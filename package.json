@@ -1,0 +1,11 @@
+{
+  "name": "DiscordLoupGarou",
+  "version": "1.0.0",
+  "dependencies": {
+    "discord.js": "^11.4.2",
+    "enmap": "^4.7.0",
+    "enmap-level": "^2.1.0",
+    "graceful-fs": "^4.1.15",
+    "node-webhooks": "^1.4.0"
+  }
+}
