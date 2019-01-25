@@ -1,4 +1,4 @@
 # Table of contents
 
-* [Introduction](README.md)
+* [LGDB - Loup Garou Discord Bot](README.md)
 
