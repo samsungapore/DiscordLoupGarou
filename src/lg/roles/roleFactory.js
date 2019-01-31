@@ -13,6 +13,35 @@ const Cupidon = require("./thiercelieux/cupidon").Cupidon;
 
 class Create {
 
+    static allRoles = {
+        Villageois: this.villageois,
+        LoupGarou: this.loupGarou,
+        Voyante: this.voyante,
+        Salvateur: this.salvateur,
+        Sorciere: this.sorciere,
+        Chasseur: this.chasseur,
+        Cupidon: this.cupidon,
+        //Ancien: this.ancien,
+        //LoupBlanc: this.loupBlanc,
+        Voleur: this.voleur,
+        PetiteFille: this.petiteFille,
+        IdiotDuVillage: this.idiotDuVillage,
+        BoucEmissaire: this.boucEmissaire,
+        JoueurDeFlute: this.joueurDeFlute,
+        EnfantSauvage: this.enfantSauvage,
+        //Ange: this.ange,
+        //InfectPereDesLoups: this.infectPereDesLoups,
+        //GrandMechantLoup: this.grandMechantLoup,
+        //Soeur: this.soeur,
+        //MontreurOurs: this.montreurOurs,
+        //Renard: this.renard,
+        //ChienLoup: this.chienLoup,
+        //Frere: this.frere,
+        //Chevalier: this.chevalier,
+        //JugeBegue: this.jugeBegue,
+        //Corbeau: this.corbeau,
+    };
+
     static petiteFille(guildMember) {
         return new PetiteFille(guildMember);
     }
@@ -99,8 +128,15 @@ class Create {
 
     static jugeBegue(guildMember) {
         return new JugeBegue(guildMember);
-    }*/
+    }
 
+    static loupBlanc(guildMember) {
+        return new LoupBlanc(guildMember);
+    }
+
+    static maire(guildMember) {
+        return new Maire(guildMember);
+    }*/
 
     static chasseur(guildMember) {
         return new Chasseur(guildMember);

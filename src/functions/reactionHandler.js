@@ -16,6 +16,8 @@ class ReactionHandler {
         } else {
             this.reactionList = [];
         }
+
+        return this;
     }
 
     /**
@@ -33,7 +35,7 @@ class ReactionHandler {
             });
 
             Promise.all(reactionPromises).then(() => {
-                resolve(true);
+                resolve(this);
             }).catch(err => reject(err));
         });
     }
@@ -88,7 +90,7 @@ class ReactionHandler {
                 return reactionArray[i].remove();
             }
         }
-        return new Promise((resolve, reject) => resolve(true));
+        return new Promise((resolve, reject) => resolve(this));
     }
 
     async removeReactionList(reactionList) {
@@ -109,6 +111,8 @@ class ReactionHandler {
             }
 
         }
+
+        return this;
 
     }
 
@@ -139,10 +143,13 @@ class ReactionHandler {
         this.collector.on('collect', func);
 
         this.collector.on('end', endFunc);
+
+        return this;
     }
 
     stop() {
         this.collector.stop();
+        return this;
     }
 
 }

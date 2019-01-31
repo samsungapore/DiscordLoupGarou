@@ -74,7 +74,7 @@ class GameFlow extends IGame {
             end = await new Night(this.GameConfiguration).goThrough();
         } while (end !== true);
 
-        console.log("Game over");
+        console.log("Game is over");
 
     }
 
@@ -351,15 +351,16 @@ class FirstNight extends Night {
                 "Le **Voleur** se réveille."
             ).catch(console.error);
 
-            let dmChannel;
+            voleur.proposeRoleChoice(this.GameConfiguration).then(() => {
 
-            voleur.member.createDM().then(privateChannel => {
+                if (!voleur.roleChosen) resolve(true);
 
-                dmChannel = privateChannel;
+                this.GameConfiguration.removePlayer(voleur.member.id);
+                this.GameConfiguration.addPlayer(Create.allRoles[voleur.roleChosen](voleur.member));
 
+                resolve(true);
 
-
-            });
+            }).catch(err => reject(err));
 
         });
     }

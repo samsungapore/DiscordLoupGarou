@@ -38,7 +38,18 @@ class Player {
             }
         };
 
+        this.dmChannel = null;
+
         return this;
+    }
+
+    createDMChannel() {
+        return new Promise((resolve, reject) => {
+            this.member.createDM().then((channel) => {
+                this.dmChannel = channel;
+                resolve(true);
+            }).catch(err => reject(err));
+        });
     }
 
 }

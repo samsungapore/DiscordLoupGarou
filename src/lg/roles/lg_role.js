@@ -242,6 +242,32 @@ class RolesHandler extends IGame {
         });
     }
 
+    getAdditionnalRoles(number) {
+        return new Promise((resolve, reject) => {
+            const lg_functions = require('../lg_functions.js');
+
+            let additionalRoles = [];
+
+            this.role_conf.forEach(role_block => {
+                if (!this.roleComplete(role_block)) {
+
+                    let role_object = RolesHandler.cleanRoleArray(role_block);
+                    let role_array = Object.keys(role_object);
+
+                    additionalRoles.push(role_array[lg_functions.get_random_index(role_array)]);
+
+                    number -= 1;
+                    if (number === 0) {
+                        resolve(additionalRoles);
+                    }
+
+                }
+            });
+
+            resolve(additionalRoles);
+        });
+    }
+
     assignRole(id, configuration) {
         return new Promise((resolve, reject) => {
 

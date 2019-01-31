@@ -3,19 +3,6 @@ const RichEmbed = require("discord.js").RichEmbed;
 
 module.exports = {
 
-    get_admin_strlist: (client, message) => {
-
-        let gSettings = client.guilds_settings.get(message.guild.id);
-
-        let admins = '';
-        gSettings.guild_admins.forEach(admin_id => {
-            admins += `<@${admin_id}>, `;
-        });
-        admins = admins.slice(0, admins.length - 2);
-
-        return admins
-    },
-
     /**
      * Fid
      * @param name
@@ -56,37 +43,6 @@ module.exports = {
         // If we can't find the user, return null
         return res;
     },
-
-    show_participants: (client, message) => new Promise((resolve, reject) => {
-        let gSettings = client.guilds_settings.get(message.guild.id);
-
-        let participants = new RichEmbed()
-            .setColor(7419530)
-            .setAuthor("Participants au LG", lg_var.roles_img.LoupGarou)
-
-
-        let player_list_id = Object.keys(LG.players);
-        let mem;
-        let i = 0;
-
-        player_list_id.forEach(id => {
-            i += 1;
-            if (i === 25) {
-                message.channel.send(participants).catch(err => reject(err));
-                participants = new RichEmbed()
-                    .setColor(7419530)
-                    .setAuthor("Participants au LG", lg_var.roles_img.LoupGarou);
-                i = 0;
-            }
-            mem = LG.players[id];
-            participants.addField(mem.display_name, `*${lg_var.memberStatus[mem.member_object.presence.status]}*`, true);
-        });
-
-        message.channel.send(participants).then(msg => {
-            resolve(msg);
-        }).catch(err => reject(err));
-
-    }),
 
     /**
      * Switch permissions for night and day
