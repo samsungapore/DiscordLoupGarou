@@ -26,7 +26,7 @@ class CommunicationHandler extends IGame {
 
     static getLGSampleMsg() {
         return new RichEmbed()
-            .setColor(BotData.bot_values.botColor)
+            .setColor(BotData.BotValues.botColor)
             .setAuthor("Loup-Garou de Thiercelieux", lg_var.roles_img.LoupGarou);
     }
 

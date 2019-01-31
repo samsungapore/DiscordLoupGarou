@@ -326,7 +326,7 @@ class RolesHandler extends IGame {
             Promise.all(promises).then((messagesSend) => {
                 console.log(`Number of sent roles : ${messagesSend.length}`);
                 resolve(true);
-            }).catch(err => reject(err));
+            }).catch(err => resolve(err)); //todo: change to reject
 
         });
     }

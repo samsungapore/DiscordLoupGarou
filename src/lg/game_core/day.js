@@ -22,7 +22,7 @@ function day_vote(client, message) {
 
     //Première étape : message d'annonce
     chan.send(new RichEmbed()
-        .setColor(BotData.bot_values.botColor)
+        .setColor(BotData.BotValues.botColor)
         .addField(
             "LG - Vote",
             'Les votes sont ouverts ! Il reste 2 minutes avant la tombée de la ' +

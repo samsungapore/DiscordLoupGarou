@@ -279,7 +279,7 @@ class ChannelsHandler extends IGame {
 
         return village.send(new RichEmbed()
             .addField('LG - Jeu', message)
-            .setColor(BotData.bot_values.botColor)
+            .setColor(BotData.BotValues.botColor)
             .setAuthor("Loup-Garou de thiercelieux", lg_var.roles_img.LoupGarou))
 
     }

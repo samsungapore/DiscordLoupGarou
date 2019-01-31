@@ -1,11 +1,31 @@
 {
-  "name": "DiscordLoupGarou",
+  "name": "discord_loup_garou",
   "version": "1.0.0",
+  "description": "Discord bot to play Loup Garou games",
   "dependencies": {
     "discord.js": "^11.4.2",
     "enmap": "^4.7.0",
     "enmap-level": "^2.1.0",
     "graceful-fs": "^4.1.15",
-    "node-webhooks": "^1.4.0"
-  }
+    "isomorphic-fetch": "^2.2.1",
+    "node-webhooks": "^1.4.0",
+    "request": "latest"
+  },
+  "scripts": {
+    "start": "node src/main.js",
+    "run": "pm2 src/main.js",
+    "restart": "pm2 main restart",
+    "stop": "pm2 main stop"
+  },
+  "contributors": [
+    {
+      "name": "Julien Sarriot",
+      "email": "julien.sarriot@epitech.eu"
+    },
+    {
+      "name": "Samuel Radat",
+      "email": "samuel.radat@epitech.eu"
+    }
+  ],
+  "license": "GPL-3.0"
 }

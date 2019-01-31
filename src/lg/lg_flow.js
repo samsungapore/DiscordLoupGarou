@@ -33,7 +33,7 @@ class GameFlow extends IGame {
         return new Promise((resolve, reject) => {
 
             this.GameConfiguration.channelsHandler._channels.get(this.GameConfiguration.channelsHandler.channels.thiercelieux_lg)
-                .send(new RichEmbed().setColor(BotData.bot_values.botColor)
+                .send(new RichEmbed().setColor(BotData.BotValues.botColor)
                     .setAuthor("Les Loups-garous de Thiercelieux [v2.0]", lg_var.roles_img.LoupGarou)
                     .setDescription('Développé par Kazuhiro#1248.\n\n*Thiercelieux est un petit village rural d\'apparence paisible,' +
                         ' mais chaque nuit certains villageois se transforment en loups-garou pour dévorer d\'autres villageois...*\n')
@@ -134,6 +134,8 @@ class FirstDay extends Period {
     maireElection() {
         return new Promise((resolve, reject) => {
 
+            console.info('maireElection');
+
             this.GameConfiguration.channelsHandler.sendMessageToVillage(
                 "🏔 Les villageois se réunissent afin d'élir leur maire\n" +
                 "C'est l'heure du vote !"
@@ -151,11 +153,13 @@ class FirstDay extends Period {
 
             }).then(() => {
 
+                console.info('2');
+
                 return new VillageoisVote(
                     "Qui voulez-vous élir comme maire ?",
                     this.GameConfiguration,
-                    120000, this.GameConfiguration.channelsHandler._channels.get(
-                        this.GameConfiguration.channelsHandler.channels.thiercelieux_lg),
+                    120000,
+                    this.GameConfiguration.channelsHandler._channels.get(this.GameConfiguration.channelsHandler.channels.thiercelieux_lg),
                     this.GameConfiguration._players.size
                 ).everyone();
 
