@@ -6,6 +6,16 @@ description: >-
 
 # LGDB - Loup Garou Discord Bot
 
+## Permissions nécessaires
+
+![Permissions requises au bot pour pouvoir fonctionner](.gitbook/assets/sans-titre.png)
+
+## Ajouter le bot à son serveur discord
+
+```text
+Bot en cours de développement, lien à venir...
+```
+
 ## Objectifs
 
 L'objectif du bot est de pouvoir animer une session du jeu Loup garou. 
