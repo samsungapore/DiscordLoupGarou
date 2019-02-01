@@ -9,7 +9,9 @@
     "graceful-fs": "^4.1.15",
     "isomorphic-fetch": "^2.2.1",
     "node-webhooks": "^1.4.0",
-    "request": "latest"
+    "request": "latest",
+    "winston": "^3.2.1",
+    "winston-daily-rotate-file": "^3.6.0"
   },
   "scripts": {
     "start": "node src/main.js",

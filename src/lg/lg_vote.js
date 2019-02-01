@@ -15,16 +15,16 @@ class Vote {
         return this;
     }
 
-    everyone(exceptionArray) {
+    everyone(exceptionArrayOfIds) {
         return new Promise((resolve, reject) => {
 
             let playersIdName = this.configuration.getPlayersIdName();
             let ids = Array.from(playersIdName.keys());
             let names = Array.from(playersIdName.values());
 
-            console.log(`exception array : ${exceptionArray} ids : ${ids} names : ${names}`);
-            if (exceptionArray && exceptionArray.length > 0) {
-                exceptionArray.forEach(exception => {
+            console.log(`exception array : ${exceptionArrayOfIds} ids : ${ids} names : ${names}`);
+            if (exceptionArrayOfIds && exceptionArrayOfIds.length > 0) {
+                exceptionArrayOfIds.forEach(exception => {
 
                     let index = ids.indexOf(exception);
 

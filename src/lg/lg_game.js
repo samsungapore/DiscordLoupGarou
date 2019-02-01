@@ -18,6 +18,26 @@ class IGame {
 
 }
 
+class GameInfo {
+    constructor(message, playTime) {
+        this.guild = message.guild;
+        this.playTime = playTime;
+        this.gameNumber = 0;
+    }
+
+    get serverName() {
+        return this.guild.name;
+    }
+
+    get stemmingTime() {
+        return this.playTime;
+    }
+
+    get gameNb() {
+        return this.gameNumber;
+    }
+}
+
 class Game extends IGame {
 
     constructor(client, message) {
@@ -28,11 +48,13 @@ class Game extends IGame {
 
         this.playTime = new Date();
 
+        this.gameInfo = new GameInfo(message, this.playTime);
+
         this.stemmingChannel = message.channel;
         this.stemmingPlayer = message.member;
 
         this.preparation = new GamePreparation(
-            this.client, this.stemmingChannel, this.stemmingPlayer, this.guild
+            this.client, this.stemmingChannel, this.stemmingPlayer, this.guild, this.gameInfo
         );
         this.flow = new GameFlow(this.client);
 
@@ -163,18 +185,20 @@ class Game extends IGame {
 
 class GamePreparation extends IGame {
 
-    constructor(client, channel, player, guild) {
+    constructor(client, channel, player, guild, gameInfo) {
 
         super(client);
 
         this.status = false;
 
+        this.gameInfo = gameInfo;
+
         this.guild = guild;
         this.stemmingPlayer = player;
         this.preparationChannel = channel;
-        this.configuration = new GameConfiguration();
-        this.rolesHandler = new RolesHandler(client, guild);
-        this.channelsHandler = new ChannelsHandler(client, guild);
+        this.configuration = new GameConfiguration(this.gameInfo);
+        this.rolesHandler = new RolesHandler(client, guild, this.gameInfo);
+        this.channelsHandler = new ChannelsHandler(client, guild, this.gameInfo);
 
         this.msg = undefined;
         this.richEmbed = undefined;
@@ -368,7 +392,9 @@ class GamePreparation extends IGame {
 
 class GameConfiguration {
 
-    constructor() {
+    constructor(gameInfo) {
+
+        this.gameInfo = gameInfo;
 
         this._table = [];
 

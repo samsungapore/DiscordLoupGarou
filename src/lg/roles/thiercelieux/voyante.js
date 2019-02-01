@@ -5,8 +5,8 @@ let RichEmbed = require('discord.js').RichEmbed;
 
 class Voyante extends Villageois {
 
-    constructor(guildMember) {
-        super(guildMember);
+    constructor(guildMember, gameInfo) {
+        super(guildMember, gameInfo);
 
         this.role = "Voyante";
 

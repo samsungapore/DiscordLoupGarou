@@ -16,8 +16,10 @@ class IGame {
 
 class ChannelsHandler extends IGame {
 
-    constructor(client, guild) {
+    constructor(client, guild, gameInfo) {
         super(client);
+
+        this.gameInfo = gameInfo;
 
         this.guild = guild;
 

@@ -42,124 +42,124 @@ class Create {
         //Corbeau: this.corbeau,
     };
 
-    static petiteFille(guildMember) {
-        return new PetiteFille(guildMember);
+    static petiteFille(guildMember, gameInfo) {
+        return new PetiteFille(guildMember, gameInfo);
     }
 
-    static villageois(guildMember) {
-        return new basicRole.Villageois(guildMember);
+    static villageois(guildMember, gameInfo) {
+        return new basicRole.Villageois(guildMember, gameInfo);
     }
 
-    static salvateur(guildMember) {
-        return new Salvateur(guildMember);
+    static salvateur(guildMember, gameInfo) {
+        return new Salvateur(guildMember, gameInfo);
     }
 
-    static idiotDuVillage(guildMember) {
-        return new IdiotDuVillage(guildMember);
+    static idiotDuVillage(guildMember, gameInfo) {
+        return new IdiotDuVillage(guildMember, gameInfo);
     }
 
-    static boucEmissaire(guildMember) {
-        return new BoucEmissaire(guildMember);
+    static boucEmissaire(guildMember, gameInfo) {
+        return new BoucEmissaire(guildMember, gameInfo);
     }
 
-    static joueurDeFlute(guildMember) {
-        return new JoueurDeFlute(guildMember);
+    static joueurDeFlute(guildMember, gameInfo) {
+        return new JoueurDeFlute(guildMember, gameInfo);
     }
 
-    static enfantSauvage(guildMember) {
-        return new EnfantSauvage(guildMember);
+    static enfantSauvage(guildMember, gameInfo) {
+        return new EnfantSauvage(guildMember, gameInfo);
     }
 
-    /*static chevalier(guildMember) {
-        return new Chevalier(guildMember);
+    /*static chevalier(guildMember, gameInfo) {
+        return new Chevalier(guildMember, gameInfo);
     }
 
-    static ange(guildMember) {
-        return new Ange(guildMember);
+    static ange(guildMember, gameInfo) {
+        return new Ange(guildMember, gameInfo);
     }
 
-    static infectPereDesLoups(guildMember) {
-        return new InfectPereDesLoups(guildMember);
+    static infectPereDesLoups(guildMember, gameInfo) {
+        return new InfectPereDesLoups(guildMember, gameInfo);
     }
 
-    static soeur(guildMember) {
-        return new Soeur(guildMember);
+    static soeur(guildMember, gameInfo) {
+        return new Soeur(guildMember, gameInfo);
     }
 
-    static renard(guildMember) {
-        return new Renard(guildMember);
+    static renard(guildMember, gameInfo) {
+        return new Renard(guildMember, gameInfo);
     }
 
-    static servanteDevouee(guildMember) {
-        return new ServanteDevouee(guildMember);
+    static servanteDevouee(guildMember, gameInfo) {
+        return new ServanteDevouee(guildMember, gameInfo);
     }
 
-    static frere(guildMember) {
-        return new Frere(guildMember);
+    static frere(guildMember, gameInfo) {
+        return new Frere(guildMember, gameInfo);
     }
 
-    static montreurOurs(guildMember) {
+    static montreurOurs(guildMember, gameInfo) {
         return new MontreurOurs(guildMember);
     }
 
-    static comedien(guildMember) {
-        return new Comedien(guildMember);
+    static comedien(guildMember, gameInfo) {
+        return new Comedien(guildMember, gameInfo);
     }
 
-    static abominableSectaire(guildMember) {
-        return new AbominableSectaire(guildMember);
+    static abominableSectaire(guildMember, gameInfo) {
+        return new AbominableSectaire(guildMember, gameInfo);
     }
 
-    static chienLoup(guildMember) {
-        return new ChienLoup(guildMember);
+    static chienLoup(guildMember, gameInfo) {
+        return new ChienLoup(guildMember, gameInfo);
     }
 
-    static villageoisVillageois(guildMember) {
-        return new VillageoisVillageois(guildMember);
+    static villageoisVillageois(guildMember, gameInfo) {
+        return new VillageoisVillageois(guildMember, gameInfo);
     }
 
-    static grandMechantLoup(guildMember) {
-        return new GrandMechantLoup(guildMember);
+    static grandMechantLoup(guildMember, gameInfo) {
+        return new GrandMechantLoup(guildMember, gameInfo);
     }
 
-    static ancien(guildMember) {
-        return new Ancien(guildMember);
+    static ancien(guildMember, gameInfo) {
+        return new Ancien(guildMember, gameInfo);
     }
 
-    static jugeBegue(guildMember) {
-        return new JugeBegue(guildMember);
+    static jugeBegue(guildMember, gameInfo) {
+        return new JugeBegue(guildMember, gameInfo);
     }
 
-    static loupBlanc(guildMember) {
-        return new LoupBlanc(guildMember);
+    static loupBlanc(guildMember, gameInfo) {
+        return new LoupBlanc(guildMember, gameInfo);
     }
 
-    static maire(guildMember) {
-        return new Maire(guildMember);
+    static maire(guildMember, gameInfo) {
+        return new Maire(guildMember, gameInfo);
     }*/
 
-    static chasseur(guildMember) {
-        return new Chasseur(guildMember);
+    static chasseur(guildMember, gameInfo) {
+        return new Chasseur(guildMember, gameInfo);
     }
 
-    static cupidon(guildMember) {
-        return new Cupidon(guildMember);
+    static cupidon(guildMember, gameInfo) {
+        return new Cupidon(guildMember, gameInfo);
     }
 
-    static loupGarou(guildMember) {
-        return new basicRole.LoupGarou(guildMember);
+    static loupGarou(guildMember, gameInfo) {
+        return new basicRole.LoupGarou(guildMember, gameInfo);
     }
 
-    static sorciere(guildMember) {
-        return new Sorciere(guildMember);
+    static sorciere(guildMember, gameInfo) {
+        return new Sorciere(guildMember, gameInfo);
     }
 
-    static voleur(guildMember) {
-        return new Voleur(guildMember);
+    static voleur(guildMember, gameInfo) {
+        return new Voleur(guildMember, gameInfo);
     }
 
-    static voyante(guildMember) {
-        return new Voyante(guildMember);
+    static voyante(guildMember, gameInfo) {
+        return new Voyante(guildMember, gameInfo);
     }
 
 }

@@ -1,6 +1,7 @@
 const RichEmbed = require("discord.js").RichEmbed;
 const BotData = require("../BotData.js");
 const lg_var = require('./lg_var.js');
+const LgLogger = require("./lg_logger");
 const Wait = require("../functions/wait.js").Wait;
 const VillageoisVote = require("./lg_vote.js").VillageoisVote;
 
@@ -342,14 +343,14 @@ class FirstNight extends Night {
             let voleurs = this.roleMap.get("Voleur");
 
             if (!voleurs || voleurs.length < 1) {
-                return resolve(true);
+                return resolve(this);
             }
 
             let voleur = voleurs.shift();
 
             this.GameConfiguration.channelsHandler.sendMessageToVillage(
                 "Le **Voleur** se réveille."
-            ).catch(console.error);
+            ).catch(err => LgLogger.warn(err));
 
             voleur.proposeRoleChoice(this.GameConfiguration).then(() => {
 
@@ -411,7 +412,21 @@ class FirstNight extends Night {
 
     callEnfantSauvage() {
         return new Promise((resolve, reject) => {
-            resolve(true);
+
+            let enfantSauvage = this.roleMap.get("EnfantSauvage");
+
+            if (!enfantSauvage || enfantSauvage.length < 1) return resolve(this);
+
+            enfantSauvage = enfantSauvage.shift();
+
+            this.GameConfiguration.channelsHandler.sendMessageToVillage(
+                "L'**Enfant Sauvage** se réveille."
+            ).catch(err => LgLogger.warn(err));
+
+            enfantSauvage.askForModel(this.GameConfiguration)
+                .then(() => resolve(this))
+                .catch(err => reject(err));
+
         })
     }
 

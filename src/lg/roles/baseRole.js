@@ -6,6 +6,7 @@ class Player {
     constructor(guildMember) {
 
         this.member = guildMember;
+        this.gameinfo = null;
 
         this.maire = false;
         this.immunity = false;
@@ -56,8 +57,8 @@ class Player {
 
 class LoupGarou extends Player {
 
-    constructor(guildMember) {
-        super(guildMember);
+    constructor(guildMember, gameInfo) {
+        super(guildMember, gameInfo);
 
         this.team = "LG";
         this.role = "LoupGarou";
@@ -89,8 +90,8 @@ class LoupGarou extends Player {
 
 class Villageois extends Player {
 
-    constructor(guildMember) {
-        super(guildMember);
+    constructor(guildMember, gameInfo) {
+        super(guildMember, gameInfo);
 
         this.team = "VILLAGEOIS";
         this.role = "Villageois";

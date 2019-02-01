@@ -7,8 +7,8 @@ let RichEmbed = require("discord.js").RichEmbed;
 
 class JoueurDeFlute extends Player {
 
-    constructor(guildMember) {
-        super(guildMember);
+    constructor(guildMember, gameInfo) {
+        super(guildMember, gameInfo);
 
         this.role = "JoueurDeFlute";
 

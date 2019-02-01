@@ -5,8 +5,8 @@ const VillageoisVote = require("../../lg_vote.js").VillageoisVote;
 
 class Cupidon extends Villageois {
 
-    constructor(guildMember) {
-        super(guildMember);
+    constructor(guildMember, gameInfo) {
+        super(guildMember, gameInfo);
 
         this.role = "Cupidon";
 

@@ -1,5 +1,6 @@
 const RichEmbed = require("discord.js").RichEmbed;
-const lg_var = require("../../lg_var.js");
+const LgLogger = require("../../lg_logger");
+const VillageoisVote = require("../../lg_vote").VillageoisVote;
 const Villageois = require("../baseRole").Villageois;
 
 /**
@@ -17,7 +18,7 @@ class EnfantSauvage extends Villageois {
         return this;
     }
 
-    proposeModel(gameConf) {
+    askForModel(gameConf) {
         return new Promise((resolve, reject) => {
 
             let dmchanpromise = [];
@@ -34,16 +35,39 @@ class EnfantSauvage extends Villageois {
                     .setDescription("Tu peux choisir ton modèle parmis les autres habitants du village." +
                         " Si ton modèle meurt, tu deviendras un Loup-Garou.");
 
-                const players = gameConf.getPlayersIdName();
-                let idArray = [];
-                let nameArray = [];
-
-                for (let [id, name] of players) {
-                    idArray.push(id);
-                    nameArray.push(name);
-                }
-
                 return this.dmChannel.send(propositionMsg);
+
+            }).then(() => {
+
+                return new VillageoisVote(
+                    'Qui prenez-vous comme modèle ?',
+                    gameConf,
+                    30000,
+                    this.dmChannel,
+                    1
+                ).everyone([this.member.id]);
+
+            }).then(outcomeIdArray => {
+
+                if (outcomeIdArray.length === 0) {
+
+                    LgLogger.info("L'enfant sauvage n'a pas pris de modèle", this.gameinfo);
+
+                    resolve(this);
+
+                } else if (outcomeIdArray.length === 1) {
+
+                    let model = gameConf._players.get(outcomeIdArray.shift());
+
+                    LgLogger.info(`L'enfant sauvage a pris comme modèle ${model.member.displayName}`);
+
+                    this.model = model;
+
+                    resolve(this);
+
+                } else {
+                    reject("Deux votes simultanés pour l'enfant sauvage est impossible");
+                }
 
             }).catch(err => reject(err));
 

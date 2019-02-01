@@ -25,8 +25,8 @@ const RichEmbed = require('discord.js').RichEmbed;
  */
 class Voleur extends Villageois {
 
-    constructor(guildMember) {
-        super(guildMember);
+    constructor(guildMember, gameInfo) {
+        super(guildMember, gameInfo);
 
         this.role = "Voleur";
 

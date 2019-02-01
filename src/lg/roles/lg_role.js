@@ -20,8 +20,10 @@ class IGame {
 
 class RolesHandler extends IGame {
 
-    constructor(client, guild) {
+    constructor(client, guild, gameInfo) {
         super(client);
+
+        this.gameInfo = gameInfo;
 
         this.guild = guild;
 

@@ -2,8 +2,8 @@ const Villageois = require("../baseRole").Villageois;
 
 class IdiotDuVillage extends Villageois {
 
-    constructor(guildMember) {
-        super(guildMember);
+    constructor(guildMember, gameInfo) {
+        super(guildMember, gameInfo);
 
         this.role = "IdiotDuVillage";
 

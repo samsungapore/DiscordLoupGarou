@@ -4,8 +4,8 @@ const Villageois = require("../baseRole").Villageois;
 
 class Salvateur extends Villageois {
 
-    constructor(guildMember) {
-        super(guildMember);
+    constructor(guildMember, gameInfo) {
+        super(guildMember, gameInfo);
 
         this.role = "Salvateur";
 
