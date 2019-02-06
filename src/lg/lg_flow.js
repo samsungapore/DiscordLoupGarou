@@ -424,7 +424,7 @@ class FirstNight extends Night {
                 this.GameConfiguration._players.set(choice1.member.id, choice1);
                 this.GameConfiguration._players.set(choice2.member.id, choice2);
 
-                console.log(`${choice1.member.displayName} et ${choice2.member.displayName} sont en couple.`);
+                LgLogger.info(`${choice1.member.displayName} et ${choice2.member.displayName} sont en couple.`, this.gameInfo);
 
                 Promise.all([
                     cupidon.member.send(`${choice1.member.displayName} et ${choice2.member.displayName} sont en couple.`),

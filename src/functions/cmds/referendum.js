@@ -237,11 +237,20 @@ class SondageInfiniteChoice {
 
                 vote.on("collect", collectedVote => {
 
-                    if (collectedVote.content.toLowerCase().startsWith("vote") && !isNaN(parseInt(collectedVote.content.split(/ +/g)[1]))) {
+                    let answerCollected = collectedVote.cleanContent;
+                    let answerTab = answerCollected.split(/ +/g);
 
-                        let content = collectedVote.content.split(/ +/g)[1];
+                    if (answerTab.length === 1) {
+                        answerCollected = answerTab[0];
+                    } else if (answerTab.length > 1) {
+                        if (answerTab[0].startsWith("vote")) {
+                            answerCollected = answerTab[1];
+                        }
+                    }
 
-                        let answer = parseInt(content);
+                    if (!isNaN(parseInt(answerCollected))) {
+
+                        let answer = parseInt(answerCollected);
                         let member = collectedVote.member;
 
                         if (!member) {

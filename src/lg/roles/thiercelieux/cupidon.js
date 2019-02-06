@@ -30,7 +30,7 @@ class Cupidon extends Villageois {
                 return new VillageoisVote(
                     "Veuillez choisir le premier élu",
                     this.GameConfiguration,
-                    20000, this.dmChannel, 1
+                    40000, this.dmChannel, 1
                 ).everyone();
 
             }).then(outcome => {
@@ -54,7 +54,7 @@ class Cupidon extends Villageois {
                 return new VillageoisVote(
                     "Veuillez choisir son/sa partenaire",
                     this.GameConfiguration,
-                    20000, this.dmChannel, 1
+                    40000, this.dmChannel, 1
                 ).everyone([this.id1]);
 
             }).then(outcome => {

@@ -307,7 +307,6 @@ const roles_desc = {
             ]
         }
     },
-
     Voyante: {
         embed: {
             color: botColor,
@@ -323,7 +322,6 @@ const roles_desc = {
             ]
         }
     },
-
     Salvateur: {
         embed: {
             color: botColor,
@@ -341,7 +339,6 @@ const roles_desc = {
             ]
         }
     },
-
     Villageois: {
         embed: {
             color: botColor,
@@ -357,7 +354,6 @@ const roles_desc = {
             ]
         }
     },
-
     Cupidon: {
         embed: {
             color: botColor,
@@ -374,7 +370,6 @@ const roles_desc = {
             ]
         }
     },
-
     Voleur: {
         embed: {
             color: botColor,
@@ -391,7 +386,6 @@ const roles_desc = {
             ]
         }
     },
-
     Sorciere: {
         embed: {
             color: botColor,
@@ -410,7 +404,6 @@ const roles_desc = {
             ]
         }
     },
-
     Chasseur: {
         embed: {
             color: botColor,
@@ -426,7 +419,6 @@ const roles_desc = {
             ]
         }
     },
-
     Ange: {
         embed: {
             color: botColor,
@@ -442,7 +434,6 @@ const roles_desc = {
             ]
         }
     },
-
     PetiteFille: {
         embed: {
             color: botColor,
@@ -458,7 +449,6 @@ const roles_desc = {
             ]
         }
     },
-
     IdiotDuVillage: {
         embed: {
             color: botColor,
@@ -476,7 +466,6 @@ const roles_desc = {
             ]
         }
     },
-
     BoucEmissaire: {
         embed: {
             color: botColor,
@@ -491,7 +480,6 @@ const roles_desc = {
             }]
         }
     },
-
     Maire: {
         embed: {
             color: botColor,
@@ -510,7 +498,6 @@ const roles_desc = {
             }]
         }
     },
-
     JoueurDeFlute: {
         embed: {
             color: botColor,
@@ -527,7 +514,6 @@ const roles_desc = {
             }]
         }
     },
-
     LoupBlanc: {
         embed: {
             color: botColor,
@@ -540,7 +526,6 @@ const roles_desc = {
             }]
         }
     },
-
     Ancien: {
         embed: {
             color: botColor,
@@ -553,7 +538,6 @@ const roles_desc = {
             }]
         }
     },
-
     EnfantSauvage: {
         embed: {
             color: botColor,
@@ -566,7 +550,6 @@ const roles_desc = {
             }]
         }
     },
-
     InfectPereDesLoups: {
         embed: {
             color: botColor,
@@ -583,7 +566,6 @@ const roles_desc = {
             }]
         }
     },
-
     GrandMechantLoup: {
         embed: {
             color: botColor,
@@ -596,7 +578,6 @@ const roles_desc = {
             }]
         }
     },
-
     Soeur: {
         embed: {
             color: botColor,
@@ -609,7 +590,6 @@ const roles_desc = {
             }]
         }
     },
-
     Frere: {
         embed: {
             color: botColor,
@@ -622,7 +602,6 @@ const roles_desc = {
             }]
         }
     },
-
     MontreurOurs: {
         embed: {
             color: botColor,
@@ -635,7 +614,6 @@ const roles_desc = {
             }]
         }
     },
-
     Renard: {
         embed: {
             color: botColor,
@@ -648,7 +626,6 @@ const roles_desc = {
             }]
         }
     },
-
     ChienLoup: {
         embed: {
             color: botColor,
@@ -661,7 +638,6 @@ const roles_desc = {
             }]
         }
     },
-
     Chevalier: {
         embed: {
             color: botColor,
@@ -674,7 +650,6 @@ const roles_desc = {
             }]
         }
     },
-
     JugeBegue: {
         embed: {
             color: botColor,
@@ -687,7 +662,6 @@ const roles_desc = {
             }]
         }
     },
-
     Corbeau: {
         embed: {
             color: botColor,
@@ -700,6 +674,9 @@ const roles_desc = {
             }]
         }
     },
+
+    //todo: add every role of wikipedia
+
 };
 
 const roles_img = {
