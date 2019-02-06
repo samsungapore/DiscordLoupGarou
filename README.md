@@ -27,10 +27,10 @@ Assurez-vous de ne pas déjà avoir sur votre serveur des rôles importants nomm
 
 Voici les channels que le bot générera si ils ne sont pas présents sur le serveur, ou utilisera directement si ils sont déjà présents sur le serveur  :
 
-* thiercelieux\_lg
-* village\_lg
-* paradis\_lg
-* loups\_garou\_lg
+* _**thiercelieux\_lg**_ Channel où se passent les annonces et les référendums
+* _**village\_lg**_ Channel du village, où les joueurs se rencontrent et discutent
+* _**paradis\_lg**_ Channel des morts, où les joueurs défunts discutent au paradis
+* _**loups\_garou\_lg**_ Channel des loups garous, où les loups se concertent pour désigner leurs proies
 {% endhint %}
 
 ![Channels g&#xE9;n&#xE9;r&#xE9;s par le bot](.gitbook/assets/lg_channelsecategory.png)
