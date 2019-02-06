@@ -10,6 +10,31 @@ description: >-
 
 ![Permissions requises au bot pour pouvoir fonctionner](.gitbook/assets/sans-titre.png)
 
+## Informations très importantes
+
+{% hint style="danger" %}
+### Le bot réquisitionne des noms spécifiques de channels et de rôles
+
+#### Noms de rôles utilisés par le bot
+
+Assurez-vous de ne pas déjà avoir sur votre serveur des rôles importants nommés respectivement :
+
+* _**JoueurLG**_ Rôle des joueurs vivants de la partie de loup garou
+* _**MortLG**_ Rôle des joueurs morts de la partie de loup garou
+* _**MastermindLG**_ Rôle attribué au meneur de jeu \(le bot\) pour avoir la vision totale sur la partie de loup garou
+
+#### Noms de channels utilisés par le bot
+
+Voici les channels que le bot générera si ils ne sont pas présents sur le serveur, ou utilisera directement si ils sont déjà présents sur le serveur  :
+
+* _**thiercelieux\_lg**_ Channel où se passent les annonces et les référendums
+* _**village\_lg**_ Channel du village, où les joueurs se rencontrent et discutent
+* _**paradis\_lg**_ Channel des morts, où les joueurs défunts discutent au paradis
+* _**loups\_garou\_lg**_ Channel des loups garous, où les loups se concertent pour désigner leurs proies
+{% endhint %}
+
+![Channels g&#xE9;n&#xE9;r&#xE9;s par le bot](.gitbook/assets/lg_channelsecategory.png)
+
 ## Ajouter le bot à son serveur discord
 
 ```text
