@@ -2,6 +2,7 @@ const RichEmbed = require("discord.js").RichEmbed;
 const BotData = require("../BotData.js");
 const lg_var = require('./lg_var.js');
 const LgLogger = require("./lg_logger");
+const allRoles = require("./roles/roleFactory").allRoles;
 const Wait = require("../functions/wait.js").Wait;
 const VillageoisVote = require("./lg_vote.js").VillageoisVote;
 
@@ -19,12 +20,16 @@ class IGame {
 
 class GameFlow extends IGame {
 
-    constructor(client) {
+    constructor(client, gameInfo) {
 
         super(client);
 
-        this.GameConfiguration = undefined;
-        this.msg = undefined;
+        this.gameInfo = gameInfo;
+
+        this.GameConfiguration = null;
+        this.msg = null;
+
+        this.turnNb = 0;
 
         return this;
 
@@ -33,9 +38,11 @@ class GameFlow extends IGame {
     run() {
         return new Promise((resolve, reject) => {
 
+            LgLogger.info('Game start', this.gameInfo);
+
             this.GameConfiguration.channelsHandler._channels.get(this.GameConfiguration.channelsHandler.channels.thiercelieux_lg)
                 .send(new RichEmbed().setColor(BotData.BotValues.botColor)
-                    .setAuthor("Les Loups-garous de Thiercelieux [v2.0]", lg_var.roles_img.LoupGarou)
+                    .setAuthor("Les Loups-garous de Thiercelieux [v2.1]", lg_var.roles_img.LoupGarou)
                     .setDescription('Développé par Kazuhiro#1248.\n\n*Thiercelieux est un petit village rural d\'apparence paisible,' +
                         ' mais chaque nuit certains villageois se transforment en loups-garou pour dévorer d\'autres villageois...*\n')
                     .addField("Règles :",
@@ -47,10 +54,11 @@ class GameFlow extends IGame {
                         "ses traditions ancestrales et ses mystères inquiétants.", lg_var.roles_img.LoupGarou)
                     .setImage(lg_var.roles_img.LoupGarou)).catch(err => reject(err));
 
-            new FirstDay(this.GameConfiguration).goThrough().then((conf) => {
+
+            new FirstDay(this.GameConfiguration, this.gameInfo).goThrough().then((conf) => {
 
                 this.GameConfiguration = conf;
-                return new FirstNight(this.GameConfiguration).goThrough();
+                return new FirstNight(this.GameConfiguration, this.gameInfo).goThrough();
 
             }).then((conf) => {
 
@@ -68,14 +76,17 @@ class GameFlow extends IGame {
 
         let end;
         do {
-            end = await new Day(this.GameConfiguration).goThrough();
+            end = await new Day(this.GameConfiguration, this.gameInfo).goThrough();
 
             if (end) break;
 
-            end = await new Night(this.GameConfiguration).goThrough();
-        } while (end !== true);
+            end = await new Night(this.GameConfiguration, this.gameInfo).goThrough();
 
-        console.log("Game is over");
+            this.turnNb += 1;
+
+        } while (end !== true && this.turnNb < 5);
+
+        LgLogger.info("Game is over", this.gameInfo);
 
     }
 
@@ -83,9 +94,11 @@ class GameFlow extends IGame {
 
 class Period {
 
-    constructor(configuration) {
+    constructor(configuration, gameInfo) {
 
         this.GameConfiguration = configuration;
+
+        this.gameInfo = gameInfo;
 
         this.roleMap = this.GameConfiguration.getRoleMap();
 
@@ -99,8 +112,8 @@ class Day extends Period {
 
     goThrough() {
         return new Promise((resolve, reject) => {
-            console.log("Going through day");
-            resolve(true);
+            LgLogger.info("Going through day", this.gameInfo);
+            resolve(false);
         })
     }
 
@@ -108,9 +121,9 @@ class Day extends Period {
 
 class FirstDay extends Period {
 
-    constructor(configuration) {
+    constructor(configuration, gameInfo) {
 
-        super(configuration);
+        super(configuration, gameInfo);
 
         return this;
     }
@@ -118,13 +131,14 @@ class FirstDay extends Period {
     goThrough() {
         return new Promise((resolve, reject) => {
 
+            return resolve(this.GameConfiguration);
+
             this.GameConfiguration.channelsHandler.sendMessageToVillage(
                 "🌄 Le jour se lève à Thiercelieux." +
                 " Quand la neige éternelle ornera les montagnes, le maire devra être élu."
             ).then(() => Wait.minutes(1))
                 .then(() => this.maireElection())
-                .then(() => this.GameConfiguration.channelsHandler.sendMessageToVillage(
-                    "⛰ La nuit va bientôt tomber sur Thiercelieux."))
+                .then(() => this.GameConfiguration.channelsHandler.sendMessageToVillage("⛰ La nuit va bientôt tomber sur Thiercelieux."))
                 .then(() => Wait.seconds(30))
                 .then(() => resolve(this.GameConfiguration))
                 .catch(err => reject(err));
@@ -135,7 +149,7 @@ class FirstDay extends Period {
     maireElection() {
         return new Promise((resolve, reject) => {
 
-            console.info('maireElection');
+            LgLogger.info('Begining maire election.', this.gameInfo);
 
             this.GameConfiguration.channelsHandler.sendMessageToVillage(
                 "🏔 Les villageois se réunissent afin d'élir leur maire\n" +
@@ -154,7 +168,7 @@ class FirstDay extends Period {
 
             }).then(() => {
 
-                console.info('2');
+                LgLogger.info('Permissions switch, init referendum.', this.gameInfo);
 
                 return new VillageoisVote(
                     "Qui voulez-vous élir comme maire ?",
@@ -166,7 +180,7 @@ class FirstDay extends Period {
 
             }).then((outcome) => {
 
-                console.log("Maire outcome : " + outcome);
+                LgLogger.info("Maire outcome : " + outcome, this.gameInfo);
 
                 if (outcome.length === 0) {
                     this.GameConfiguration.channelsHandler.sendMessageToVillage(
@@ -209,18 +223,38 @@ class FirstDay extends Period {
 
 class Night extends Period {
 
-    constructor(configuration) {
+    constructor(configuration, gameInfo) {
 
-        super(configuration);
+        super(configuration, gameInfo);
 
         return this;
 
     }
 
+    initRole(roleName) {
+        return new Promise((resolve, reject) => {
+            let roles = this.roleMap.get(roleName);
+
+            if (!roles || roles.length < 1) {
+                return resolve(false);
+            }
+
+            let role = roles.shift();
+
+            LgLogger.warn(role, this.gameInfo);
+
+            this.GameConfiguration.channelsHandler.sendMessageToVillage(
+                `Le **${roleName}** se réveille.`
+            ).catch(err => LgLogger.warn(err));
+
+            resolve(role);
+        });
+    }
+
     goThrough() {
         return new Promise((resolve, reject) => {
 
-            console.log("Going through night");
+            LgLogger.info("Going through night", this.gameInfo);
             this.GameConfiguration.channelsHandler.sendMessageToVillage("🌌 La nuit tombe.")
                 .then(() => Promise.all([
                     this.callLoupsGarou(),
@@ -237,7 +271,7 @@ class Night extends Period {
                     this.callSorciere(),
                     this.callRenard()
                 ]))
-                .then(() => resolve(this.GameConfiguration))
+                .then(() => resolve(false))
                 .catch(err => reject(err));
 
         });
@@ -245,6 +279,9 @@ class Night extends Period {
 
     callLoupsGarou() {
         return new Promise((resolve, reject) => {
+
+
+
             resolve(true);
         });
     }
@@ -301,9 +338,9 @@ class Night extends Period {
 
 class FirstNight extends Night {
 
-    constructor(configuration) {
+    constructor(configuration, gameInfo) {
 
-        super(configuration);
+        super(configuration, gameInfo);
 
         return this;
 
@@ -340,28 +377,18 @@ class FirstNight extends Night {
     callVoleur() {
         return new Promise((resolve, reject) => {
 
-            let voleurs = this.roleMap.get("Voleur");
+            this.initRole("Voleur")
+                .then(voleur => voleur ? voleur.proposeRoleChoice(this.GameConfiguration) : resolve(this))
+                .then((voleur) => {
 
-            if (!voleurs || voleurs.length < 1) {
-                return resolve(this);
-            }
+                    if (!voleur.roleChosen) resolve(true);
 
-            let voleur = voleurs.shift();
+                    this.GameConfiguration.removePlayer(voleur.member.id);
+                    this.GameConfiguration.addPlayer(allRoles[voleur.roleChosen](voleur.member));
 
-            this.GameConfiguration.channelsHandler.sendMessageToVillage(
-                "Le **Voleur** se réveille."
-            ).catch(err => LgLogger.warn(err));
+                    resolve(this);
 
-            voleur.proposeRoleChoice(this.GameConfiguration).then(() => {
-
-                if (!voleur.roleChosen) resolve(true);
-
-                this.GameConfiguration.removePlayer(voleur.member.id);
-                this.GameConfiguration.addPlayer(Create.allRoles[voleur.roleChosen](voleur.member));
-
-                resolve(true);
-
-            }).catch(err => reject(err));
+                }).catch(err => reject(err));
 
         });
     }

@@ -83,7 +83,7 @@ module.exports = {
                 let mastermind_role = LG.lg_game_roles.Mastermind.object;
 
                 // Will always be this name
-                let everyone_role = message.guild.roles.find('name', '@everyone');
+                let everyone_role = message.guild.roles.find(x => x.name === '@everyone');
 
                 if (channel.name === 'village_lg') {
                     console.log("Setting LG permissions on village channel");
@@ -162,7 +162,7 @@ module.exports = {
                         let mort_role = LG.lg_game_roles.MortLG.object;
 
                         // Will always be this name
-                        let everyone_role = message.guild.roles.find('name', '@everyone');
+                        let everyone_role = message.guild.roles.find(x => x.name === '@everyone');
 
                         if (channel.name === 'village_lg') {
                             console.log("Setting LG permissions on village channel");

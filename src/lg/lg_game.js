@@ -1,10 +1,12 @@
 const BotData = require("../BotData.js");
 const lg_var = require("./lg_var");
+const LgLogger = require("./lg_logger");
 const GameFlow = require("./lg_flow").GameFlow;
 const ChannelsHandler = require("./lg_channel").ChannelsHandler;
 const RolesHandler = require("./roles/lg_role").RolesHandler;
 const ReactionHandler = require("../functions/reactionHandler").ReactionHandler;
 const RichEmbed = require("discord.js").RichEmbed;
+const Wait = require('../functions/wait').Wait;
 
 class IGame {
 
@@ -49,6 +51,7 @@ class Game extends IGame {
         this.playTime = new Date();
 
         this.gameInfo = new GameInfo(message, this.playTime);
+        LgLogger.info('New lg game created', this.gameInfo);
 
         this.stemmingChannel = message.channel;
         this.stemmingPlayer = message.member;
@@ -56,15 +59,18 @@ class Game extends IGame {
         this.preparation = new GamePreparation(
             this.client, this.stemmingChannel, this.stemmingPlayer, this.guild, this.gameInfo
         );
-        this.flow = new GameFlow(this.client);
+        this.flow = new GameFlow(this.client, this.gameInfo);
 
         this.quitListener = undefined;
+
+        this.msgCollector = [];
 
         return this;
 
     }
 
     launch() {
+        LgLogger.info("Preparing game...", this.gameInfo);
         this.preparation.prepareGame().then(status => {
             if (!status) {
                 this.quit();
@@ -73,12 +79,20 @@ class Game extends IGame {
 
             this.updateObjects(status);
 
+            LgLogger.info("Game successfully prepared.", this.gameInfo);
+
             return this.msg.delete();
 
         }).then(() => {
 
             return this.stemmingChannel.send(CommunicationHandler.getLGSampleMsg()
-                .addField("Joueurs", this.preparation.configuration.getPlayerNames().toString())
+                .addField(
+                    "Joueurs",
+                    this.preparation.configuration
+                        .getPlayerNames()
+                        .toString()
+                        .replace(',', ', ')
+                )
             );
 
         }).then(msg => {
@@ -86,6 +100,16 @@ class Game extends IGame {
             this.msg = msg;
 
             return this.listenQuitEvents();
+
+        }).then(() => this.stemmingChannel.send(CommunicationHandler.getLGSampleMsg()
+            .addField(
+                "Le jeu va bientôt commencer", "Début du jeu dans 5 secondes"
+            )
+        )).then((msg) => {
+
+            LgLogger.info(`${this.flow.GameConfiguration.getGameConfString()}`, this.gameInfo);
+
+            return Wait.seconds(5).then(() => msg.delete());
 
         }).then(() => this.flow.run()).then((configuration) => {
 
@@ -116,7 +140,9 @@ class Game extends IGame {
     listenQuitEvents() {
         return new Promise((resolve, reject) => {
 
-            this.quitListener = new ReactionHandler(this.msg);
+            this.quitListener = new ReactionHandler(this.msg, ["🔚"]);
+
+            this.quitListener.addReactions().catch(err => LgLogger.error(err, this.gameInfo));
 
             this.quitListener.initCollector((reaction) => {
 
@@ -145,6 +171,19 @@ class Game extends IGame {
         });
     }
 
+    cleanChannels() {
+        return new Promise((resolve, reject) => {
+
+            let msgPromises = [];
+
+            this.msgCollector.forEach(msg => {
+                if (msg.deletable) msgPromises.push(msg.delete());
+            });
+
+            Promise.all(msgPromises).then(() => resolve(this)).catch(err => reject(err));
+        });
+    }
+
     quit() {
 
         let LG = this.client.LG.get(this.guild.id);
@@ -162,7 +201,7 @@ class Game extends IGame {
         } else {
 
             quitPromises.push(this.preparation.channelsHandler.deletePermissionsOverwrites());
-            quitPromises.push(this.preparation.channelsHandler.deleteMessagesInChannels());
+            quitPromises.push(this.cleanChannels());
 
         }
 
@@ -176,7 +215,7 @@ class Game extends IGame {
         Promise.all(quitPromises).then(() => {
             this.stemmingChannel.send("Jeu arrêté, après " + playTime + " de jeu.").catch(console.error);
         }).catch((err) => {
-            console.error(err);
+            LgLogger.error(err, this.gameInfo);
             this.stemmingChannel.send("Jeu arrêté, des erreurs se sont produite : ```" + err + "```").catch(console.error);
         });
     }
@@ -207,52 +246,6 @@ class GamePreparation extends IGame {
 
         return this;
 
-    }
-
-    updateParticipantsDisplay() {
-        this.richEmbed.fields[this.richEmbed.fields.length - 1].value = this.configuration.getParticipantsNames().toString();
-        if (this.richEmbed.fields[this.richEmbed.fields.length - 1].value === "") {
-            this.richEmbed.fields[this.richEmbed.fields.length - 1].value = "Aucun participant pour le moment";
-        }
-        this.msg.edit(this.richEmbed).catch(console.error);
-    }
-
-    askForChannelGeneration() {
-        return new Promise((resolve, reject) => {
-            this.preparationChannel.send(CommunicationHandler.getLGSampleMsg()
-                .setTitle("Voulez-vous garder les salons nécessaires au jeu sur le serveur discord une fois la partie terminée ?")
-                .setDescription("Garder les salons sur le serveur discord permet de ne plus les générer par la suite")
-                .addField("✅", "Garder les salons sur le serveur")
-                .addField("❎", "Supprimer les salons du serveur une fois la partie terminée")
-            ).then(msg => {
-
-                let question = new ReactionHandler(msg, ["✅", "❎"]);
-
-                question.addReactions().then(() => {
-
-                    question.initCollector((reaction) => {
-                        let r = reaction.emoji.name;
-
-                        if (r === "✅") {
-                            this.keepChannels = true;
-                            question.stop();
-                        } else if (r === "❎") {
-                            this.keepChannels = false;
-                            question.stop();
-                        }
-
-                    }, () => {
-                        msg.delete().then(() => resolve(this.keepChannels)).catch(() => resolve(this.keepChannels));
-                    }, (reaction) => {
-                        let user = reaction.users.last();
-                        return reaction.count > 1 && (user.id === this.stemmingPlayer || this.guild.members.get(user.id).hasPermission('BAN_MEMBERS'))
-                    });
-
-                }).catch(err => reject(err));
-
-            }).catch(err => reject(err));
-
-        })
     }
 
     prepareGame() {
@@ -388,6 +381,52 @@ class GamePreparation extends IGame {
         });
     }
 
+    updateParticipantsDisplay() {
+        this.richEmbed.fields[this.richEmbed.fields.length - 1].value = this.configuration.getParticipantsNames().toString();
+        if (this.richEmbed.fields[this.richEmbed.fields.length - 1].value === "") {
+            this.richEmbed.fields[this.richEmbed.fields.length - 1].value = "Aucun participant pour le moment";
+        }
+        this.msg.edit(this.richEmbed).catch(console.error);
+    }
+
+    askForChannelGeneration() {
+        return new Promise((resolve, reject) => {
+            this.preparationChannel.send(CommunicationHandler.getLGSampleMsg()
+                .setTitle("Voulez-vous garder les salons nécessaires au jeu sur le serveur discord une fois la partie terminée ?")
+                .setDescription("Garder les salons sur le serveur discord permet de ne plus les générer par la suite")
+                .addField("✅", "Garder les salons sur le serveur")
+                .addField("❎", "Supprimer les salons du serveur une fois la partie terminée")
+            ).then(msg => {
+
+                let question = new ReactionHandler(msg, ["✅", "❎"]);
+
+                question.addReactions().then(() => {
+
+                    question.initCollector((reaction) => {
+                        let r = reaction.emoji.name;
+
+                        if (r === "✅") {
+                            this.keepChannels = true;
+                            question.stop();
+                        } else if (r === "❎") {
+                            this.keepChannels = false;
+                            question.stop();
+                        }
+
+                    }, () => {
+                        msg.delete().then(() => resolve(this.keepChannels)).catch(() => resolve(this.keepChannels));
+                    }, (reaction) => {
+                        let user = reaction.users.last();
+                        return reaction.count > 1 && (user.id === this.stemmingPlayer || this.guild.members.get(user.id).hasPermission('BAN_MEMBERS'))
+                    });
+
+                }).catch(err => reject(err));
+
+            }).catch(err => reject(err));
+
+        })
+    }
+
 }
 
 class GameConfiguration {
@@ -406,6 +445,18 @@ class GameConfiguration {
 
         this.channelsHandler = undefined;
         this.rolesHandler = undefined;
+
+    }
+
+    getGameConfString() {
+
+        let str = '\n';
+
+        for (let player of this._players.values()) {
+            str += `${player.member.displayName} : ${player.role}\n`;
+        }
+
+        return str;
 
     }
 

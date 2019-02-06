@@ -23,7 +23,7 @@ class ChannelsHandler extends IGame {
 
         this.guild = guild;
 
-        this.everyoneRole = this.guild.roles.find('name', '@everyone');
+        this.everyoneRole = this.guild.roles.find(x => x.name === '@everyone');
         this.everyonePermission = {
             loups_garou_de_thiercelieux: {
                 'VIEW_CHANNEL': true,
@@ -52,6 +52,34 @@ class ChannelsHandler extends IGame {
             },
         };
 
+        this.mastermindPermissions = {
+            thiercelieux_lg: {
+                'VIEW_CHANNEL': true,
+                'SEND_MESSAGES': true,
+                'ADD_REACTIONS': true
+            },
+            village_lg: {
+                'VIEW_CHANNEL': true,
+                'SEND_MESSAGES': true,
+                'ADD_REACTIONS': true
+            },
+            paradis_lg: {
+                'VIEW_CHANNEL': true,
+                'SEND_MESSAGES': true,
+                'ADD_REACTIONS': true
+            },
+            loups_garou_lg: {
+                'VIEW_CHANNEL': true,
+                'SEND_MESSAGES': true,
+                'ADD_REACTIONS': true
+            },
+            petite_fille_lg: {
+                'VIEW_CHANNEL': true,
+                'SEND_MESSAGES': true,
+                'ADD_REACTIONS': true
+            }
+        };
+
         this.category = undefined;
 
         this.channels = {
@@ -78,7 +106,7 @@ class ChannelsHandler extends IGame {
     checkCategory() {
         return new Promise((resolve, reject) => {
 
-            let channel = this.guild.channels.find("name", "loups_garou_de_thiercelieux");
+            let channel = this.guild.channels.find(x => x.name === "loups_garou_de_thiercelieux");
 
             if (channel && channel.type === "category") {
                 this.category = channel.id;
@@ -99,7 +127,7 @@ class ChannelsHandler extends IGame {
         return new Promise((resolve, reject) => {
             Object.keys(this.channels).forEach(channelToFind => {
 
-                let channel = this.guild.channels.find('name', channelToFind);
+                let channel = this.guild.channels.find(x => x.name === channelToFind);
 
                 if (channel && channel.type === "text" &&
                     channel.parentID === this.category) {
@@ -241,6 +269,13 @@ class ChannelsHandler extends IGame {
             let promises = [];
 
             for (let channel of this._channels.values()) {
+
+                // add mastermind permissions
+                promises.push(channel.overwritePermissions(
+                    this.client.user,
+                    this.mastermindPermissions[channel.name]
+                ));
+
                 promises.push(this.applyPermissionsOnChannel(channel, configuration.getPlayers()));
             }
 

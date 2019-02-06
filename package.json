@@ -4,6 +4,7 @@
   "description": "Discord bot to play Loup Garou games",
   "dependencies": {
     "discord.js": "^11.4.2",
+    "dotenv": "^6.2.0",
     "enmap": "^4.7.0",
     "enmap-level": "^2.1.0",
     "graceful-fs": "^4.1.15",

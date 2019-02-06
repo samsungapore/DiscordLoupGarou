@@ -44,6 +44,8 @@ LGBot.on('resume', nb => {
 
 LGBot.on('message', message => {
 
+    if (message.author.bot) return;
+
     const args = message.content.slice(3).trim().split(/ +/g);
     const command = args.shift().toLowerCase();
 

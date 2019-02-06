@@ -30,7 +30,7 @@ if (!fs.existsSync('./logs')) {
 
 let transport = new (winston.transports.DailyRotateFile)({
     filename: join(process.env.LOG_PATH, '/%DATE%.log'),
-    datePattern: 'YYYY/MM/DD',
+    datePattern: 'YYYY_MM_DD',
     zippedArchive: true,
     maxSize: '20m',
     maxFiles: '14d'

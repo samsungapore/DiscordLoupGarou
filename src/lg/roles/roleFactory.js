@@ -13,35 +13,6 @@ const Cupidon = require("./thiercelieux/cupidon").Cupidon;
 
 class Create {
 
-    static allRoles = {
-        Villageois: this.villageois,
-        LoupGarou: this.loupGarou,
-        Voyante: this.voyante,
-        Salvateur: this.salvateur,
-        Sorciere: this.sorciere,
-        Chasseur: this.chasseur,
-        Cupidon: this.cupidon,
-        //Ancien: this.ancien,
-        //LoupBlanc: this.loupBlanc,
-        Voleur: this.voleur,
-        PetiteFille: this.petiteFille,
-        IdiotDuVillage: this.idiotDuVillage,
-        BoucEmissaire: this.boucEmissaire,
-        JoueurDeFlute: this.joueurDeFlute,
-        EnfantSauvage: this.enfantSauvage,
-        //Ange: this.ange,
-        //InfectPereDesLoups: this.infectPereDesLoups,
-        //GrandMechantLoup: this.grandMechantLoup,
-        //Soeur: this.soeur,
-        //MontreurOurs: this.montreurOurs,
-        //Renard: this.renard,
-        //ChienLoup: this.chienLoup,
-        //Frere: this.frere,
-        //Chevalier: this.chevalier,
-        //JugeBegue: this.jugeBegue,
-        //Corbeau: this.corbeau,
-    };
-
     static petiteFille(guildMember, gameInfo) {
         return new PetiteFille(guildMember, gameInfo);
     }
@@ -164,4 +135,33 @@ class Create {
 
 }
 
-module.exports = {Create};
+const allRoles = {
+    Villageois: Create.villageois,
+    LoupGarou: Create.loupGarou,
+    Voyante: Create.voyante,
+    Salvateur: Create.salvateur,
+    Sorciere: Create.sorciere,
+    Chasseur: Create.chasseur,
+    Cupidon: Create.cupidon,
+    //Ancien: Create.ancien,
+    //LoupBlanc: Create.loupBlanc,
+    Voleur: Create.voleur,
+    PetiteFille: Create.petiteFille,
+    IdiotDuVillage: Create.idiotDuVillage,
+    BoucEmissaire: Create.boucEmissaire,
+    JoueurDeFlute: Create.joueurDeFlute,
+    EnfantSauvage: Create.enfantSauvage,
+    //Ange: Create.ange,
+    //InfectPereDesLoups: Create.infectPereDesLoups,
+    //GrandMechantLoup: Create.grandMechantLoup,
+    //Soeur: Create.soeur,
+    //MontreurOurs: Create.montreurOurs,
+    //Renard: Create.renard,
+    //ChienLoup: Create.chienLoup,
+    //Frere: Create.frere,
+    //Chevalier: Create.chevalier,
+    //JugeBegue: Create.jugeBegue,
+    //Corbeau: Create.corbeau,
+};
+
+module.exports = {Create, allRoles};

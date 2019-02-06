@@ -1,6 +1,7 @@
 const BotData = require("../../BotData.js");
 const lg_var = require("../lg_var");
 const LGGame = require("./roleFactory");
+const LgLogger = require("../lg_logger");
 const get_random_in_array = require("../../functions/parsing_functions").get_random_in_array;
 const shuffle_array = require("../../functions/parsing_functions").shuffle_array;
 const ReactionHandler = require("../../functions/reactionHandler").ReactionHandler;
@@ -36,6 +37,10 @@ class RolesHandler extends IGame {
                 color: 'RED',
                 object: null
             },
+            MastermindLG: {
+                color: 'WHITE',
+                object: null
+            }
         };
 
         this.factory = {
@@ -73,17 +78,16 @@ class RolesHandler extends IGame {
         this.role_conf = [
             {
                 LoupGarou: 1,
-                Cupidon: 1,
             },
             // Thiercelieux
             {
-                Voyante: 1,
+                Voyante: 0,
                 Voleur: 1,
-                Chasseur: 1,
+                Chasseur: 0,
                 Cupidon: 1,
-                Sorciere: 1,
-                PetiteFille: 1,
-                LoupGarou: 1
+                Sorciere: 0,
+                PetiteFille: 0,
+                LoupGarou: 0
             },
             // Nouvelle lune
             {
@@ -129,9 +133,9 @@ class RolesHandler extends IGame {
             this.role_conf[0], this.role_conf[1], this.role_conf[2], this.role_conf[5]
         ];
 
-        this.allExtension = this.role_conf;
+        this.allExtension = this.thiercelieux;
 
-        this.gameType = this.thiercelieux;
+        this.gameType = this.allExtension;
 
         return this;
     }
@@ -346,13 +350,13 @@ class RolesHandler extends IGame {
 
             let promises = [];
 
-            console.log(`Number of players : ${configuration.getPlayers().size}`);
+            LgLogger.info(`Number of players : ${configuration.getPlayers().size}`, this.gameInfo);
             for (let player of configuration.getPlayers().values()) {
                 promises.push(player.member.send(lg_var.roles_desc[player.role]));
             }
 
             Promise.all(promises).then((messagesSend) => {
-                console.log(`Number of sent roles : ${messagesSend.length}`);
+                LgLogger.info(`Sent ${messagesSend.length} roles.`, this.gameInfo);
                 resolve(true);
             }).catch(err => resolve(err)); //todo: change to reject
 

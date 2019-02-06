@@ -22,7 +22,6 @@ class Vote {
             let ids = Array.from(playersIdName.keys());
             let names = Array.from(playersIdName.values());
 
-            console.log(`exception array : ${exceptionArrayOfIds} ids : ${ids} names : ${names}`);
             if (exceptionArrayOfIds && exceptionArrayOfIds.length > 0) {
                 exceptionArrayOfIds.forEach(exception => {
 
@@ -33,15 +32,12 @@ class Vote {
 
                 });
             }
-            console.log(`ids : ${ids} names : ${names}`);
 
             new Sondage(
                 this.question, names, this.channel, this.time,
                 CommunicationHandler.getLGSampleMsg(),
                 true, true, this.maxVotes
             ).post().then((choiceArray) => {
-
-                console.log(`choiceArray: ${choiceArray}`);
 
                 let result = [];
 

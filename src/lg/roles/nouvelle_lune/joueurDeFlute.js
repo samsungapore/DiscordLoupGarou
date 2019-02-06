@@ -10,6 +10,7 @@ class JoueurDeFlute extends Player {
     constructor(guildMember, gameInfo) {
         super(guildMember, gameInfo);
 
+        this.team = "JOUEURDEFLUTE";
         this.role = "JoueurDeFlute";
 
         return this;

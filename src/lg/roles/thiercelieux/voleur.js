@@ -55,8 +55,8 @@ class Voleur extends Villageois {
                         .setTitle('Tu es le voleur de la partie')
                         .setDescription('Tu as le choix d\'échanger ton rôle de voleur considéré ' +
                             'comme villageois avec deux carte. Tu ne dois en choisir qu\'une seule')
-                        .addField(`Carte 🇦 ${roles[0]}`, lg_var.roles_desc[roles[0]], true)
-                        .addField(`Carte 🇧 ${roles[1]}`, lg_var.roles_desc[roles[1]], true)
+                        .addField(`Carte 🇦 ${roles[0]}`, lg_var.roles_desc[roles[0]].embed.fields[0].value, true)
+                        .addField(`Carte 🇧 ${roles[1]}`, lg_var.roles_desc[roles[1]].embed.fields[0].value, true)
                         .setFooter('Veuillez réagir avec la réaction de votre choix', lg_var.roles_img.LoupGarou);
 
                     if (!(roles[0] === "LoupGarou" && roles[1] === "LoupGarou")) {
@@ -79,7 +79,7 @@ class Voleur extends Villageois {
                             proposition.stop();
                         }
                     }, () => {
-                        resolve(true);
+                        resolve(this);
                     }, (reaction) => reaction.count > 1
                     );
                 })
