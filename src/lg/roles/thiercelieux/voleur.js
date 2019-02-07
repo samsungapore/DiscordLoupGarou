@@ -45,6 +45,8 @@ class Voleur extends Villageois {
                 dmchanpromise.push(this.createDMChannel());
             }
 
+            let embed = null;
+
             Promise.all(dmchanpromise)
                 .then(() => gameConf.rolesHandler.getAdditionnalRoles(2))
                 .then(roles => {
@@ -55,8 +57,8 @@ class Voleur extends Villageois {
                         .setTitle('Tu es le voleur de la partie')
                         .setDescription('Tu as le choix d\'échanger ton rôle de voleur considéré ' +
                             'comme villageois avec deux carte. Tu ne dois en choisir qu\'une seule')
-                        .addField(`Carte 🇦 ${roles[0]}`, lg_var.roles_desc[roles[0]].embed.fields[0].value, true)
-                        .addField(`Carte 🇧 ${roles[1]}`, lg_var.roles_desc[roles[1]].embed.fields[0].value, true)
+                        .addField(`Carte 🇦 ${roles[0]}`, lg_var.roles_desc[roles[0]].embed.fields[0].value.slice(0, 1024), true)
+                        .addField(`Carte 🇧 ${roles[1]}`, lg_var.roles_desc[roles[1]].embed.fields[0].value.slice(0, 1024), true)
                         .setFooter('Veuillez réagir avec la réaction de votre choix', lg_var.roles_img.LoupGarou);
 
                     if (!(roles[0] === "LoupGarou" && roles[1] === "LoupGarou")) {
@@ -65,7 +67,10 @@ class Voleur extends Villageois {
 
                     return this.dmChannel.send(propositionMsg);
                 })
-                .then(embedMsg => new ReactionHandler(embedMsg, ['🇦', '🇧']).addReactions())
+                .then(embedMsg => {
+                    embed = embedMsg;
+                    return new ReactionHandler(embedMsg, ['🇦', '🇧', '❌']).addReactions();
+                })
                 .then((proposition) => {
                     proposition.initCollector((reaction) => {
                         if (reaction.emoji.name === "🇦") {
@@ -74,12 +79,22 @@ class Voleur extends Villageois {
                         } else if (reaction.emoji.name === "🇧") {
                             this.roleChosen = this.additionnalRoles[1];
                             proposition.stop();
-                        } else if (reaction.emoji.name === "❌") {
+                        } else if (reaction.emoji.name === "❌" && !(this.additionnalRoles[0] === "LoupGarou" && this.additionnalRoles[1] === "LoupGarou")) {
                             this.roleChosen = undefined;
                             proposition.stop();
                         }
                     }, () => {
+
+                        embed.delete().catch(() => true);
+
+                        if (this.roleChosen) {
+                            this.dmChannel.send(`Tu as choisi le rôle ${this.roleChosen}`).catch(() => true);
+                        } else {
+                            this.dmChannel.send(`Tu as choisi de garder ton rôle`).catch(() => true);
+                        }
+
                         resolve(this);
+
                     }, (reaction) => reaction.count > 1
                     );
                 })
