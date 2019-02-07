@@ -35,7 +35,7 @@ class Cupidon extends Villageois {
 
             }).then(outcome => {
 
-                if (outcome.length === 0) {
+                if (!outcome || outcome.length === 0) {
 
                     this.dmChannel.send("Tu n'as pas fait ton choix, ton tour est terminé").catch(console.error);
                     this.GameConfiguration.channelsHandler.sendMessageToVillage(

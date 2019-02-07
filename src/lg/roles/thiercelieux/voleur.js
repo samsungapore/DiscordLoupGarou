@@ -43,7 +43,7 @@ class Voleur extends Villageois {
             let dmchanpromise = [];
 
             if (!this.dmChannel) {
-                dmchanpromise.push(this.createDMChannel());
+                dmchanpromise.push(this.getDMChannel());
             }
 
             let embed = null;
