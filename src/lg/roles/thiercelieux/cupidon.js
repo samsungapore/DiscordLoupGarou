@@ -40,7 +40,7 @@ class Cupidon extends Villageois {
                     this.dmChannel.send("Tu n'as pas fait ton choix, ton tour est terminé").catch(console.error);
                     this.GameConfiguration.channelsHandler.sendMessageToVillage(
                         "**Cupidon** se rendort."
-                    ).then(() => resolve(true)).catch(err => reject(err));
+                    ).then(() => resolve([undefined, undefined])).catch(err => reject(err));
                     return;
 
                 } else if (outcome.length === 1) {
@@ -48,7 +48,7 @@ class Cupidon extends Villageois {
                     this.id1 = outcome.shift();
 
                 } else {
-                    reject("Plusieurs votes ont été fait pour cupidon, situation impossible");
+                    return reject("Plusieurs votes ont été fait pour cupidon, situation impossible");
                 }
 
                 return new VillageoisVote(
@@ -59,12 +59,12 @@ class Cupidon extends Villageois {
 
             }).then(outcome => {
 
-                if (outcome.length === 0) {
+                if (!outcome || outcome.length === 0) {
 
                     this.dmChannel.send("Tu n'as pas fait ton choix, ton tour est terminé").catch(console.error);
                     this.GameConfiguration.channelsHandler.sendMessageToVillage(
                         "**Cupidon** se rendort."
-                    ).then(() => resolve(true)).catch(err => reject(err));
+                    ).then(() => resolve([undefined, undefined])).catch(err => reject(err));
 
                 } else if (outcome.length === 1) {
 
@@ -73,7 +73,7 @@ class Cupidon extends Villageois {
                     resolve([this.id1, this.id2]);
 
                 } else {
-                    reject("Plusieurs votes ont été fait pour cupidon, situation impossible");
+                    return reject("Plusieurs votes ont été fait pour cupidon, situation impossible");
                 }
 
             }).catch(err => reject(err));
