@@ -54,7 +54,7 @@ class GameFlow extends IGame {
                     .setFooter("Bienvenue à Thiercelieux, sa campagne paisible, son école charmante, sa population accueillante, ainsi que " +
                         "ses traditions ancestrales et ses mystères inquiétants.", lg_var.roles_img.LoupGarou)
                     .setImage(lg_var.roles_img.LoupGarou)).catch(err => {
-                        reject(err);
+                reject(err);
             });
 
 
@@ -234,7 +234,7 @@ class Night extends Period {
 
     }
 
-    initRole(roleName) {
+    initRole(roleName, prefix) {
         return new Promise((resolve, reject) => {
             let roles = this.roleMap.get(roleName);
 
@@ -245,7 +245,7 @@ class Night extends Period {
             let role = roles[0];
 
             this.GameConfiguration.channelsHandler.sendMessageToVillage(
-                `Le **${roleName}** se réveille.`
+                `${prefix}**${roleName}** se réveille.`
             ).catch(err => LgLogger.warn(err, this.gameInfo));
 
             resolve(role);
@@ -282,7 +282,6 @@ class Night extends Period {
         return new Promise((resolve, reject) => {
 
 
-
             resolve(true);
         });
     }
@@ -301,7 +300,20 @@ class Night extends Period {
 
     callVoyante() {
         return new Promise((resolve, reject) => {
-            resolve(true);
+
+            this.initRole("Voyante", "La ")
+                .then(voyante => {
+
+                    if (!voyante) return resolve(this);
+
+                    return voyante.processRole(this.GameConfiguration);
+
+                }).then(() => {
+                    return this.GameConfiguration.channelsHandler.sendMessageToVillage(
+                        "La **Voyante** se rendort."
+                    );
+            }).then(() => resolve(this)).catch(err => reject(err));
+
         });
     }
 
@@ -380,7 +392,7 @@ class FirstNight extends Night {
     callVoleur() {
         return new Promise((resolve, reject) => {
 
-            this.initRole("Voleur")
+            this.initRole("Voleur", "Le ")
                 .then(voleur => voleur ? voleur.proposeRoleChoice(this.GameConfiguration) : resolve(this))
                 .then((voleur) => {
 

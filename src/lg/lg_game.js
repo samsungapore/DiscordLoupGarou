@@ -456,6 +456,10 @@ class GameConfiguration {
 
     }
 
+    getPlayerById(id) {
+        return this._players.get(id);
+    }
+
     getGameConfString() {
 
         let str = '';

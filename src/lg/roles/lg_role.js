@@ -81,7 +81,7 @@ class RolesHandler extends IGame {
             },
             // Thiercelieux
             {
-                Voyante: 0,
+                Voyante: 1,
                 Voleur: 1,
                 Chasseur: 0,
                 Cupidon: 1,
