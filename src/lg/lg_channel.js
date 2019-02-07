@@ -52,33 +52,18 @@ class ChannelsHandler extends IGame {
             },
         };
 
-        this.mastermindPermissions = {
-            thiercelieux_lg: {
+        this.mastermindPermissions = {};
+
+        ["loups_garou_de_thiercelieux", "thiercelieux_lg", "village_lg", "paradis_lg", "loups_garou_lg", "petite_fille_lg"].forEach(element => {
+            this.mastermindPermissions[element] = {
                 'VIEW_CHANNEL': true,
                 'SEND_MESSAGES': true,
-                'ADD_REACTIONS': true
-            },
-            village_lg: {
-                'VIEW_CHANNEL': true,
-                'SEND_MESSAGES': true,
-                'ADD_REACTIONS': true
-            },
-            paradis_lg: {
-                'VIEW_CHANNEL': true,
-                'SEND_MESSAGES': true,
-                'ADD_REACTIONS': true
-            },
-            loups_garou_lg: {
-                'VIEW_CHANNEL': true,
-                'SEND_MESSAGES': true,
-                'ADD_REACTIONS': true
-            },
-            petite_fille_lg: {
-                'VIEW_CHANNEL': true,
-                'SEND_MESSAGES': true,
-                'ADD_REACTIONS': true
-            }
-        };
+                'ADD_REACTIONS': true,
+                'MANAGE_CHANNELS': true,
+                'MANAGE_MESSAGES': true,
+                'MANAGE_ROLES': true,
+            };
+        });
 
         this.category = undefined;
 
@@ -114,7 +99,6 @@ class ChannelsHandler extends IGame {
                 return resolve(true);
             }
 
-            console.log("0");
             reject(false);
         });
     }
@@ -125,6 +109,9 @@ class ChannelsHandler extends IGame {
      */
     checkChannels() {
         return new Promise((resolve, reject) => {
+
+            let allPresent = true;
+
             Object.keys(this.channels).forEach(channelToFind => {
 
                 let channel = this.guild.channels.find(x => x.name === channelToFind);
@@ -136,12 +123,16 @@ class ChannelsHandler extends IGame {
                 }
 
                 if (!this.channels[channelToFind]) {
-                    return reject(false);
+                    allPresent = false;
                 }
 
             });
 
-            resolve(true);
+            if (allPresent) {
+                resolve(true)
+            } else {
+                reject(false);
+            }
 
         });
     }
@@ -203,8 +194,6 @@ class ChannelsHandler extends IGame {
                 if (categoriesCreated && categoriesCreated[0]) {
                     this.category = categoriesCreated[0].id;
                     this._channels.set(categoriesCreated[0].id, categoriesCreated[0]);
-                    console.log(this.category);
-                    console.log(this._channels);
                 }
 
                 return Promise.all(promises);
