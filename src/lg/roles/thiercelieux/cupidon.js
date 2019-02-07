@@ -1,7 +1,7 @@
 const send = require("../../message_sending");
 const Villageois = require("../baseRole").Villageois;
 const get_player_list = require("../../lg_functions").get_player_list;
-const VillageoisVote = require("../../lg_vote.js").VillageoisVote;
+const EveryOneVote = require("../../lg_vote.js").EveryOneVote;
 
 class Cupidon extends Villageois {
 
@@ -27,11 +27,11 @@ class Cupidon extends Villageois {
 
                 this.dmChannel = privateChannel;
 
-                return new VillageoisVote(
+                return new EveryOneVote(
                     "Veuillez choisir le premier élu",
                     this.GameConfiguration,
                     40000, this.dmChannel, 1
-                ).everyone();
+                ).runVote();
 
             }).then(outcome => {
 
@@ -51,11 +51,11 @@ class Cupidon extends Villageois {
                     return reject("Plusieurs votes ont été fait pour cupidon, situation impossible");
                 }
 
-                return new VillageoisVote(
+                return new EveryOneVote(
                     "Veuillez choisir son/sa partenaire",
                     this.GameConfiguration,
                     40000, this.dmChannel, 1
-                ).everyone([this.id1]);
+                ).runVote([this.id1]);
 
             }).then(outcome => {
 
