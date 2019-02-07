@@ -674,8 +674,54 @@ const roles_desc = {
             }]
         }
     },
-
-    //todo: add every role of wikipedia
+    ServanteDevouee: {
+        embed: {
+            color: botColor,
+            author: {
+                name: "LG - Rôle"
+            },
+            fields: [{
+                name: "Servante Dévouée",
+                value: "La servante dévouée \"se sacrifie\" à la place d'un autre joueur choisi durant le vote (ou plus exactement change de rôle sans disparaître du jeu). Le joueur qui joue la servante échange la carte de la servante avec la carte du personnage qui vient d'être désigné comme mise à mort par le village (sans la révéler au village). Le joueur qui joue la servante joue maintenant cette carte, tandis que le joueur désigné à l'origine est bel et bien éliminé... mais avec la carte de la servante.De plus, le pouvoir de la carte échangée est \"réinitialisé\". En bref, la servante peut voler la carte d'un joueur mis à mort et donc prendre son pouvoir. Néanmoins, quand la servante est en couple, elle ne peut utiliser son pouvoir, l'amour étant plus fort que sa volonté de changer de rôle. Le meneur de jeu doit tout de même demander à la servante si elle souhaite échanger sa carte pour maintenir l'illusion."
+            }]
+        }
+    },
+    Comedien: {
+        embed: {
+            color: botColor,
+            author: {
+                name: "LG - Rôle"
+            },
+            fields: [{
+                name: "Comédien",
+                value: "Lorsque le comédien est présent dans la partie, le meneur de jeu choisit trois cartes supplémentaires (sauf loups-garous, chien-loup, enfant sauvage et voleur) qu'il place face révélée. Chaque nuit, le comédien choisit parmi ces trois cartes le rôle qu'il veut jouer jusqu'à la prochaine nuit. Lorsqu'un rôle est sélectionné, il est retiré de la partie afin que les autres joueurs puissent voir lequel a été sélectionné. Quand il ne peut plus choisir de rôle, il redevient simple villageois."
+            }]
+        }
+    },
+    AbominableSectaire: {
+        embed: {
+            color: botColor,
+            author: {
+                name: "LG - Rôle"
+            },
+            fields: [{
+                name: "Abominable Sectaire",
+                value: "La première nuit, le meneur divise le village en deux parties (femmes/hommes; blonds/bruns; barbus/imberbes…). L’abominable sectaire est forcément dans un de ces camps, et pour gagner, il doit éliminer tous les joueurs de l'autre camp. C'est un personnage solitaire, comme le joueur de flûte ou l'ange."
+            }]
+        }
+    },
+    VillageoisVillageois: {
+        embed: {
+            color: botColor,
+            author: {
+                name: "LG - Rôle"
+            },
+            fields: [{
+                name: "Villageois Villagois",
+                value: "Personnage dont la carte présente deux faces identiques, est connu de tous comme un simple villageois, c'est donc un personnage de \"confiance\" que l'on choisira pour être capitaine ou garde champêtre. C'est aussi une bonne cible pour l'infect père des loups."
+            }]
+        }
+    },
 
 };
 
