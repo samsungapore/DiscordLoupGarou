@@ -2,6 +2,7 @@ const referendumChannelId = "479635710069178370";
 const BotData = require("../../BotData.js");
 const ReactionHandler = require("../reactionHandler").ReactionHandler;
 const RichEmbed = require("discord.js").RichEmbed;
+const Wait = require('../../functions/wait').Wait;
 
 class Sondage {
 
@@ -223,7 +224,9 @@ class SondageInfiniteChoice {
                 .addField("Votants", "Zéro votants", true)
                 .setFooter(`${this.time / 1000} secondes avant la fin du vote`);
 
-            this.channel.send(this.embed).then(msg => {
+            this.channel.send(this.embed).then(async msg => {
+
+                await Wait.seconds(1);
 
                 console.log(this.embed.fields[2].value.length);
 
