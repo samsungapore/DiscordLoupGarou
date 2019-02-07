@@ -44,11 +44,14 @@ class Player {
         return this;
     }
 
-    createDMChannel() {
+    getDMChannel() {
         return new Promise((resolve, reject) => {
+
+            if (this.dmChannel !== null && this.dmChannel !== undefined) return resolve(this.dmChannel);
+
             this.member.createDM().then((channel) => {
                 this.dmChannel = channel;
-                resolve(true);
+                resolve(this.dmChannel);
             }).catch(err => reject(err));
         });
     }
