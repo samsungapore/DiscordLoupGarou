@@ -458,13 +458,13 @@ class GameConfiguration {
 
     getGameConfString() {
 
-        let str = '\n';
+        let str = '';
 
         for (let player of this._players.values()) {
-            str += `${player.member.displayName} : ${player.role}\n`;
+            str += `${player.member.displayName} : ${player.role}, `;
         }
 
-        return str;
+        return str.slice(0, str.length - 2);
 
     }
 

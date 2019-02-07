@@ -20,6 +20,7 @@ LGBot.LG = new Enmap({provider: LG});
 LGBot.on('ready', () => {
 
     console.info('The bot is ready.');
+    console.info(`Connected to ${LGBot.guilds.size} servers, servicing ${LGBot.users.size} users.`);
 
     LGBot.user.setActivity("Alpha 2.1").catch(console.error);
 
