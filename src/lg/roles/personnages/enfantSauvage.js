@@ -59,7 +59,7 @@ class EnfantSauvage extends Villageois {
 
                     let model = gameConf._players.get(outcomeIdArray.shift());
 
-                    LgLogger.info(`L'enfant sauvage a pris comme modèle ${model.member.displayName}`);
+                    LgLogger.info(`L'enfant sauvage a pris comme modèle ${model.member.displayName}`, this.gameinfo);
 
                     this.model = model;
 
