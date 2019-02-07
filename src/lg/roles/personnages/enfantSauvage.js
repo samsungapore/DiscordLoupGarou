@@ -24,7 +24,7 @@ class EnfantSauvage extends Villageois {
             let dmchanpromise = [];
 
             if (!this.dmChannel) {
-                dmchanpromise.push(this.createDMChannel());
+                dmchanpromise.push(this.getDMChannel());
             }
 
             Promise.all(dmchanpromise).then(() => {
