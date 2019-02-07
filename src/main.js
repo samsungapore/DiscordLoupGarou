@@ -16,9 +16,12 @@ LGBot.Settings = new Enmap({provider: Settings});
 const LG = new EnmapLevel({name: "LG"});
 LGBot.LG = new Enmap({provider: LG});
 
+
 LGBot.on('ready', () => {
 
     console.info('The bot is ready.');
+
+    LGBot.user.setActivity("Alpha 2.1").catch(console.error);
 
     if (LGBot.Settings.Admins) {
         LGBot.Settings.Admins.forEach(adminID => {
@@ -49,13 +52,9 @@ LGBot.on('message', message => {
     const args = message.content.slice(3).trim().split(/ +/g);
     const command = args.shift().toLowerCase();
 
-    console.log(command);
-
     if (!message.content.startsWith(BotData.BotValues.botPrefix)) {
         return;
     }
-
-    const date = new Date();
 
     try {
         let commandFile = require(`./commands/${command}.js`);
