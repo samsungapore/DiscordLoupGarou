@@ -1,6 +1,6 @@
 const RichEmbed = require("discord.js").RichEmbed;
 const LgLogger = require("../../lg_logger");
-const VillageoisVote = require("../../lg_vote").VillageoisVote;
+const EveryOneVote = require("../../lg_vote").EveryOneVote;
 const Villageois = require("../baseRole").Villageois;
 
 /**
@@ -39,13 +39,13 @@ class EnfantSauvage extends Villageois {
 
             }).then(() => {
 
-                return new VillageoisVote(
+                return new EveryOneVote(
                     'Qui prenez-vous comme modèle ?',
                     gameConf,
                     30000,
                     this.dmChannel,
                     1
-                ).everyone([this.member.id]);
+                ).runVote([this.member.id]);
 
             }).then(outcomeIdArray => {
 
