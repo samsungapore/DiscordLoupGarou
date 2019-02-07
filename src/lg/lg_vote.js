@@ -15,12 +15,17 @@ class Vote {
         return this;
     }
 
-    everyone(exceptionArrayOfIds) {
+    runVote(exceptionArrayOfIds) {
         return new Promise((resolve, reject) => {
 
             let playersIdName = this.configuration.getPlayersIdName();
-            let ids = Array.from(playersIdName.keys());
-            let names = Array.from(playersIdName.values());
+            let ids = [];
+            let names = [];
+
+            for (let [id, name] of playersIdName) {
+                ids.push(id);
+                names.push(name);
+            }
 
             if (exceptionArrayOfIds && exceptionArrayOfIds.length > 0) {
                 exceptionArrayOfIds.forEach(exception => {
@@ -55,9 +60,15 @@ class Vote {
 
 class LoupGarouVote extends Vote {
 
+    constructor(question, configuration, time, channel) {
+        super(question, configuration, time, channel, configuration.getLG().length);
+
+    }
+
+
 }
 
-class VillageoisVote extends Vote {
+class EveryoneVote extends Vote {
 
     constructor(question, configuration, time, channel, maxVotes) {
         super(question, configuration, time, channel, maxVotes);
@@ -67,4 +78,14 @@ class VillageoisVote extends Vote {
 
 }
 
-module.exports = {Vote, LoupGarouVote, VillageoisVote};
+class VillageoisVote extends Vote {
+
+    constructor(question, configuration, time, channel) {
+        super(question, configuration, time, channel, configuration.getVillageois().length);
+
+        return this;
+    }
+
+}
+
+module.exports = {Vote, LoupGarouVote, EveryOneVote: EveryoneVote, VillageoisVote};

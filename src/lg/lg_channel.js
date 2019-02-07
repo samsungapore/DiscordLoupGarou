@@ -23,7 +23,7 @@ class ChannelsHandler extends IGame {
 
         this.guild = guild;
 
-        this.everyoneRole = this.guild.roles.find(x => x.name === '@everyone');
+        this.everyoneRole = this.guild.roles.find(x => x.name === '@runVote');
         this.everyonePermission = {
             loups_garou_de_thiercelieux: {
                 'VIEW_CHANNEL': true,
@@ -308,6 +308,15 @@ class ChannelsHandler extends IGame {
             .setColor(BotData.BotValues.botColor)
             .setAuthor("Loup-Garou de thiercelieux", lg_var.roles_img.LoupGarou))
 
+    }
+
+    sendMsgToLG(message) {
+        let lg = this._channels.get(this.channels.loups_garou_lg);
+
+        return lg.send(new RichEmbed()
+            .addField("LG - Jeu", message)
+            .setColor(BotData.BotValues.botColor)
+        );
     }
 
     deletePermissionsOverwrites() {

@@ -456,6 +456,10 @@ class GameConfiguration {
 
     }
 
+    getLGChannel() {
+        return this.channelsHandler._channels.get(this.channelsHandler.channels.loups_garou_lg);
+    }
+
     getPlayerById(id) {
         return this._players.get(id);
     }
@@ -552,6 +556,43 @@ class GameConfiguration {
 
         return roleMap;
 
+    }
+
+    getLG() {
+
+        let lgs = [];
+
+        for (let player of this._players.values()) {
+            if (player.team === "LG") {
+                lgs.push(player);
+            }
+        }
+
+        return lgs;
+    }
+
+    /**
+     *
+     * @param allVillageois specifies if you want all villageois, wether he's dead or not
+     * @returns {Array}
+     */
+    getVillageois(allVillageois) {
+
+        if (allVillageois === undefined) allVillageois = true;
+
+        let villageois = [];
+
+        for (let player of this._players.values()) {
+            if (player.team === "VILLAGEOIS") {
+                if (!allVillageois) {
+                    if (player.alive) villageois.push(player);
+                } else {
+                    villageois.push(player);
+                }
+            }
+        }
+
+        return villageois;
     }
 
 }

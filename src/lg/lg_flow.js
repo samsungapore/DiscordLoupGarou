@@ -2,10 +2,11 @@ const RichEmbed = require("discord.js").RichEmbed;
 const BotData = require("../BotData.js");
 const lg_var = require('./lg_var.js');
 const LgLogger = require("./lg_logger");
+const LoupGarouVote = require("./lg_vote").LoupGarouVote;
 const get_random_in_array = require("../functions/parsing_functions").get_random_in_array;
 const allRoles = require("./roles/roleFactory").allRoles;
 const Wait = require("../functions/wait.js").Wait;
-const VillageoisVote = require("./lg_vote.js").VillageoisVote;
+const EveryOneVote = require("./lg_vote.js").EveryOneVote;
 
 class IGame {
 
@@ -30,7 +31,7 @@ class GameFlow extends IGame {
         this.GameConfiguration = null;
         this.msg = null;
 
-        this.turnNb = 0;
+        this.turnNb = 1;
 
         return this;
 
@@ -58,10 +59,10 @@ class GameFlow extends IGame {
             });
 
 
-            new FirstDay(this.GameConfiguration, this.gameInfo).goThrough().then((conf) => {
+            new FirstDay(this.GameConfiguration, this.gameInfo, this.turnNb).goThrough().then((conf) => {
 
                 this.GameConfiguration = conf;
-                return new FirstNight(this.GameConfiguration, this.gameInfo).goThrough();
+                return new FirstNight(this.GameConfiguration, this.gameInfo, this.turnNb).goThrough();
 
             }).then((conf) => {
 
@@ -79,11 +80,11 @@ class GameFlow extends IGame {
 
         let end;
         do {
-            end = await new Day(this.GameConfiguration, this.gameInfo).goThrough();
+            end = await new Day(this.GameConfiguration, this.gameInfo, this.turnNb).goThrough();
 
             if (end) break;
 
-            end = await new Night(this.GameConfiguration, this.gameInfo).goThrough();
+            end = await new Night(this.GameConfiguration, this.gameInfo, this.turnNb).goThrough();
 
             this.turnNb += 1;
 
@@ -97,11 +98,13 @@ class GameFlow extends IGame {
 
 class Period {
 
-    constructor(configuration, gameInfo) {
+    constructor(configuration, gameInfo, turnNb) {
 
         this.GameConfiguration = configuration;
 
         this.gameInfo = gameInfo;
+
+        this.turnNb = turnNb;
 
         this.roleMap = this.GameConfiguration.getRoleMap();
 
@@ -124,9 +127,9 @@ class Day extends Period {
 
 class FirstDay extends Period {
 
-    constructor(configuration, gameInfo) {
+    constructor(configuration, gameInfo, turnNb) {
 
-        super(configuration, gameInfo);
+        super(configuration, gameInfo, turnNb);
 
         return this;
     }
@@ -173,13 +176,13 @@ class FirstDay extends Period {
 
                 LgLogger.info('Permissions switch, init referendum.', this.gameInfo);
 
-                return new VillageoisVote(
+                return new EveryOneVote(
                     "Qui voulez-vous élir comme maire ?",
                     this.GameConfiguration,
                     120000,
                     this.GameConfiguration.channelsHandler._channels.get(this.GameConfiguration.channelsHandler.channels.thiercelieux_lg),
                     this.GameConfiguration._players.size
-                ).everyone();
+                ).runVote();
 
             }).then((outcome) => {
 
@@ -226,9 +229,12 @@ class FirstDay extends Period {
 
 class Night extends Period {
 
-    constructor(configuration, gameInfo) {
+    constructor(configuration, gameInfo, turnNb) {
 
-        super(configuration, gameInfo);
+        super(configuration, gameInfo, turnNb);
+
+        this.LGTarget = null;
+        this.SorciereTarget = null;
 
         return this;
 
@@ -272,8 +278,15 @@ class Night extends Period {
                     this.callSorciere(),
                     this.callRenard()
                 ]))
+                .then(() => this.computeDeaths())
                 .then(() => resolve(false))
                 .catch(err => reject(err));
+
+        });
+    }
+
+    computeDeaths() {
+        return new Promise((resolve, reject) => {
 
         });
     }
@@ -281,8 +294,29 @@ class Night extends Period {
     callLoupsGarou() {
         return new Promise((resolve, reject) => {
 
+            return this.GameConfiguration.channelsHandler.sendMessageToVillage(
+                `Les **Loups Garous** se réveillent 🐺`
+            ).then(() => LoupGarouVote(
+                "Veuillez choisir votre proie.",
+                this.GameConfiguration,
+                60000,
+                this.GameConfiguration.getLGChannel()
+            )).then(outcome => {
 
-            resolve(true);
+                if (!outcome || outcome.length === 0) {
+                    this.LGTarget = get_random_in_array(this.GameConfiguration.getVillageois(false));
+                } else {
+                    this.LGTarget = this.GameConfiguration.getPlayerById(get_random_in_array(outcome));
+                }
+
+                return this.GameConfiguration.getLGChannel().send(
+                    `Votre choix est de dévorer ${this.LGTarget.member.displayName}`
+                );
+
+            }).then(() => this.GameConfiguration.channelsHandler.sendMessageToVillage(
+                `Les **Loups Garous** se rendorment.`
+            )).then(() => resolve(this)).catch(err => reject(err));
+
         });
     }
 
@@ -309,9 +343,9 @@ class Night extends Period {
                     return voyante.processRole(this.GameConfiguration);
 
                 }).then(() => {
-                    return this.GameConfiguration.channelsHandler.sendMessageToVillage(
-                        "La **Voyante** se rendort."
-                    );
+                return this.GameConfiguration.channelsHandler.sendMessageToVillage(
+                    "La **Voyante** se rendort."
+                );
             }).then(() => resolve(this)).catch(err => reject(err));
 
         });
@@ -337,7 +371,22 @@ class Night extends Period {
 
     callSorciere() {
         return new Promise((resolve, reject) => {
-            resolve(true);
+            this.initRole("Sorcière", "La ")
+                .then(sorciere => sorciere.processRole(this.GameConfiguration, this.LGTarget))
+                .then(sorciere => {
+
+                    if (sorciere.savedLgTarget) {
+                        this.LGTarget = null;
+                    }
+
+                    this.SorciereTarget = sorciere.target;
+
+                    sorciere.savedLgTarget = false;
+                })
+                .then(() => this.GameConfiguration.channelsHandler.sendMessageToVillage(
+                    "La **Sorcière** se rendort"
+                ))
+                .then(() => resolve(this)).catch(err => reject(err));
         });
     }
 
@@ -351,9 +400,9 @@ class Night extends Period {
 
 class FirstNight extends Night {
 
-    constructor(configuration, gameInfo) {
+    constructor(configuration, gameInfo, turnNb) {
 
-        super(configuration, gameInfo);
+        super(configuration, gameInfo, turnNb);
 
         return this;
 
