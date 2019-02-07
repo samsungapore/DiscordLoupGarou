@@ -1,4 +1,5 @@
 const lg_var = require("../../lg_var");
+const LgLogger = require("../../lg_logger");
 const ReactionHandler = require("../../../functions/reactionHandler").ReactionHandler;
 const Villageois = require("../baseRole").Villageois;
 const RichEmbed = require('discord.js').RichEmbed;
@@ -59,7 +60,7 @@ class Voleur extends Villageois {
                             'comme villageois avec deux carte. Tu ne dois en choisir qu\'une seule')
                         .addField(`Carte 🇦 ${roles[0]}`, lg_var.roles_desc[roles[0]].embed.fields[0].value.slice(0, 1024), true)
                         .addField(`Carte 🇧 ${roles[1]}`, lg_var.roles_desc[roles[1]].embed.fields[0].value.slice(0, 1024), true)
-                        .setFooter('Veuillez réagir avec la réaction de votre choix', lg_var.roles_img.LoupGarou);
+                        .setFooter('Veuillez réagir avec la réaction de votre choix. Tu as 40 secondes pour prendre une décision', lg_var.roles_img.LoupGarou);
 
                     if (!(roles[0] === "LoupGarou" && roles[1] === "LoupGarou")) {
                         propositionMsg.addField('❌', 'Garder son rôle');
@@ -95,7 +96,8 @@ class Voleur extends Villageois {
 
                         resolve(this);
 
-                    }, (reaction) => reaction.count > 1
+                    }, (reaction) => reaction.count > 1,
+                        { time: 40000 }
                     );
                 })
                 .catch(err => reject(err));

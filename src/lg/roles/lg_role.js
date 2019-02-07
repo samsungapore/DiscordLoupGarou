@@ -135,7 +135,7 @@ class RolesHandler extends IGame {
 
         this.allExtension = this.thiercelieux;
 
-        this.gameType = this.allExtension;
+        this.gameType = this.thiercelieux;
 
         return this;
     }
@@ -254,21 +254,27 @@ class RolesHandler extends IGame {
 
             let additionalRoles = [];
 
-            this.role_conf.forEach(role_block => {
-                if (!this.roleComplete(role_block)) {
+            while (number > 0 && this.confHasSpace()) {
 
-                    let role_object = RolesHandler.cleanRoleArray(role_block);
-                    let role_array = Object.keys(role_object);
+                this.gameType.forEach(role_block => {
+                    if (!this.roleComplete(role_block)) {
 
-                    additionalRoles.push(role_array[lg_functions.get_random_index(role_array)]);
+                        let role_object = RolesHandler.cleanRoleArray(role_block);
+                        let role_array = Object.keys(role_object);
 
-                    number -= 1;
-                    if (number === 0) {
-                        resolve(additionalRoles);
+                        additionalRoles.push(role_array[lg_functions.get_random_index(role_array)]);
+
+                        number -= 1;
+                        if (number === 0) {
+                            resolve(additionalRoles);
+                        }
+
                     }
+                });
 
-                }
-            });
+            }
+
+            if (!this.confHasSpace()) LgLogger.warn("Conf is completely empty", this.gameInfo);
 
             resolve(additionalRoles);
         });
@@ -363,6 +369,22 @@ class RolesHandler extends IGame {
         });
     }
 
+    confHasSpace() {
+
+        let found = false;
+
+        for (let i = 0; i < this.gameType.length; i++) {
+
+            if (!this.roleComplete(this.gameType[i])) {
+                found = true;
+                break;
+            }
+
+        }
+
+        return found;
+
+    }
 }
 
 module.exports = {RolesHandler};
