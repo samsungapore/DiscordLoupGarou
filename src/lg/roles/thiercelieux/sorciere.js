@@ -1,24 +1,12 @@
 const send = require("../../message_sending");
 const death = require("../../game_core/death");
+const EveryOneVote = require("../../lg_vote").EveryOneVote;
+const ReactionHandler = require("../../../functions/reactionHandler").ReactionHandler;
 const Villageois = require("../baseRole").Villageois;
 let RichEmbed = require('discord.js').RichEmbed;
 
-class Sorciere extends Villageois {
-
-    constructor(guildMember, gameInfo) {
-        super(guildMember, gameInfo);
-
-        this.role = "Sorciere";
-
-        this.potions = {vie: 1, poison: 1};
-
-        return this;
-    }
-
-}
-
 /**
- * First Night
+ * * First Night
  - Vous devez lui envoyer un MP afin de l'avertir que c'est à son tour d'entrer en scène ; ici , deux cas sont possibles :
  -- Il n'y a pas eu de victime cette nuit, ( dans le cas où le salvateur a sauvé la victime prévue par les Loups) ; dans ce cas la sorcière ne sait PAS qui est la victime sauvée, et elle ne peut utiliser que sa potion de poison. Mais elle n'est bien sur pas obligée de l'utiliser immédiatement, et peut attendre afin de tuer plus efficacement.
  -- Les Loups-Garous ont réussi à tuer quelqu'un cette nuit ; dans ce cas vous annoncez son nom à la sorcière, qui décidera ou non de la soigner avec la potion de soin, et qui décidera ou non d'en achever une avec son poison
@@ -40,6 +28,143 @@ class Sorciere extends Villageois {
  à dire à haute voix la phrase "je montre à la sorcière la victime des loups-garous" afin d'entretenir le doute sur
  l'utilisation des potions. De cette manière, elle peut utiliser sa potion d'empoisonnement sur cette même personne
  (la potion sera sans effet, mais tout de même perdue)
+ */
+class Sorciere extends Villageois {
+
+    constructor(guildMember, gameInfo) {
+        super(guildMember, gameInfo);
+
+        this.role = "Sorciere";
+
+        this.potions = {vie: 1, poison: 1};
+
+        this.savedLgTarget = false;
+        this.target = null;
+
+        return this;
+    }
+
+    askIfWannaSave(lgTarget) {
+        return new Promise((resolve, reject) => {
+
+            this.dmChannel.send(new RichEmbed()
+                .setAuthor(lgTarget.member.displayName, lgTarget.member.user.avatarURL)
+                .setTitle(`Voulez-vous sauver ${lgTarget.member.displayName} ?`)
+                .addField(`✅ Oui`, "Réagissez avec ✅ pour utiliser votre potion de vie")
+                .addField(`❌ Non`, "Réagissez avec ❌ pour ne rien faire face à cette situation")
+            )
+                .then((msgSent) => new ReactionHandler(msgSent, ["✅", "❌"]).addReactions())
+                .then(question => {
+
+                    question.initCollector((reaction) => {
+                            if (reaction.emoji.name === "✅") {
+                                this.potions.vie -= 1;
+                                this.savedLgTarget = true;
+                                question.stop();
+                            } else if (reaction.emoji.name === "❌") {
+                                question.stop();
+                            }
+                        }, () => {
+
+                            resolve(this);
+
+                        }, reaction => reaction.count > 1,
+                        {time: 30000}
+                    );
+
+                }).catch(err => reject(err));
+
+        });
+    }
+
+    askIfWannaKill(configuration) {
+        return new Promise((resolve, reject) => {
+
+            let promises = [];
+
+            this.dmChannel.send(new RichEmbed()
+                .setAuthor(this.member.displayName, this.member.user.avatarURL)
+                .setTitle(`Voulez-vous tuer une personne ?`)
+                .addField(`✅ Oui`, "Réagissez avec ✅ pour utiliser votre potion de poison sur quelqu'un")
+                .addField(`❌ Non`, "Réagissez avec ❌ pour ne rien faire")
+            )
+                .then((msgSent) => new ReactionHandler(msgSent, ["✅", "❌"]).addReactions())
+                .then(question => {
+
+                    question.initCollector((reaction) => {
+                            if (reaction.emoji.name === "✅") {
+
+                                promises.push(this.askTargetToKill(configuration));
+
+                                question.stop();
+                            } else if (reaction.emoji.name === "❌") {
+                                question.stop();
+                            }
+                        }, () => {
+
+                            Promise.all(promises).then(() => resolve(this)).catch(err => reject(err));
+
+                        }, reaction => reaction.count > 1,
+                        {time: 30000}
+                    );
+
+                }).catch(err => reject(err));
+
+        });
+    }
+
+    askTargetToKill(configuration) {
+        return new Promise((resolve, reject) => {
+
+            EveryOneVote(
+                "Qui voulez-vous tuer ?",
+                configuration,
+                30000,
+                this.dmChannel,
+                1
+            ).runVote([this.member.id])
+                .then(outcome => {
+
+                    if (!outcome || outcome.length === 0) {
+
+                        resolve(this);
+
+                    } else {
+
+                        this.target = configuration.getPlayerById(outcome[0]);
+                        resolve(this);
+
+                    }
+
+                })
+                .catch(err => reject(err));
+
+        });
+    }
+
+    processRole(configuration, lgTarget) {
+        return new Promise((resolve, reject) => {
+            this.target = null;
+            this.getDMChannel()
+                .then(dmChannel => {
+                    let promise = [];
+
+                    if (!lgTarget.immunity) {
+                        promise.push(this.askIfWannaSave(lgTarget));
+                    }
+
+                    return Promise.all(promise);
+
+                })
+                .then(() => this.askIfWannaKill(configuration))
+                .then(() => resolve(this)).catch(err => reject(err));
+        });
+    }
+
+}
+
+/**
+
 
  * @param client
  * @param message
