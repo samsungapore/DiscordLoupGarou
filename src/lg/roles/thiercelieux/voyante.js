@@ -1,5 +1,5 @@
 const send = require("../../message_sending");
-const VillageoisVote = require("../../lg_vote").VillageoisVote;
+const EveryOneVote = require("../../lg_vote").EveryOneVote;
 const Villageois = require("../baseRole").Villageois;
 const salvateur = require("../nouvelle_lune/salvateur").salvateur;
 let RichEmbed = require('discord.js').RichEmbed;
@@ -21,11 +21,11 @@ class Voyante extends Villageois {
 
             this.getDMChannel().then(dmChannel => {
 
-                return new VillageoisVote(
+                return new EveryOneVote(
                     "Choisissez une personne pour voir son rôle",
                     this.GameConfiguration,
                     40000, dmChannel, 1
-                ).everyone([this.member.id]);
+                ).runVote([this.member.id]);
 
             }).then(outcome => {
 
