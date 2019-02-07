@@ -64,6 +64,7 @@ class Game extends IGame {
         this.quitListener = undefined;
 
         this.msgCollector = [];
+        this.listenMsgCollector();
 
         return this;
 
@@ -113,13 +114,12 @@ class Game extends IGame {
 
         }).then(() => this.flow.run()).then((configuration) => {
 
-            this.stemmingChannel.send("Test réussi").catch(console.error);
-            console.info(configuration);
+            LgLogger.info(configuration, this.gameInfo);
             this.quit();
 
         }).catch(err => {
 
-            this.stemmingChannel.send("Test échoué\n```" + err + "```").catch(console.error);
+            this.stemmingChannel.send("Erreur rencontrée\n```" + err + "```").catch(console.error);
             console.error(err);
             this.quit();
 
@@ -142,7 +142,7 @@ class Game extends IGame {
 
             this.quitListener = new ReactionHandler(this.msg, ["🔚"]);
 
-            this.quitListener.addReactions().catch(err => LgLogger.error(err, this.gameInfo));
+            this.quitListener.addReactions().catch(console.error);
 
             this.quitListener.initCollector((reaction) => {
 
@@ -172,15 +172,8 @@ class Game extends IGame {
     }
 
     cleanChannels() {
-        return new Promise((resolve, reject) => {
-
-            let msgPromises = [];
-
-            this.msgCollector.forEach(msg => {
-                if (msg.deletable) msgPromises.push(msg.delete());
-            });
-
-            Promise.all(msgPromises).then(() => resolve(this)).catch(err => reject(err));
+        this.msgCollector.forEach(msg => {
+            msg.delete().catch(() => true);
         });
     }
 
@@ -215,11 +208,26 @@ class Game extends IGame {
         Promise.all(quitPromises).then(() => {
             this.stemmingChannel.send("Jeu arrêté, après " + playTime + " de jeu.").catch(console.error);
         }).catch((err) => {
-            LgLogger.error(err, this.gameInfo);
+            console.error(err);
             this.stemmingChannel.send("Jeu arrêté, des erreurs se sont produite : ```" + err + "```").catch(console.error);
         });
     }
 
+    listenMsgCollector() {
+
+        this.client.on('message', (message) => {
+
+            if (message && message.channel.parent) {
+
+                if (message.channel.parent.name.toLowerCase() === "loups_garou_de_thiercelieux") {
+                    this.msgCollector.push(message);
+                }
+
+            }
+
+        });
+
+    }
 }
 
 class GamePreparation extends IGame {

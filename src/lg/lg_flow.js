@@ -2,6 +2,7 @@ const RichEmbed = require("discord.js").RichEmbed;
 const BotData = require("../BotData.js");
 const lg_var = require('./lg_var.js');
 const LgLogger = require("./lg_logger");
+const get_random_in_array = require("../functions/parsing_functions").get_random_in_array;
 const allRoles = require("./roles/roleFactory").allRoles;
 const Wait = require("../functions/wait.js").Wait;
 const VillageoisVote = require("./lg_vote.js").VillageoisVote;
@@ -52,7 +53,9 @@ class GameFlow extends IGame {
                         'les amoureux, leur but est de survivre tous les deux jusqu\'à la fin de la partie.')
                     .setFooter("Bienvenue à Thiercelieux, sa campagne paisible, son école charmante, sa population accueillante, ainsi que " +
                         "ses traditions ancestrales et ses mystères inquiétants.", lg_var.roles_img.LoupGarou)
-                    .setImage(lg_var.roles_img.LoupGarou)).catch(err => reject(err));
+                    .setImage(lg_var.roles_img.LoupGarou)).catch(err => {
+                        reject(err);
+            });
 
 
             new FirstDay(this.GameConfiguration, this.gameInfo).goThrough().then((conf) => {
@@ -239,13 +242,11 @@ class Night extends Period {
                 return resolve(false);
             }
 
-            let role = roles.shift();
-
-            LgLogger.warn(role, this.gameInfo);
+            let role = roles[0];
 
             this.GameConfiguration.channelsHandler.sendMessageToVillage(
                 `Le **${roleName}** se réveille.`
-            ).catch(err => LgLogger.warn(err));
+            ).catch(err => LgLogger.warn(err, this.gameInfo));
 
             resolve(role);
         });
@@ -369,7 +370,9 @@ class FirstNight extends Night {
                     this.callRenard()
                 ]))
                 .then(() => resolve(this.GameConfiguration))
-                .catch(err => reject(err));
+                .catch(err => {
+                    reject(err);
+                });
 
         });
     }
@@ -386,9 +389,11 @@ class FirstNight extends Night {
                     this.GameConfiguration.removePlayer(voleur.member.id);
                     this.GameConfiguration.addPlayer(allRoles[voleur.roleChosen](voleur.member));
 
-                    resolve(this);
+                    return this.GameConfiguration.channelsHandler.sendMessageToVillage(
+                        "**Le Voleur** se rendort."
+                    );
 
-                }).catch(err => reject(err));
+                }).then(() => resolve(this)).catch(err => reject(err));
 
         });
     }
@@ -402,7 +407,7 @@ class FirstNight extends Night {
                 return resolve(true);
             }
 
-            let cupidon = cupidons.shift();
+            let cupidon = cupidons[0];
 
             this.GameConfiguration.channelsHandler.sendMessageToVillage(
                 "💘 **Cupidon** se réveille, il désignera __les amoureux__."
@@ -415,7 +420,14 @@ class FirstNight extends Night {
                 let choice2 = this.GameConfiguration._players.get(id2);
 
                 if (!choice1 || !choice2) {
-                    reject("Un des deux choix de cupidon est un joueur undefined ou null");
+                    LgLogger.info("Cupidon n'a pas fait son choix", this.gameInfo);
+
+                    let players = Array.from(this.GameConfiguration._players.values());
+                    let randomChoice = get_random_in_array(players);
+                    players.splice(players.indexOf(randomChoice));
+
+                    choice1 = randomChoice;
+                    choice2 = get_random_in_array(players);
                 }
 
                 choice1.amoureux = choice2.member.id;
@@ -444,11 +456,11 @@ class FirstNight extends Night {
 
             if (!enfantSauvage || enfantSauvage.length < 1) return resolve(this);
 
-            enfantSauvage = enfantSauvage.shift();
+            enfantSauvage = enfantSauvage[0];
 
             this.GameConfiguration.channelsHandler.sendMessageToVillage(
                 "L'**Enfant Sauvage** se réveille."
-            ).catch(err => LgLogger.warn(err));
+            ).catch(err => LgLogger.warn(err, this.gameInfo));
 
             enfantSauvage.askForModel(this.GameConfiguration)
                 .then(() => resolve(this))
