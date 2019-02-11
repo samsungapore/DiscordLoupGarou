@@ -56,6 +56,11 @@ class Player {
         });
     }
 
+    async die(GameConfiguration) {
+        //todo: add enfant sauvage handling
+        return false;
+    }
+
 }
 
 class LoupGarou extends Player {

@@ -82,10 +82,10 @@ class RolesHandler extends IGame {
             // Thiercelieux
             {
                 Voyante: 1,
-                Voleur: 1,
+                Voleur: 0,
                 Chasseur: 0,
-                Cupidon: 1,
-                Sorciere: 0,
+                Cupidon: 0,
+                Sorciere: 1,
                 PetiteFille: 0,
                 LoupGarou: 0
             },
@@ -216,11 +216,23 @@ class RolesHandler extends IGame {
         return guildMember.addRole(this.roles.JoueurLG.object);
     }
 
+    addDeadRole(guildMember) {
+        return guildMember.addRole(this.roles.MortLG.object);
+    }
+
+    removePlayerRole(guildMember) {
+        return guildMember.removeRole(this.roles.JoueurLG.object);
+    }
+
+    removeDeadRole(guildMember) {
+        return guildMember.removeRole(this.roles.MortLG.object);
+    }
+
     /**
      * Returns no promise
      * @param guildMember
      */
-    removePlayerRole(guildMember) {
+    removeRoles(guildMember) {
         guildMember.removeRole(this.roles.JoueurLG.object).catch(() => true);
         guildMember.removeRole(this.roles.MortLG.object).catch(() => true);
     }
