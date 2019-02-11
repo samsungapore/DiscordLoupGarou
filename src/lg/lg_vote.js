@@ -3,7 +3,7 @@ const CommunicationHandler = require("./message_sending.js").CommunicationHandle
 
 class Vote {
 
-    constructor(question, configuration, time, channel, maxVotes) {
+    constructor(question, configuration, time, channel, maxVotes, deleteAll) {
 
         this.question = question;
         this.configuration = configuration;
@@ -13,6 +13,8 @@ class Vote {
         this.maxVotes = maxVotes;
 
         this.additionnalExceptions = [];
+
+        this.deleteAll = deleteAll === undefined;
 
         return this;
     }
@@ -37,6 +39,8 @@ class Vote {
 
     runVote(exceptionArrayOfIds) {
         return new Promise((resolve, reject) => {
+
+            if (!exceptionArrayOfIds) exceptionArrayOfIds = [];
 
             let playersIdName = this.configuration.getPlayersIdName();
             let ids = [];
@@ -64,7 +68,7 @@ class Vote {
             new Sondage(
                 this.question, names, this.channel, this.time,
                 CommunicationHandler.getLGSampleMsg(),
-                true, true, this.maxVotes
+                true, this.deleteAll, this.maxVotes
             ).post().then((choiceArray) => {
 
                 let result = [];
@@ -84,10 +88,9 @@ class Vote {
 class LoupGarouVote extends Vote {
 
     constructor(question, configuration, time, channel) {
-        super(question, configuration, time, channel, configuration.getLG().length);
+        super(question, configuration, time, channel, configuration.getLG(true).length, false);
 
     }
-
 
 }
 
@@ -97,6 +100,15 @@ class EveryoneVote extends Vote {
         super(question, configuration, time, channel, maxVotes);
 
         return this;
+    }
+
+}
+
+class DayVote extends Vote {
+
+    constructor(question, configuration, time, channel) {
+        super(question, configuration, time, channel, configuration.getAlivePlayers().length, false);
+
     }
 
 }
@@ -111,4 +123,4 @@ class VillageoisVote extends Vote {
 
 }
 
-module.exports = {Vote, LoupGarouVote, EveryOneVote: EveryoneVote, VillageoisVote};
+module.exports = {LoupGarouVote, EveryOneVote: EveryoneVote, VillageoisVote, DayVote};

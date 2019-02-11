@@ -25,9 +25,7 @@ class GameInfo {
     constructor(message, playTime) {
         this.guild = message.guild;
         this.playTime = playTime;
-
-        if (!GameInfo.gameNumber) GameInfo.gameNumber = 0;
-        GameInfo.gameNumber++;
+        this.gameNumber = new Date().toString();
     }
 
     get serverName() {
@@ -38,8 +36,8 @@ class GameInfo {
         return this.playTime;
     }
 
-    static get gameNb() {
-        return GameInfo.gameNumber;
+    get gameNb() {
+        return this.gameNumber;
     }
 
     getPlayTime() {
@@ -53,8 +51,6 @@ class GameInfo {
         return playTime;
     }
 }
-
-GameInfo.gameNumber = 0;
 
 class Game extends IGame {
 
@@ -218,16 +214,7 @@ class Game extends IGame {
 
         }
 
-        let minutes = (new Date() - this.playTime) / 1000 / 60;
-        let hours = minutes / 60;
-        let playTime = `${(minutes % 60).toFixed()}m`;
-        if (hours >= 1) {
-            playTime = `${hours.toFixed()}h${playTime}`;
-        }
-
-        Promise.all(quitPromises).then(() => {
-            this.stemmingChannel.send("Jeu arrêté, après " + playTime + " de jeu.").catch(console.error);
-        }).catch((err) => {
+        Promise.all(quitPromises).catch((err) => {
             console.error(err);
             this.stemmingChannel.send("Jeu arrêté, des erreurs se sont produite : ```" + err + "```").catch(console.error);
         });
@@ -502,6 +489,7 @@ class GameConfiguration {
 
     addParticipant(guildMember) {
         this._participants.set(guildMember.id, guildMember);
+        this._table.push(guildMember);
     }
 
     removeParticipant(id) {

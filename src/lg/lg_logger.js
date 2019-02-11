@@ -31,15 +31,15 @@ class LgLogger {
      * @param gameInfo gameinfo object
      */
     static info(message, gameInfo) {
-        logger.info(`${gameInfo.serverName} | partie n°${gameInfo.gameNb} | ${message} | ${gameInfo.stemmingTime}`);
+        logger.info(`${gameInfo.serverName} | game ${gameInfo.gameNb} | ${message} | ${gameInfo.stemmingTime}`);
     }
 
     static warn(message, gameInfo) {
-        logger.warn(`${gameInfo.serverName} | partie n°${gameInfo.gameNb} | ${message} | ${gameInfo.stemmingTime}`);
+        logger.warn(`${gameInfo.serverName} | game ${gameInfo.gameNb} | ${message} | ${gameInfo.stemmingTime}`);
     }
 
     static error(message, gameInfo) {
-        logger.error(`${gameInfo.serverName} | partie n°${gameInfo.gameNb} | ${message} | ${gameInfo.stemmingTime}`);
+        logger.error(`${gameInfo.serverName} | game ${gameInfo.gameNb} | ${message} | ${gameInfo.stemmingTime}`);
     }
 }
 

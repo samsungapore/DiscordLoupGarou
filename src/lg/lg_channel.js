@@ -240,12 +240,12 @@ class ChannelsHandler extends IGame {
             let promises = [];
             let channel = this._channels.get(channelId);
 
-            for (let player of players.values()) {
+            players.forEach(player => {
                 promises.push(channel.overwritePermissions(
                     player.member,
                     permission
                 ));
-            }
+            });
 
             Promise.all(promises).then(() => resolve(true)).catch(err => reject(err));
 

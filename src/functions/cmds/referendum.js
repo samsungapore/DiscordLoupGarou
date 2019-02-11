@@ -79,7 +79,6 @@ class Sondage {
                             this.votes[this.emojis_used.indexOf(r.emoji.name)] += 1;
                         }
                     }
-                    console.log(this.votes);
                 }, () => {
                     this.field_content = [];
                     this.options.forEach((element) => {
@@ -227,8 +226,6 @@ class SondageInfiniteChoice {
             this.channel.send(this.embed).then(async msg => {
 
                 await Wait.seconds(1);
-
-                console.log(this.embed.fields[2].value.length);
 
                 this.msg = msg;
 

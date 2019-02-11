@@ -22,7 +22,7 @@ LGBot.on('ready', () => {
     console.info('The bot is ready.');
     console.info(`Connected to ${LGBot.guilds.size} servers, servicing ${LGBot.users.size} users.`);
 
-    LGBot.user.setActivity("Alpha 2.1").catch(console.error);
+    LGBot.user.setActivity("Réalisé par Kazuhiro#1248 - Alpha 2.2").catch(console.error);
 
     if (LGBot.Settings.Admins) {
         LGBot.Settings.Admins.forEach(adminID => {
