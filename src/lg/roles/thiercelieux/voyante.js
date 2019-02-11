@@ -23,7 +23,7 @@ class Voyante extends Villageois {
                     "Choisissez une personne pour voir son rôle",
                     this.GameConfiguration,
                     40000, dmChannel, 1
-                ).runVote([this.member.id]);
+                ).excludeDeadPlayers().runVote([this.member.id]);
 
             }).then(outcome => {
 

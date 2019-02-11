@@ -55,7 +55,7 @@ class Cupidon extends Villageois {
                     "Veuillez choisir son/sa partenaire",
                     this.GameConfiguration,
                     40000, this.dmChannel, 1
-                ).runVote([this.id1]);
+                ).excludeDeadPlayers().runVote([this.id1]);
 
             }).then(outcome => {
 

@@ -116,13 +116,13 @@ class Sorciere extends Villageois {
     askTargetToKill(configuration) {
         return new Promise((resolve, reject) => {
 
-            EveryOneVote(
+            new EveryOneVote(
                 "Qui voulez-vous tuer ?",
                 configuration,
                 30000,
                 this.dmChannel,
                 1
-            ).runVote([this.member.id])
+            ).excludeDeadPlayers().runVote([this.member.id])
                 .then(outcome => {
 
                     if (!outcome || outcome.length === 0) {
@@ -146,17 +146,23 @@ class Sorciere extends Villageois {
         return new Promise((resolve, reject) => {
             this.target = null;
             this.getDMChannel()
-                .then(dmChannel => {
+                .then(() => {
                     let promise = [];
 
-                    if (!lgTarget.immunity) {
+                    if (this.potions.vie > 0 && !lgTarget.immunity) {
                         promise.push(this.askIfWannaSave(lgTarget));
                     }
 
                     return Promise.all(promise);
 
                 })
-                .then(() => this.askIfWannaKill(configuration))
+                .then(() => {
+                    if (this.potions.poison > 0) {
+                        return this.askIfWannaKill(configuration);
+                    } else {
+                        resolve(this);
+                    }
+                })
                 .then(() => resolve(this)).catch(err => reject(err));
         });
     }

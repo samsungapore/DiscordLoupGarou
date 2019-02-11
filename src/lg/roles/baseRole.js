@@ -56,8 +56,12 @@ class Player {
         });
     }
 
-    async die(GameConfiguration) {
-        //todo: add enfant sauvage handling
+    async die() {
+
+        if (this.amoureux) {
+            return this.amoureux;
+        }
+
         return false;
     }
 

@@ -28,17 +28,19 @@ class Chasseur extends Villageois {
                     ).excludeDeadPlayers().runVote())
                 .then(outcome => {
 
-                    let target;
+                    let targets = [];
 
                     if (!outcome || outcome.length === 0) {
-                        target = get_random_in_array(GameConfiguration.getAlivePlayers());
+                        targets.push(get_random_in_array(GameConfiguration.getAlivePlayers()));
                     } else {
-                        target = GameConfiguration.getPlayerById(outcome[0]);
+                        targets.push(GameConfiguration.getPlayerById(outcome[0]));
                     }
 
-                    this.dmChannel.send(`Vous avez choisi ${target.member.displayName}`).catch(console.error);
+                    this.dmChannel.send(`Vous avez choisi ${targets[0].member.displayName}`).catch(console.error);
 
-                    resolve([target]);
+                    if (this.amoureux) targets.push(this.amoureux);
+
+                    resolve(targets);
 
                 })
                 .catch(err => reject(err));
