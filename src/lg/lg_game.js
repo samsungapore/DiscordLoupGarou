@@ -532,11 +532,11 @@ class GameConfiguration {
         return playerNames;
     }
 
-    getMemberteamNames(team) {
+    getMemberteams(team) {
         let lgNames = [];
 
         for (let player of this._players.values()) {
-            if (player.team === team) lgNames.push(player.member.displayName);
+            if (player.team === team) lgNames.push(`**${player.role}** : ${player.member.displayName}`);
         }
 
         return lgNames;

@@ -115,21 +115,30 @@ class GameFlow extends IGame {
 
         this.gameStats.addField(
             "Loups",
-            `${this.GameConfiguration.getMemberteamNames("LG").toString().replace(',', ', ')}`,
+            `${this.GameConfiguration.getMemberteams("LG").toString().replace(',', '\n')}`,
             true
         ).addField(
             "Villageois",
-            `${this.GameConfiguration.getMemberteamNames("VILLAGEOIS").toString().replace(',', ', ')}`,
+            `${this.GameConfiguration.getMemberteams("VILLAGEOIS").toString().replace(',', '\n')}`,
             true
         );
 
-        if (this.GameConfiguration.getMemberteamNames("LOUPBLANC").length > 0) {
+        if (this.GameConfiguration.getMemberteams("LOUPBLANC").length > 0) {
             this.gameStats.addField(
                 "Loup Blanc",
-                `${this.GameConfiguration.getMemberteamNames("LOUPBLANC").toString().replace(',', ', ')}`,
+                `${this.GameConfiguration.getMemberteams("LOUPBLANC").toString().replace(',', '\n')}`,
                 true
             )
         }
+
+        this.gameStats.setDescription(
+            `Vainqueur(s): ${this.GameConfiguration.getAlivePlayers()
+                .map(player => player.member.displayName)
+                .toString()
+                .replace(',', ', ')
+            }`
+        );
+
     }
 
     /**
@@ -171,7 +180,7 @@ class GameFlow extends IGame {
 
                 gameHasEnded = true;
 
-                let alivePerson = Array.from(players.values()).shift();
+                let alivePerson = this.GameConfiguration.getAlivePlayers()[0];
 
                 if (alivePerson.team === "LG") {
                     this.gameStats.setTitle("Les Loups Garou ont gagnés !");
