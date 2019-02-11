@@ -8,7 +8,7 @@ const get_random_in_array = require("../functions/parsing_functions").get_random
 const allRoles = require("./roles/roleFactory").allRoles;
 const Wait = require("../functions/wait.js").Wait;
 const EveryOneVote = require("./lg_vote.js").EveryOneVote;
-const EventEmitter = require('events').EventEmitter;
+const EventEmitter = require('events');
 
 class IGame {
 
@@ -47,6 +47,8 @@ class GameFlow extends IGame {
 
     listenDeaths() {
         this.killer.on("death", (deadPlayer) => {
+
+            LgLogger.info("Death triggered", this.gameInfo);
 
             this.onPause = true;
 
@@ -99,82 +101,125 @@ class GameFlow extends IGame {
                 this.GameConfiguration = conf;
                 return new FirstNight(this.GameConfiguration, this.gameInfo, this.turnNb).goThrough();
 
-            }).then((conf) => {
-
-                this.GameConfiguration = conf;
-                return this.gameLoop();
-
-            }).then(() => {
-                resolve(true);
-            }).catch(err => reject(err));
+            })
+                .then((shouldDie) => this.killPlayers(shouldDie))
+                .then(() => this.gameLoop())
+                .then((endMsg) => resolve(endMsg))
+                .catch(err => reject(err));
 
         });
     }
 
-    printGameStats() {
-        return new Promise((resolve, reject) => {
+    async fillGameStats() {
+        this.gameStats.setFooter(`Jeu terminé au bout de ${this.gameInfo.getPlayTime()}`);
 
-            this.gameStats.setFooter(`Jeu terminé au bout de ${this.gameInfo.getPlayTime()}`);
+        this.gameStats.addField(
+            "Loups",
+            `${this.GameConfiguration.getMemberteamNames("LG").toString().replace(',', ', ')}`,
+            true
+        ).addField(
+            "Villageois",
+            `${this.GameConfiguration.getMemberteamNames("VILLAGEOIS").toString().replace(',', ', ')}`,
+            true
+        );
 
+        if (this.GameConfiguration.getMemberteamNames("LOUPBLANC").length > 0) {
             this.gameStats.addField(
-                "Loups",
-                `${this.GameConfiguration.getMemberteamNames("LG").toString().replace(',', ', ')}`,
+                "Loup Blanc",
+                `${this.GameConfiguration.getMemberteamNames("LOUPBLANC").toString().replace(',', ', ')}`,
                 true
-            ).addField(
-                "Villageois",
-                `${this.GameConfiguration.getMemberteamNames("VILLAGEOIS").toString().replace(',', ', ')}`,
-                true
-            );
-
-            if (this.GameConfiguration.getMemberteamNames("LOUPBLANC")) {
-                this.gameStats.addField(
-                    "Loup Blanc",
-                    `${this.GameConfiguration.getMemberteamNames("LOUPBLANC").toString().replace(',', ', ')}`,
-                    true
-                )
-            }
-
-        });
+            )
+        }
     }
 
     /**
-     * todo: return true if game ended, false if not.
-     * @returns {Promise<any>}
+     *
+     * @returns {Promise<boolean>} resolve true if game ended, false if not.
      */
     gameEnded() {
         return new Promise((resolve, reject) => {
-            let players = this.GameConfiguration.getPlayers();
-            let lg = 0;
-            let villageois = 0;
+
+            let gameHasEnded = false;
+
+            let gameStatus = {
+                lg: 0,
+                villageois: 0,
+                abominableSectaire: 0,
+                ange: 0,
+                joueurDeFlute: 0,
+                loupBlanc: 0,
+                alivePlayers: 0
+            };
 
             let promises = [];
 
+            let players = this.GameConfiguration.getPlayers();
+
             for (let player of players.values()) {
                 if (player.alive) {
-                    if (player.team === "LG") lg++;
-                    if (player.team === "VILLAGEOIS") villageois++;
+                    if (player.team === "LG") gameStatus.lg++;
+                    if (player.team === "VILLAGEOIS") gameStatus.villageois++;
+                    if (player.team === "ABOMINABLESECTAIRE") gameStatus.abominableSectaire++;
+                    if (player.team === "ANGE") gameStatus.ange++;
+                    if (player.team === "JOUEURDEFLUTE") gameStatus.joueurDeFlute++;
+                    if (player.team === "LOUPBLANC") gameStatus.loupBlanc++;
+                    gameStatus.alivePlayers++;
                 }
             }
 
-            if (lg === 0 && villageois === 0) {
-                promises.push(this.printGameStats(this.gameStats));
-            } else if (lg === 0) {
+            if (gameStatus.alivePlayers === 1) {
+
+                gameHasEnded = true;
+
+                let alivePerson = Array.from(players.values()).shift();
+
+                if (alivePerson.team === "LG") {
+                    this.gameStats.setTitle("Les Loups Garou ont gagnés !");
+                    this.gameStats.setColor('RED');
+                } else if (alivePerson.team === "VILLAGEOIS") {
+                    this.gameStats.setTitle("Les Villageois ont gagnés !");
+                    this.gameStats.setColor('BLUE');
+                }
+
+                promises.push(this.fillGameStats());
+
+                //todo: handle lone roles like loup blanc, ange and such, AND also Villageois if there is only 1 villager, same for LG team
+
+            } else if (gameStatus.lg === 0 && gameStatus.villageois === 0) {
+
+                gameHasEnded = true;
+                this.gameStats.setTitle("Tout le monde est mort !");
+                this.gameStats.setColor('RED');
+                promises.push(this.fillGameStats());
+
+            } else if (gameStatus.lg === 0) {
+
+                gameHasEnded = true;
                 this.gameStats.setTitle("Les Villageois ont gagnés !");
                 this.gameStats.setColor('BLUE');
-                promises.push(this.printGameStats(this.gameStats));
-            } else if (villageois === 0) {
+                promises.push(this.fillGameStats());
+
+            } else if (gameStatus.villageois === 0) {
+
+                //todo: vérifier les rôles alone, ange, loup blanc..
+
+                gameHasEnded = true;
                 this.gameStats.setTitle("Les Loups Garou ont gagnés !");
                 this.gameStats.setColor('RED');
-                promises.push(this.printGameStats(this.gameStats));
+                promises.push(this.fillGameStats());
+
             }
 
-            Promise.all(promises).then(() => resolve(true)).catch(err => reject(err));
+            LgLogger.info(`Game ended: ${gameHasEnded} | game status: ${gameStatus}`, this.gameInfo);
+
+            Promise.all(promises).then(() => resolve(gameHasEnded)).catch(err => reject(err));
         });
     }
 
     async gameLoop() {
 
-        let end;
+        let shouldDie = [];
+
         do {
 
             await Wait.seconds(4);
@@ -183,15 +228,17 @@ class GameFlow extends IGame {
                 await Wait.seconds(1);
             }
 
-            end = await new Day(this.GameConfiguration, this.gameInfo, this.turnNb).goThrough();
+            shouldDie = await new Day(this.GameConfiguration, this.gameInfo, this.turnNb).goThrough();
 
-            if (end) break;
+            if (await this.gameEnded()) break;
 
-            end = await new Night(this.GameConfiguration, this.gameInfo, this.turnNb).goThrough();
+            shouldDie = await new Night(this.GameConfiguration, this.gameInfo, this.turnNb).goThrough();
+
+            await this.killPlayers(shouldDie);
 
             this.turnNb += 1;
 
-        } while (end !== true && this.turnNb < 5); //todo: remove turnNb < 5
+        } while (await this.gameEnded() === false);
 
         await Wait.seconds(4);
 
@@ -201,9 +248,15 @@ class GameFlow extends IGame {
 
         LgLogger.info("Game is over", this.gameInfo);
 
-        return this;
+        return this.gameStats;
     }
 
+    async killPlayers(shouldDie) {
+        shouldDie = [...new Set(shouldDie)];
+        shouldDie = shouldDie.filter(element => element !== undefined && element !== null);
+        shouldDie.forEach(person => person ? this.killer.emit("death", person) : null);
+        LgLogger.info(`Should die : ${shouldDie.map(p => p ? p.member.displayName : null).toString()}`, this.gameInfo);
+    }
 }
 
 class Period {
@@ -346,7 +399,7 @@ class Night extends Period {
         super(configuration, gameInfo, turnNb);
 
         this.LGTarget = null;
-        this.SorciereTarget = null;
+        this.shouldDieTonight = new Map();
 
         return this;
 
@@ -398,6 +451,7 @@ class Night extends Period {
         return new Promise((resolve, reject) => {
 
             LgLogger.info("Going through night", this.gameInfo);
+            this.shouldDieTonight.clear();
             this.GameConfiguration.channelsHandler.sendMessageToVillage("🌌 La nuit tombe.")
                 .then(() => Promise.all([
                     this.callLoupsGarou(),
@@ -414,15 +468,8 @@ class Night extends Period {
                     this.callSorciere(),
                     this.callRenard()
                 ]))
-                .then(() => this.computeDeaths())
-                .then(() => resolve(false))
+                .then(() => resolve(Array.from(this.shouldDieTonight.values())))
                 .catch(err => reject(err));
-
-        });
-    }
-
-    computeDeaths() {
-        return new Promise((resolve, reject) => {
 
         });
     }
@@ -442,16 +489,16 @@ class Night extends Period {
                 this.GameConfiguration,
                 60000,
                 this.GameConfiguration.getLGChannel()
-            ).runVote(this.GameConfiguration.getLGIds())).then(outcome => {
+            ).excludeDeadPlayers().runVote(this.GameConfiguration.getLGIds())).then(outcome => {
 
                 if (!outcome || outcome.length === 0) {
-                    this.LGTarget = get_random_in_array(this.GameConfiguration.getVillageois(false));
+                    this.shouldDieTonight.set("LGTarget", get_random_in_array(this.GameConfiguration.getVillageois(false)));
                 } else {
-                    this.LGTarget = this.GameConfiguration.getPlayerById(get_random_in_array(outcome));
+                    this.shouldDieTonight.set("LGTarget", this.GameConfiguration.getPlayerById(get_random_in_array(outcome)));
                 }
 
                 return this.GameConfiguration.getLGChannel().send(
-                    `Votre choix est de dévorer ${this.LGTarget.member.displayName}`
+                    `Votre choix est de dévorer ${this.shouldDieTonight.get("LGTarget").member.displayName}`
                 );
 
             }).then(() => this.GameConfiguration.channelsHandler.sendMessageToVillage(
@@ -513,18 +560,20 @@ class Night extends Period {
     callSorciere() {
         return new Promise((resolve, reject) => {
             this.initRole("Sorciere", "La ", "Sorcière")
-                .then(sorciere => sorciere.processRole(this.GameConfiguration, this.LGTarget))
+                .then(sorciere => sorciere ? sorciere.processRole(this.GameConfiguration, this.shouldDieTonight.get("LGTarget")) : resolve(this))
                 .then(sorciere => {
 
                     if (sorciere.savedLgTarget) {
-                        this.LGTarget = null;
+                        this.shouldDieTonight.set("LGTarget", null);
                     }
 
-                    this.SorciereTarget = sorciere.target;
+                    this.shouldDieTonight.set("SorciereTarget", sorciere.target);
 
-                    LgLogger.info(`Sorciere target: ${sorciere.target.member.displayName}`, this.gameInfo);
-                    LgLogger.info(`Sorciere saved: ${sorciere.savedLgTarget}`, this.gameInfo);
-                    LgLogger.info(`Sorciere potions: vie[${sorciere.potions.vie}] poison[${sorciere.potions.poison}]`, this.gameInfo);
+                    if (sorciere.target) {
+                        LgLogger.info(`Sorciere target: ${sorciere.target.member.displayName}`, this.gameInfo);
+                        LgLogger.info(`Sorciere saved: ${sorciere.savedLgTarget}`, this.gameInfo);
+                        LgLogger.info(`Sorciere potions: vie[${sorciere.potions.vie}] poison[${sorciere.potions.poison}]`, this.gameInfo);
+                    }
 
                     sorciere.savedLgTarget = false;
 
@@ -576,7 +625,7 @@ class FirstNight extends Night {
                     this.callSorciere(),
                     this.callRenard()
                 ]))
-                .then(() => resolve(this.GameConfiguration))
+                .then(() => resolve(Array.from(this.shouldDieTonight.values())))
                 .catch(err => {
                     reject(err);
                 });

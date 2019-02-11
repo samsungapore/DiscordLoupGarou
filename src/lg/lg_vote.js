@@ -48,6 +48,7 @@ class Vote {
             }
 
             exceptionArrayOfIds = exceptionArrayOfIds.concat(this.additionnalExceptions);
+            exceptionArrayOfIds = [...new Set(exceptionArrayOfIds)];
 
             if (exceptionArrayOfIds && exceptionArrayOfIds.length > 0) {
                 exceptionArrayOfIds.forEach(exception => {

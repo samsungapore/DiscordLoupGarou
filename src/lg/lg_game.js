@@ -22,12 +22,11 @@ class IGame {
 
 class GameInfo {
 
-    static gameNumber = 0;
-
     constructor(message, playTime) {
         this.guild = message.guild;
         this.playTime = playTime;
 
+        if (!GameInfo.gameNumber) GameInfo.gameNumber = 0;
         GameInfo.gameNumber++;
     }
 
@@ -54,6 +53,8 @@ class GameInfo {
         return playTime;
     }
 }
+
+GameInfo.gameNumber = 0;
 
 class Game extends IGame {
 
@@ -127,9 +128,9 @@ class Game extends IGame {
 
             return Wait.seconds(5).then(() => msg.delete());
 
-        }).then(() => this.flow.run()).then((configuration) => {
+        }).then(() => this.flow.run()).then((endMsg) => {
 
-            LgLogger.info(configuration, this.gameInfo);
+            this.stemmingChannel.send(endMsg).catch(console.error);
             this.quit();
 
         }).catch(err => {
