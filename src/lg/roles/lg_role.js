@@ -85,8 +85,8 @@ class RolesHandler extends IGame {
                 Voleur: 0,
                 Chasseur: 0,
                 Cupidon: 0,
-                Sorciere: 1,
-                PetiteFille: 0,
+                Sorciere: 0,
+                PetiteFille: 1,
                 LoupGarou: 0
             },
             // Nouvelle lune

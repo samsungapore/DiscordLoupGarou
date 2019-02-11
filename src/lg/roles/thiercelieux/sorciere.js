@@ -1,5 +1,3 @@
-const send = require("../../message_sending");
-const death = require("../../game_core/death");
 const EveryOneVote = require("../../lg_vote").EveryOneVote;
 const ReactionHandler = require("../../../functions/reactionHandler").ReactionHandler;
 const Villageois = require("../baseRole").Villageois;
