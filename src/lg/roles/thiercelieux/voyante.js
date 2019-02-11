@@ -1,7 +1,5 @@
-const send = require("../../message_sending");
 const EveryOneVote = require("../../lg_vote").EveryOneVote;
 const Villageois = require("../baseRole").Villageois;
-const salvateur = require("../nouvelle_lune/salvateur").salvateur;
 let RichEmbed = require('discord.js').RichEmbed;
 
 class Voyante extends Villageois {
@@ -52,3 +50,5 @@ class Voyante extends Villageois {
     }
 
 }
+
+module.exports = {Voyante};
