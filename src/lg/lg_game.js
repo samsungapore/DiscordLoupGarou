@@ -21,10 +21,14 @@ class IGame {
 }
 
 class GameInfo {
+
+    static gameNumber = 0;
+
     constructor(message, playTime) {
         this.guild = message.guild;
         this.playTime = playTime;
-        this.gameNumber = 0;
+
+        GameInfo.gameNumber++;
     }
 
     get serverName() {
@@ -35,8 +39,19 @@ class GameInfo {
         return this.playTime;
     }
 
-    get gameNb() {
-        return this.gameNumber;
+    static get gameNb() {
+        return GameInfo.gameNumber;
+    }
+
+    getPlayTime() {
+        let minutes = (new Date() - this.playTime) / 1000 / 60;
+        let hours = minutes / 60;
+        let playTime = `${(minutes % 60).toFixed()}m`;
+        if (hours >= 1) {
+            playTime = `${hours.toFixed()}h${playTime}`;
+        }
+
+        return playTime;
     }
 }
 
@@ -185,6 +200,10 @@ class Game extends IGame {
 
         if (this.quitListener) this.quitListener.stop();
 
+        if (this.flow.GameConfiguration.loupGarouMsgCollector) {
+            this.flow.GameConfiguration.loupGarouMsgCollector.stop();
+        }
+
         let quitPromises = [];
 
         quitPromises.push(this.preparation.rolesHandler.deleteRoles());
@@ -331,7 +350,7 @@ class GamePreparation extends IGame {
                     this.updateParticipantsDisplay();
                     reaction.remove(guildMember.user).catch(console.error);
                 } else if (reaction.emoji.name === "🚪") {
-                    this.rolesHandler.removePlayerRole(guildMember);
+                    this.rolesHandler.removeRoles(guildMember);
                     this.configuration.removeParticipant(guildMember.id);
                     this.updateParticipantsDisplay();
                     reaction.remove(guildMember.user).catch(console.error);
@@ -512,6 +531,16 @@ class GameConfiguration {
         return playerNames;
     }
 
+    getMemberteamNames(team) {
+        let lgNames = [];
+
+        for (let player of this._players.values()) {
+            if (player.team === team) lgNames.push(player.member.displayName);
+        }
+
+        return lgNames;
+    }
+
     getPlayersIdName() {
 
         let playersIdName = new Map();
@@ -528,6 +557,16 @@ class GameConfiguration {
         return this._players;
     }
 
+    getAlivePlayers() {
+        let players = [];
+
+        for (let player of this._players.values()) {
+            if (player.alive) players.push(player);
+        }
+
+        return players;
+    }
+
     addPlayer(player) {
         this._players.set(player.member.id, player);
     }
@@ -536,7 +575,7 @@ class GameConfiguration {
         this._players.delete(id);
     }
 
-    getRoleMap() {
+    getRoleMap(options) {
 
         let roleMap = new Map();
 
@@ -546,10 +585,18 @@ class GameConfiguration {
             array = roleMap.get(player.role);
 
             if (!array) {
-                roleMap.set(player.role, [player]);
-            } else {
+                if ((options.alive && options.dead) ||
+                    (options.alive && !options.dead && player.alive) ||
+                    (!options.alive && options.dead && !player.alive)) {
+                    roleMap.set(player.role, [player]);
+                }
+            } else if ((options.alive && options.dead) ||
+                (options.alive && !options.dead && player.alive) ||
+                (!options.alive && options.dead && !player.alive)) {
+
                 array.push(player);
                 roleMap.set(player.role, array);
+
             }
 
         }
@@ -558,33 +605,53 @@ class GameConfiguration {
 
     }
 
-    getLG() {
+    getLG(onlyAlive) {
 
         let lgs = [];
 
         for (let player of this._players.values()) {
             if (player.team === "LG") {
-                lgs.push(player);
+                if (onlyAlive) {
+                    if (player.alive) lgs.push(player);
+                } else {
+                    lgs.push(player);
+                }
             }
         }
 
         return lgs;
     }
 
+    getLGIds(onlyAlive) {
+        let lgIds = [];
+
+        for (let [id, player] of this._players) {
+            if (player.team === "LG") {
+                if (onlyAlive) {
+                    if (player.alive) lgIds.push(id);
+                } else {
+                    lgIds.push(id);
+                }
+            }
+        }
+
+        return lgIds;
+    }
+
     /**
      *
-     * @param allVillageois specifies if you want all villageois, wether he's dead or not
+     * @param includeDead specifies if you want to include dead villageois as well as alive villageois
      * @returns {Array}
      */
-    getVillageois(allVillageois) {
+    getVillageois(includeDead) {
 
-        if (allVillageois === undefined) allVillageois = true;
+        if (includeDead === undefined) includeDead = true;
 
         let villageois = [];
 
         for (let player of this._players.values()) {
             if (player.team === "VILLAGEOIS") {
-                if (!allVillageois) {
+                if (!includeDead) {
                     if (player.alive) villageois.push(player);
                 } else {
                     villageois.push(player);

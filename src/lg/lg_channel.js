@@ -23,7 +23,7 @@ class ChannelsHandler extends IGame {
 
         this.guild = guild;
 
-        this.everyoneRole = this.guild.roles.find(x => x.name === '@runVote');
+        this.everyoneRole = this.guild.roles.find(x => x.name === '@everyone');
         this.everyonePermission = {
             loups_garou_de_thiercelieux: {
                 'VIEW_CHANNEL': true,

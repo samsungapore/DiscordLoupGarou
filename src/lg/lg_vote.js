@@ -12,6 +12,26 @@ class Vote {
 
         this.maxVotes = maxVotes;
 
+        this.additionnalExceptions = [];
+
+        return this;
+    }
+
+    excludeDeadPlayers() {
+
+        for (let player of this.configuration._players.values()) {
+            if (!player.alive) this.additionnalExceptions.push(player.member.id);
+        }
+
+        return this;
+    }
+
+    excludeAlivePlayers() {
+
+        for (let player of this.configuration._players.values()) {
+            if (player.alive) this.additionnalExceptions.push(player.member.id);
+        }
+
         return this;
     }
 
@@ -26,6 +46,8 @@ class Vote {
                 ids.push(id);
                 names.push(name);
             }
+
+            exceptionArrayOfIds = exceptionArrayOfIds.concat(this.additionnalExceptions);
 
             if (exceptionArrayOfIds && exceptionArrayOfIds.length > 0) {
                 exceptionArrayOfIds.forEach(exception => {
