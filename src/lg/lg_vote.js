@@ -107,7 +107,7 @@ class EveryoneVote extends Vote {
 class DayVote extends Vote {
 
     constructor(question, configuration, time, channel) {
-        super(question, configuration, time, channel, configuration.getAlivePlayers().length, false);
+        super(question, configuration, time, channel, configuration.getAlivePlayers().length);
 
     }
 

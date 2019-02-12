@@ -467,6 +467,19 @@ class GameConfiguration {
         return this.channelsHandler._channels.get(this.channelsHandler.channels.loups_garou_lg);
     }
 
+    get villageChannel() {
+        return this.channelsHandler._channels.get(this.channelsHandler.channels.village_lg);
+    }
+
+    get Maire() {
+
+        for (let player of this._players.values()) {
+            if (player.maire) return player;
+        }
+
+        return null;
+    }
+
     getPlayerById(id) {
         return this._players.get(id);
     }

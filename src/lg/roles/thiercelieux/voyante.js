@@ -16,6 +16,7 @@ class Voyante extends Villageois {
         return new Promise((resolve, reject) => {
 
             this.GameConfiguration = configuration;
+            let roleDetected = null;
 
             this.getDMChannel().then(dmChannel => {
 
@@ -37,6 +38,8 @@ class Voyante extends Villageois {
 
                     let target = this.GameConfiguration.getPlayerById(outcome[0]);
 
+                    roleDetected = target.role;
+
                     return this.dmChannel.send(new RichEmbed()
                         .setAuthor(target.member.displayName, target.member.user.avatarURL)
                         .setTitle(target.role)
@@ -45,6 +48,10 @@ class Voyante extends Villageois {
 
                 }
 
+            }).then(() => {
+                if (roleDetected) {
+                    return configuration.channelsHandler.sendMessageToVillage(`La Voyante a détecté un(e) ${roleDetected}`);
+                }
             }).then(() => resolve(this)).catch(err => reject(err));
         });
     }

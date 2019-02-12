@@ -9,6 +9,8 @@ const allRoles = require("./roles/roleFactory").allRoles;
 const Wait = require("../functions/wait.js").Wait;
 const EveryOneVote = require("./lg_vote.js").EveryOneVote;
 const EventEmitter = require('events');
+const DayVote = require("./lg_vote").DayVote;
+const CommunicationHandler = require('./message_sending').CommunicationHandler;
 
 class IGame {
 
@@ -35,41 +37,71 @@ class GameFlow extends IGame {
 
         this.killer = new EventEmitter();
 
-        this.onPause = false;
+        // equals 0 if not on pause, and > 0 if on pause
+        this.onPause = 0;
 
         this.turnNb = 1;
 
         this.gameStats = new RichEmbed().setColor(botColor).setDescription("Fin de partie");
+
+        this.deadPeople = [];
 
         return this;
 
     }
 
     listenDeaths() {
-        this.killer.on("death", (deadPlayer) => {
+        setImmediate(() => {
+            this.killer.on("death", (deadPlayer) => {
 
-            LgLogger.info("Death triggered", this.gameInfo);
+                this.deadPeople.push(deadPlayer);
 
-            this.onPause = true;
+                LgLogger.info("onpause + 1", this.gameInfo);
+                this.onPause += 1;
 
-            deadPlayer.alive = false;
-            deadPlayer.die(this.GameConfiguration, this.killer).then((somebodyNew) => {
+                LgLogger.info("Death triggered", this.gameInfo);
 
-                this.GameConfiguration.rolesHandler.removePlayerRole(deadPlayer.member).catch(console.error);
-                this.GameConfiguration.rolesHandler.addDeadRole(deadPlayer.member).catch(console.error);
+                deadPlayer.alive = false;
 
-                if (somebodyNew) {
-                    somebodyNew.forEach(person => this.killer.emit("death", person));
-                } else {
-                    this.onPause = false;
-                }
+                this.GameConfiguration.channelsHandler.switchPermissions(
+                    this.GameConfiguration.channelsHandler.channels.paradis_lg,
+                    {'VIEW_CHANNEL': true, 'SEND_MESSAGE': false},
+                    [deadPlayer]
+                ).then(() => this.GameConfiguration.channelsHandler.switchPermissions(
+                    this.GameConfiguration.channelsHandler.channels.village_lg,
+                    {'VIEW_CHANNEL': true, 'SEND_MESSAGE': true},
+                    [deadPlayer]
+                )).then(() => {
 
-            }).catch(err => {
-                console.error(err);
-                this.onPause = false;
+                    if (deadPlayer.team === "LG") {
+                        return this.GameConfiguration.channelsHandler.switchPermissions(
+                            this.GameConfiguration.channelsHandler.channels.loups_garou_lg,
+                            {'VIEW_CHANNEL': false, 'SEND_MESSAGE': false},
+                            [deadPlayer]
+                        );
+                    }
+
+                }).then(() => deadPlayer.die(this.GameConfiguration, this.killer).then((somebodyNew) => {
+
+                    this.GameConfiguration.rolesHandler.removePlayerRole(deadPlayer.member).catch(console.error);
+                    this.GameConfiguration.rolesHandler.addDeadRole(deadPlayer.member).catch(console.error);
+
+                    if (somebodyNew) {
+                        somebodyNew.forEach(person => setImmediate(() => this.killer.emit("death", person)));
+                    } else {
+                        LgLogger.info("onpause - 1", this.gameInfo);
+                    }
+
+                    this.onPause -= 1;
+
+                })).catch(err => {
+                    console.error(err);
+                    LgLogger.info("onpause - 1", this.gameInfo);
+                    this.onPause -= 1;
+                });
+
             });
-
-        })
+        });
     }
 
     run() {
@@ -81,7 +113,7 @@ class GameFlow extends IGame {
 
             this.GameConfiguration.channelsHandler._channels.get(this.GameConfiguration.channelsHandler.channels.thiercelieux_lg)
                 .send(new RichEmbed().setColor(BotData.BotValues.botColor)
-                    .setAuthor("Les Loups-garous de Thiercelieux [v2.1]", lg_var.roles_img.LoupGarou)
+                    .setAuthor("Les Loups-garous de Thiercelieux [v2.2]", lg_var.roles_img.LoupGarou)
                     .setDescription('Développé par Kazuhiro#1248.\n\n*Thiercelieux est un petit village rural d\'apparence paisible,' +
                         ' mais chaque nuit certains villageois se transforment en loups-garou pour dévorer d\'autres villageois...*\n')
                     .addField("Règles :",
@@ -91,7 +123,15 @@ class GameFlow extends IGame {
                         'les amoureux, leur but est de survivre tous les deux jusqu\'à la fin de la partie.')
                     .setFooter("Bienvenue à Thiercelieux, sa campagne paisible, son école charmante, sa population accueillante, ainsi que " +
                         "ses traditions ancestrales et ses mystères inquiétants.", lg_var.roles_img.LoupGarou)
-                    .setImage(lg_var.roles_img.LoupGarou)).catch(err => {
+                    .setImage(lg_var.roles_img.LoupGarou))
+                .then(() => this.GameConfiguration.channelsHandler._channels.get(this.GameConfiguration.channelsHandler.channels.thiercelieux_lg)
+                    .send(new RichEmbed().setColor(BotData.BotValues.botColor)
+                        .addField(
+                            "Table ronde",
+                            this.GameConfiguration.getTable().map(member => member.displayName).toString().replace(',', '\n')
+                        )
+                    )
+                ).catch(err => {
                 reject(err);
             });
 
@@ -136,7 +176,7 @@ class GameFlow extends IGame {
                 .map(player => player.member.displayName)
                 .toString()
                 .replace(',', ', ')
-            }`
+                }`
         );
 
     }
@@ -229,7 +269,7 @@ class GameFlow extends IGame {
 
         let shouldDie = [];
 
-        do {
+        while (await this.gameEnded() === false) {
 
             await Wait.seconds(4);
 
@@ -237,9 +277,18 @@ class GameFlow extends IGame {
                 await Wait.seconds(1);
             }
 
-            shouldDie = await new Day(this.GameConfiguration, this.gameInfo, this.turnNb).goThrough();
+            shouldDie = await new Day(this.GameConfiguration, this.gameInfo, this.turnNb, this.deadPeople).goThrough();
 
-            if (await this.gameEnded()) break;
+            await this.killPlayers(shouldDie);
+
+            console.log("TEST");
+            if (await this.gameEnded() === true) break;
+
+            this.deadPeople = [];
+
+            while (this.onPause) {
+                await Wait.seconds(1);
+            }
 
             shouldDie = await new Night(this.GameConfiguration, this.gameInfo, this.turnNb).goThrough();
 
@@ -247,12 +296,10 @@ class GameFlow extends IGame {
 
             this.turnNb += 1;
 
-        } while (await this.gameEnded() === false);
+            while (this.onPause) {
+                await Wait.seconds(1);
+            }
 
-        await Wait.seconds(4);
-
-        while (this.onPause) {
-            await Wait.seconds(1);
         }
 
         LgLogger.info("Game is over", this.gameInfo);
@@ -263,7 +310,7 @@ class GameFlow extends IGame {
     async killPlayers(shouldDie) {
         shouldDie = [...new Set(shouldDie)];
         shouldDie = shouldDie.filter(element => element !== undefined && element !== null);
-        shouldDie.forEach(person => person ? this.killer.emit("death", person) : null);
+        shouldDie.forEach(person => person ? setImmediate(() => this.killer.emit("death", person)) : null);
         LgLogger.info(`Should die : ${shouldDie.map(p => p ? p.member.displayName : null).toString()}`, this.gameInfo);
     }
 }
@@ -290,11 +337,142 @@ class Period {
 
 class Day extends Period {
 
+    constructor(configuration, gameInfo, turnNb, deadPeople) {
+
+        super(configuration, gameInfo, turnNb);
+
+        this.deadPeople = deadPeople;
+
+        return this;
+
+    }
+
     goThrough() {
         return new Promise((resolve, reject) => {
             LgLogger.info("Going through day", this.gameInfo);
-            resolve(false);
+
+            this.displayNightOutcome()
+                .then(() => this.debateTime())
+                .then((outcome) => this.pronounceSentence(outcome))
+                .then((victim) => resolve([victim]))
+                .catch(err => reject(err));
+
         })
+    }
+
+    async displayNightOutcome() {
+        for (let i = 0; i < this.deadPeople.length; i++) {
+            await this.GameConfiguration.villageChannel.send(new RichEmbed()
+                .setAuthor(`${this.deadPeople[i].member.displayName} est mort(e)`, this.deadPeople[i].member.user.avatarURL)
+                .setTitle(this.deadPeople[i].role)
+                .setImage(this.deadPeople[i].member.user.avatarURL)
+                .setColor('RED')
+            )
+        }
+
+        return this;
+    }
+
+    async debateTime() {
+
+        let debateDuration = this.GameConfiguration.getAlivePlayers().length / 2; // in minutes
+
+        await this.GameConfiguration.channelsHandler.sendMessageToVillage(
+            `Le jour se lève sur thiercelieux 🌄`
+        );
+
+        await this.GameConfiguration.channelsHandler.sendMessageToVillage(
+            `Vous disposez de ${debateDuration} minutes pour débattre, et faire un vote`
+        );
+
+        await Wait.minutes(debateDuration / 2);
+
+        await this.GameConfiguration.channelsHandler.switchPermissions(
+            this.GameConfiguration.channelsHandler.channels.thiercelieux_lg,
+            {
+                'VIEW_CHANNEL': true,
+                'SEND_MESSAGES': true,
+                'ADD_REACTIONS': true
+            },
+            Array.from(this.GameConfiguration.getPlayers().values())
+        );
+
+        setTimeout(() => {
+            this.GameConfiguration.channelsHandler.sendMessageToVillage(`Il reste ${debateDuration / 4} minutes avant la fin du vote`)
+        }, (debateDuration / 4) * 60 * 1000);
+
+        let outcome = await new DayVote(
+            "Qui doit mourir ?",
+            this.GameConfiguration,
+            (debateDuration / 2) * 60 * 1000,
+            this.GameConfiguration.channelsHandler._channels.get(this.GameConfiguration.channelsHandler.channels.thiercelieux_lg),
+            this.GameConfiguration.getAlivePlayers().length
+        ).excludeDeadPlayers().runVote();
+
+        return outcome;
+    }
+
+    async pronounceSentence(outcome) {
+
+        let victimId = null;
+
+        if (!outcome || outcome.length === 0) {
+
+            // vote blanc
+
+        } else if (outcome.length === 1) {
+
+            victimId = outcome[0]
+
+        } else if (outcome.length > 1) {
+
+            // more than one victim voted, the maire must make a decision
+            // if no maire, random victim
+            // if maire refuse to make a decision, pick a random victim
+
+            let maire = this.GameConfiguration.Maire;
+
+            if (maire) {
+
+                await this.GameConfiguration.channelsHandler.sendMessageToVillage("Le vote est nul, le Maire va devoir trancher");
+
+                victimId = await new Promise((resolve, reject) => {
+                    maire.getDMChannel()
+                        .then(dmChannel => new EveryOneVote(
+                            "Qui doit mourir ?",
+                            this.GameConfiguration,
+                            30000,
+                            dmChannel,
+                            1
+                        ).excludeDeadPlayers().runVote(
+                            this.GameConfiguration.getAlivePlayers().filter(p => !outcome.includes(p.member.id))
+                        ))
+                        .then(maireDecision => {
+                            if (!maireDecision || maireDecision.length === 0) {
+                                resolve(get_random_in_array(outcome));
+                            } else {
+                                resolve(maireDecision[0]);
+                            }
+                        })
+                        .catch(err => reject(err));
+                });
+
+            } else {
+
+                victimId = get_random_in_array(outcome);
+
+            }
+
+        }
+
+        let victim = this.GameConfiguration.getPlayerById(victimId);
+
+        await this.GameConfiguration.channelsHandler.sendMessageToVillage(
+            `Le village a souhaité la mort de **${victim.member.displayName}**`
+        );
+
+        return victim;
+
     }
 
 }
@@ -343,7 +521,7 @@ class FirstDay extends Period {
                         'SEND_MESSAGES': true,
                         'ADD_REACTIONS': true
                     },
-                    this.GameConfiguration.getPlayers()
+                    Array.from(this.GameConfiguration.getPlayers().values())
                 );
 
             }).then(() => {
@@ -389,7 +567,7 @@ class FirstDay extends Period {
                         'SEND_MESSAGES': false,
                         'ADD_REACTIONS': true
                     },
-                    this.GameConfiguration.getPlayers()
+                    Array.from(this.GameConfiguration.getPlayers().values())
                 );
 
             }).then(() => {
@@ -432,7 +610,7 @@ class Night extends Period {
         });
     }
 
-    initPetiteFilleListening() {
+    async initPetiteFilleListening() {
         let petitesFilles = this.roleMap.get("PetiteFille");
 
         if (!petitesFilles || petitesFilles.length < 1) {
@@ -441,20 +619,18 @@ class Night extends Period {
 
         let petiteFille = petitesFilles[0];
 
-        petiteFille.getDMChannel().then(dmChannel => {
+        let dmChannel = await petiteFille.getDMChannel();
 
-            dmChannel.send("Début de l'écoute des loups garous").catch(console.error);
+        await dmChannel.send("Début de l'écoute des loups garous");
 
-            this.GameConfiguration.loupGarouMsgCollector = this.GameConfiguration.getLGChannel().createMessageCollector(() => true);
+        this.GameConfiguration.loupGarouMsgCollector = this.GameConfiguration.getLGChannel().createMessageCollector(() => true);
 
-            this.GameConfiguration.loupGarouMsgCollector.on("collect", msg => {
-                dmChannel.send(msg).catch(console.error);
-            });
+        this.GameConfiguration.loupGarouMsgCollector.on("collect", msg => {
+            dmChannel.send(msg.cleanContent).catch(() => true);
+        });
 
-        }).catch(err => {
-            LgLogger.error(err);
-        })
     }
+
 
     goThrough() {
         return new Promise((resolve, reject) => {
@@ -488,7 +664,7 @@ class Night extends Period {
 
             if (this.turnNb === 1) {
                 this.GameConfiguration.getLGChannel().send("Prenez garde à la petite fille...").catch(console.error);
-                this.initPetiteFilleListening();
+                this.initPetiteFilleListening().catch(console.error);
             }
 
             this.GameConfiguration.channelsHandler.sendMessageToVillage(
