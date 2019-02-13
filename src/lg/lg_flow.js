@@ -55,7 +55,7 @@ class GameFlow extends IGame {
             this.killer.on("death", (deadPlayer) => {
 
                 if (!deadPlayer || typeof deadPlayer !== "object") {
-                    LgLogger.warn(`Dead trigger error: deadPlayer equals ${deadPlayer}`);
+                    LgLogger.warn(`Dead trigger error: deadPlayer equals ${deadPlayer}`, this.gameInfo);
                     return;
                 }
 
@@ -320,6 +320,9 @@ class GameFlow extends IGame {
         return new Promise((resolve, reject) => {
             shouldDie = [...new Set(shouldDie)];
             shouldDie = shouldDie.filter(element => element !== undefined && element !== null);
+
+            if (shouldDie.length === 0) return resolve(this);
+
             shouldDie.forEach(person => person ? setImmediate(() => this.killer.emit("death", person)) : null);
             LgLogger.info(`Should die : ${shouldDie.map(p => p ? p.member.displayName : null).toString()}`, this.gameInfo);
             this.killer.on("death_processed", () => {
@@ -411,12 +414,16 @@ class Day extends Period {
                 'SEND_MESSAGES': true,
                 'ADD_REACTIONS': true
             },
-            Array.from(this.GameConfiguration.getPlayers().values())
+            this.GameConfiguration.getAlivePlayers()
         );
 
         setTimeout(() => {
             this.GameConfiguration.channelsHandler.sendMessageToVillage(`Il reste ${debateDuration / 4} minutes avant la fin du vote`)
         }, (debateDuration / 4) * 60 * 1000);
+
+        await this.GameConfiguration.channelsHandler.sendMessageToVillage(
+            `Votez dans le channel ${this.GameConfiguration.channelsHandler._channels.get(this.GameConfiguration.channelsHandler.channels.thiercelieux_lg).toString()} !`
+        );
 
         let outcome = await new DayVote(
             "Qui doit mourir ?",
@@ -482,13 +489,24 @@ class Day extends Period {
 
         }
 
-        let victim = this.GameConfiguration.getPlayerById(victimId);
+        if (!victimId) {
 
-        await this.GameConfiguration.channelsHandler.sendMessageToVillage(
-            `Le village a souhaité la mort de **${victim.member.displayName}**`
-        );
+            await this.GameConfiguration.channelsHandler.sendMessageToVillage(
+                `Le village n'a pas souhaité voter`
+            );
 
-        return victim;
+            return null;
+
+        } else {
+            let victim = this.GameConfiguration.getPlayerById(victimId);
+
+            await this.GameConfiguration.channelsHandler.sendMessageToVillage(
+                `Le village a souhaité la mort de **${victim.member.displayName}**, étant ${victim.role}`,
+                victim.member.user.avatarURL
+            );
+
+            return victim;
+        }
 
     }
 
@@ -505,8 +523,6 @@ class FirstDay extends Period {
 
     goThrough() {
         return new Promise((resolve, reject) => {
-
-            return resolve(this.GameConfiguration);
 
             this.GameConfiguration.channelsHandler.sendMessageToVillage(
                 "🌄 Le jour se lève à Thiercelieux." +
@@ -544,6 +560,10 @@ class FirstDay extends Period {
             }).then(() => {
 
                 LgLogger.info('Permissions switch, init referendum.', this.gameInfo);
+
+                this.GameConfiguration.channelsHandler.sendMessageToVillage(
+                    `Votez dans le channel ${this.GameConfiguration.channelsHandler._channels.get(this.GameConfiguration.channelsHandler.channels.thiercelieux_lg).toString()} !`
+                ).catch(console.error);
 
                 return new EveryOneVote(
                     "Qui voulez-vous élir comme maire ?",

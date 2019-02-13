@@ -306,14 +306,18 @@ class ChannelsHandler extends IGame {
         });
     }
 
-    sendMessageToVillage(message) {
+    sendMessageToVillage(message, imageLink) {
 
         let village = this._channels.get(this.channels.village_lg);
 
-        return village.send(new RichEmbed()
+        let msg = new RichEmbed()
             .addField('LG - Jeu', message)
             .setColor(BotData.BotValues.botColor)
-            .setAuthor("Loup-Garou de thiercelieux", lg_var.roles_img.LoupGarou))
+            .setAuthor("Loup-Garou de thiercelieux", lg_var.roles_img.LoupGarou);
+
+        if (imageLink) msg.setImage(imageLink);
+
+        return village.send(msg);
 
     }
 

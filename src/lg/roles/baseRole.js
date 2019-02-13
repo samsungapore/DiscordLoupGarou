@@ -56,11 +56,13 @@ class Player {
         });
     }
 
-    async die() {
+    async die(configuration) {
 
-        if (this.amoureux) {
-            return [this.amoureux];
+        if (this.amoureux && configuration.getPlayerById(this.amoureux).alive) {
+            return [configuration.getPlayerById(this.amoureux)];
         }
+
+        //si le maire meurt go réélire
 
         return false;
     }

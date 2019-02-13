@@ -30,10 +30,8 @@ class Voyante extends Villageois {
 
                 if (!outcome || outcome.length === 0) {
                     this.dmChannel.send("Ton tour est terminé, tu n'as pas joué ton rôle de voyante").catch(console.error);
-                    this.GameConfiguration.channelsHandler.sendMessageToVillage(
-                        "La **Voyante** se rendort."
-                    ).then(() => resolve(this)).catch(err => reject(err));
-                    return;
+
+                    return resolve(this);
                 } else if (outcome.length === 1) {
 
                     let target = this.GameConfiguration.getPlayerById(outcome[0]);
