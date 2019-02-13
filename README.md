@@ -35,10 +35,10 @@ Voici les channels que le bot générera si ils ne sont pas présents sur le ser
 
 ![Channels g&#xE9;n&#xE9;r&#xE9;s par le bot](.gitbook/assets/lg_channelsecategory.png)
 
-## Ajouter le bot à son serveur discord
+## [Ajouter le bot à son serveur discord](https://discordapp.com/api/oauth2/authorize?client_id=538344945673830410&scope=bot&permissions=468839664)
 
 ```text
-Bot en cours de développement, lien à venir...
+Bot en cours de développement, Alpha 2.2
 ```
 
 ## Objectifs
