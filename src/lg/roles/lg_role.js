@@ -83,11 +83,13 @@ class RolesHandler extends IGame {
             {
                 Voyante: 1,
                 Voleur: 0,
-                Chasseur: 0,
-                Cupidon: 0,
-                Sorciere: 0,
+                Chasseur: 1,
+                Cupidon: 1,
+                Sorciere: 1,
                 PetiteFille: 1,
-                LoupGarou: 0
+            },
+            {
+                LoupGarou: 1
             },
             // Nouvelle lune
             {
@@ -126,11 +128,11 @@ class RolesHandler extends IGame {
         ];
 
         this.thiercelieux = [
-            this.role_conf[0], this.role_conf[1], this.role_conf[5]
+            this.role_conf[0], this.role_conf[1], this.role_conf[2], this.role_conf[6]
         ];
 
         this.nouvelleLune = [
-            this.role_conf[0], this.role_conf[1], this.role_conf[2], this.role_conf[5]
+            this.role_conf[0], this.role_conf[1], this.role_conf[3], this.role_conf[6]
         ];
 
         this.allExtension = this.thiercelieux;

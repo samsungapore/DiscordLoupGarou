@@ -59,7 +59,7 @@ class Player {
     async die() {
 
         if (this.amoureux) {
-            return this.amoureux;
+            return [this.amoureux];
         }
 
         return false;

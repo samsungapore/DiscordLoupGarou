@@ -54,10 +54,15 @@ class GameFlow extends IGame {
         setImmediate(() => {
             this.killer.on("death", (deadPlayer) => {
 
-                this.deadPeople.push(deadPlayer);
+                if (!deadPlayer || typeof deadPlayer !== "object") {
+                    LgLogger.warn(`Dead trigger error: deadPlayer equals ${deadPlayer}`);
+                    return;
+                }
 
-                LgLogger.info("onpause + 1", this.gameInfo);
                 this.onPause += 1;
+                LgLogger.info("onpause + 1", this.gameInfo);
+
+                this.deadPeople.push(deadPlayer);
 
                 LgLogger.info("Death triggered", this.gameInfo);
 
@@ -65,18 +70,18 @@ class GameFlow extends IGame {
 
                 this.GameConfiguration.channelsHandler.switchPermissions(
                     this.GameConfiguration.channelsHandler.channels.paradis_lg,
-                    {'VIEW_CHANNEL': true, 'SEND_MESSAGE': false},
+                    {VIEW_CHANNEL: true, SEND_MESSAGES: true},
                     [deadPlayer]
                 ).then(() => this.GameConfiguration.channelsHandler.switchPermissions(
                     this.GameConfiguration.channelsHandler.channels.village_lg,
-                    {'VIEW_CHANNEL': true, 'SEND_MESSAGE': true},
+                    {VIEW_CHANNEL: true, SEND_MESSAGES: false},
                     [deadPlayer]
                 )).then(() => {
 
                     if (deadPlayer.team === "LG") {
                         return this.GameConfiguration.channelsHandler.switchPermissions(
                             this.GameConfiguration.channelsHandler.channels.loups_garou_lg,
-                            {'VIEW_CHANNEL': false, 'SEND_MESSAGE': false},
+                            {'VIEW_CHANNEL': false, 'SEND_MESSAGES': false},
                             [deadPlayer]
                         );
                     }
@@ -88,16 +93,17 @@ class GameFlow extends IGame {
 
                     if (somebodyNew) {
                         somebodyNew.forEach(person => setImmediate(() => this.killer.emit("death", person)));
-                    } else {
-                        LgLogger.info("onpause - 1", this.gameInfo);
                     }
 
+                    LgLogger.info("onpause - 1", this.gameInfo);
                     this.onPause -= 1;
+                    setImmediate(() => this.killer.emit("death_processed"));
 
                 })).catch(err => {
                     console.error(err);
                     LgLogger.info("onpause - 1", this.gameInfo);
                     this.onPause -= 1;
+                    setImmediate(() => this.killer.emit("death_processed"));
                 });
 
             });
@@ -185,84 +191,88 @@ class GameFlow extends IGame {
      *
      * @returns {Promise<boolean>} resolve true if game ended, false if not.
      */
-    gameEnded() {
-        return new Promise((resolve, reject) => {
+    async gameEnded() {
+        let gameHasEnded = false;
 
-            let gameHasEnded = false;
+        let gameStatus = {
+            lg: 0,
+            villageois: 0,
+            abominableSectaire: 0,
+            ange: 0,
+            joueurDeFlute: 0,
+            loupBlanc: 0,
+            alivePlayers: 0
+        };
 
-            let gameStatus = {
-                lg: 0,
-                villageois: 0,
-                abominableSectaire: 0,
-                ange: 0,
-                joueurDeFlute: 0,
-                loupBlanc: 0,
-                alivePlayers: 0
-            };
+        let players = this.GameConfiguration.getPlayers();
 
-            let promises = [];
-
-            let players = this.GameConfiguration.getPlayers();
-
-            for (let player of players.values()) {
-                if (player.alive) {
-                    if (player.team === "LG") gameStatus.lg++;
-                    if (player.team === "VILLAGEOIS") gameStatus.villageois++;
-                    if (player.team === "ABOMINABLESECTAIRE") gameStatus.abominableSectaire++;
-                    if (player.team === "ANGE") gameStatus.ange++;
-                    if (player.team === "JOUEURDEFLUTE") gameStatus.joueurDeFlute++;
-                    if (player.team === "LOUPBLANC") gameStatus.loupBlanc++;
-                    gameStatus.alivePlayers++;
-                }
+        for (let player of players.values()) {
+            if (player.alive) {
+                if (player.team === "LG") gameStatus.lg++;
+                if (player.team === "VILLAGEOIS") gameStatus.villageois++;
+                if (player.team === "ABOMINABLESECTAIRE") gameStatus.abominableSectaire++;
+                if (player.team === "ANGE") gameStatus.ange++;
+                if (player.team === "JOUEURDEFLUTE") gameStatus.joueurDeFlute++;
+                if (player.team === "LOUPBLANC") gameStatus.loupBlanc++;
+                gameStatus.alivePlayers++;
             }
+        }
 
-            if (gameStatus.alivePlayers === 1) {
+        let alivePlayers = this.GameConfiguration.getAlivePlayers();
 
-                gameHasEnded = true;
+        if (gameStatus.alivePlayers === 1) {
 
-                let alivePerson = this.GameConfiguration.getAlivePlayers()[0];
+            gameHasEnded = true;
 
-                if (alivePerson.team === "LG") {
-                    this.gameStats.setTitle("Les Loups Garou ont gagnés !");
-                    this.gameStats.setColor('RED');
-                } else if (alivePerson.team === "VILLAGEOIS") {
-                    this.gameStats.setTitle("Les Villageois ont gagnés !");
-                    this.gameStats.setColor('BLUE');
-                }
+            let alivePerson = alivePlayers[0];
 
-                promises.push(this.fillGameStats());
-
-                //todo: handle lone roles like loup blanc, ange and such, AND also Villageois if there is only 1 villager, same for LG team
-
-            } else if (gameStatus.lg === 0 && gameStatus.villageois === 0) {
-
-                gameHasEnded = true;
-                this.gameStats.setTitle("Tout le monde est mort !");
-                this.gameStats.setColor('RED');
-                promises.push(this.fillGameStats());
-
-            } else if (gameStatus.lg === 0) {
-
-                gameHasEnded = true;
-                this.gameStats.setTitle("Les Villageois ont gagnés !");
-                this.gameStats.setColor('BLUE');
-                promises.push(this.fillGameStats());
-
-            } else if (gameStatus.villageois === 0) {
-
-                //todo: vérifier les rôles alone, ange, loup blanc..
-
-                gameHasEnded = true;
+            if (alivePerson.team === "LG") {
                 this.gameStats.setTitle("Les Loups Garou ont gagnés !");
                 this.gameStats.setColor('RED');
-                promises.push(this.fillGameStats());
-
+            } else if (alivePerson.team === "VILLAGEOIS") {
+                this.gameStats.setTitle("Les Villageois ont gagnés !");
+                this.gameStats.setColor('BLUE');
             }
 
-            LgLogger.info(`Game ended: ${gameHasEnded} | game status: ${gameStatus}`, this.gameInfo);
+            await this.fillGameStats();
 
-            Promise.all(promises).then(() => resolve(gameHasEnded)).catch(err => reject(err));
-        });
+            //todo: handle lone roles like loup blanc, ange and such, AND also Villageois if there is only 1 villager, same for LG team
+
+        } else if (gameStatus.alivePlayers === 2 && alivePlayers[0].amoureux === alivePlayers[1].member.id) {
+
+            gameHasEnded = true;
+            this.gameStats.setTitle(`Le couple ${alivePlayers[0].member.displayName} 💗 ${alivePlayers[1].member.displayName} a gagné la partie !`);
+            this.gameStats.setColor('GOLD');
+            await this.fillGameStats();
+
+        } else if (gameStatus.lg === 0 && gameStatus.villageois === 0) {
+
+            gameHasEnded = true;
+            this.gameStats.setTitle("Tout le monde est mort !");
+            this.gameStats.setColor('RED');
+            await this.fillGameStats();
+
+        } else if (gameStatus.lg === 0) {
+
+            gameHasEnded = true;
+            this.gameStats.setTitle("Les Villageois ont gagnés !");
+            this.gameStats.setColor('BLUE');
+            await this.fillGameStats();
+
+        } else if (gameStatus.villageois === 0) {
+
+            //todo: vérifier les rôles alone, ange, loup blanc..
+
+            gameHasEnded = true;
+            this.gameStats.setTitle("Les Loups Garou ont gagnés !");
+            this.gameStats.setColor('RED');
+            await this.fillGameStats();
+
+        }
+
+        LgLogger.info(`Game ended: ${gameHasEnded} | game status: ${gameStatus}`, this.gameInfo);
+
+        return gameHasEnded
     }
 
     async gameLoop() {
@@ -281,7 +291,6 @@ class GameFlow extends IGame {
 
             await this.killPlayers(shouldDie);
 
-            console.log("TEST");
             if (await this.gameEnded() === true) break;
 
             this.deadPeople = [];
@@ -307,11 +316,19 @@ class GameFlow extends IGame {
         return this.gameStats;
     }
 
-    async killPlayers(shouldDie) {
-        shouldDie = [...new Set(shouldDie)];
-        shouldDie = shouldDie.filter(element => element !== undefined && element !== null);
-        shouldDie.forEach(person => person ? setImmediate(() => this.killer.emit("death", person)) : null);
-        LgLogger.info(`Should die : ${shouldDie.map(p => p ? p.member.displayName : null).toString()}`, this.gameInfo);
+    killPlayers(shouldDie) {
+        return new Promise((resolve, reject) => {
+            shouldDie = [...new Set(shouldDie)];
+            shouldDie = shouldDie.filter(element => element !== undefined && element !== null);
+            shouldDie.forEach(person => person ? setImmediate(() => this.killer.emit("death", person)) : null);
+            LgLogger.info(`Should die : ${shouldDie.map(p => p ? p.member.displayName : null).toString()}`, this.gameInfo);
+            this.killer.on("death_processed", () => {
+                if (!this.onPause) {
+                    LgLogger.info("resolve kill players", this.gameInfo);
+                    resolve(this);
+                }
+            });
+        });
     }
 }
 
@@ -588,8 +605,13 @@ class Night extends Period {
         this.LGTarget = null;
         this.shouldDieTonight = new Map();
 
-        return this;
+        configuration.channelsHandler.switchPermissions(
+            configuration.channelsHandler.channels.village_lg,
+            {VIEW_CHANNEL: true, SEND_MESSAGES: false},
+            configuration.getAlivePlayers()
+        ).catch(console.error);
 
+        return this;
     }
 
     initRole(roleName, prefix, realName) {
@@ -653,6 +675,11 @@ class Night extends Period {
                     this.callSorciere(),
                     this.callRenard()
                 ]))
+                .then(() => this.GameConfiguration.channelsHandler.switchPermissions(
+                    this.GameConfiguration.channelsHandler.channels.village_lg,
+                    {VIEW_CHANNEL: true, SEND_MESSAGES: true},
+                    this.GameConfiguration.getAlivePlayers()
+                ))
                 .then(() => resolve(Array.from(this.shouldDieTonight.values())))
                 .catch(err => reject(err));
 
@@ -810,6 +837,11 @@ class FirstNight extends Night {
                     this.callSorciere(),
                     this.callRenard()
                 ]))
+                .then(() => this.GameConfiguration.channelsHandler.switchPermissions(
+                    this.GameConfiguration.channelsHandler.channels.village_lg,
+                    {VIEW_CHANNEL: true, SEND_MESSAGES: true},
+                    this.GameConfiguration.getAlivePlayers()
+                ))
                 .then(() => resolve(Array.from(this.shouldDieTonight.values())))
                 .catch(err => {
                     reject(err);

@@ -234,6 +234,13 @@ class ChannelsHandler extends IGame {
         });
     }
 
+    /**
+     *
+     * @param channelId String
+     * @param permission Object
+     * @param players Array<Player>
+     * @returns {Promise<any>}
+     */
     switchPermissions(channelId, permission, players) {
         return new Promise((resolve, reject) => {
 
