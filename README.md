@@ -38,8 +38,12 @@ Voici les channels que le bot générera si ils ne sont pas présents sur le ser
 ## [Ajouter le bot à son serveur discord](https://discordapp.com/api/oauth2/authorize?client_id=538344945673830410&scope=bot&permissions=468839664)
 
 ```text
-Bot en cours de développement, Alpha 2.2
+Bot en cours de développement, Beta 1.0
 ```
+
+{% hint style="info" %}
+[Cliquez-ici](https://discordapp.com/api/oauth2/authorize?client_id=538344945673830410&scope=bot&permissions=468839664) pour ajouter le bot à votre serveur
+{% endhint %}
 
 ## Objectifs
 
