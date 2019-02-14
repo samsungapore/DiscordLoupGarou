@@ -873,20 +873,42 @@ class FirstNight extends Night {
     callVoleur() {
         return new Promise((resolve, reject) => {
 
+            let newPlayer = null;
+
             this.initRole("Voleur", "Le ")
                 .then(voleur => voleur ? voleur.proposeRoleChoice(this.GameConfiguration) : resolve(this))
                 .then((voleur) => {
 
-                    if (!voleur.roleChosen) resolve(true);
+                    if (!voleur.roleChosen) return resolve(true);
 
-                    this.GameConfiguration.removePlayer(voleur.member.id);
+                    let voleurId = voleur.member.id;
+
+                    this.GameConfiguration.removePlayer(voleurId);
                     this.GameConfiguration.addPlayer(allRoles[voleur.roleChosen](voleur.member));
 
-                    return this.GameConfiguration.channelsHandler.sendMessageToVillage(
-                        "**Le Voleur** se rendort."
-                    );
+                    newPlayer = this.GameConfiguration.getPlayerById(voleurId);
+                    let promises = [];
 
-                }).then(() => resolve(this)).catch(err => reject(err));
+                    Object.keys(newPlayer.permission).forEach((channelName) => {
+                        promises.push(
+                            this.GameConfiguration.channelsHandler._channels.get(
+                                this.GameConfiguration.channelsHandler.channels[channelName]
+                            ).overwritePermissions(
+                                newPlayer.member,
+                                newPlayer.permission[channelName]
+                            )
+                        );
+                    });
+
+                    return Promise.all(promises);
+
+                }).then(() => this.GameConfiguration.channelsHandler.switchPermissions(
+                this.GameConfiguration.channelsHandler.channels.village_lg,
+                {VIEW_CHANNEL: true, SEND_MESSAGES: false},
+                [newPlayer]
+            )).then(() => this.GameConfiguration.channelsHandler.sendMessageToVillage(
+                "**Le Voleur** se rendort."
+            )).then(() => resolve(this)).catch(err => reject(err));
 
         });
     }
