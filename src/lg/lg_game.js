@@ -193,7 +193,7 @@ class Game extends IGame {
 
         let LG = this.client.LG.get(this.guild.id);
 
-        LG.running = false;
+        if (LG) LG.running = false;
 
         if (this.quitListener) this.quitListener.stop();
 
