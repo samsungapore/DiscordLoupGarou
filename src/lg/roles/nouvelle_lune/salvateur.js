@@ -1,3 +1,4 @@
+const EveryOneVote = require("../../lg_vote").EveryOneVote;
 const Villageois = require("../baseRole").Villageois;
 
 /**
@@ -14,13 +15,44 @@ class Salvateur extends Villageois {
 
         this.role = "Salvateur";
 
-        this.targetChoice = undefined;
+        this.lastTargetId = null;
+        this.targetChoice = null;
 
         return this;
     }
 
     async processRole(configuration) {
-        return true;
+
+        this.targetChoice = null;
+
+        let dmChannel = await this.getDMChannel();
+
+        let exceptionIdArray = [this.member.id];
+
+        if (this.lastTargetId && this.lastTargetId !== this.member.id) {
+            exceptionIdArray.push(this.lastTargetId);
+        }
+
+        let outcome = await EveryOneVote(
+            "En tant que Salvateur qui voulez-vous protéger ?",
+            configuration,
+            40000,
+            dmChannel,
+            1
+        ).excludeDeadPlayers().runVote(exceptionIdArray);
+
+        if (!outcome || outcome.length === 0) {
+            this.lastTargetId = null;
+        } else if (outcome.length === 1) {
+            this.targetChoice = configuration.getPlayerById(outcome[0]);
+            this.targetChoice.immunity = true;
+            this.lastTargetId = this.targetChoice.member.id;
+        } else {
+            this.lastTargetId = null;
+        }
+
+        return this;
+
     }
 
 }

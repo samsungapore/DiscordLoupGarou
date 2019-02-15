@@ -751,6 +751,9 @@ class Night extends Period {
 
             this.initRole("Salvateur", "Le ")
                 .then(salvateur => salvateur ? salvateur.processRole(this.GameConfiguration) : resolve(this))
+                .then(salvateur => {
+
+                })
                 .then(() => resolve(this))
                 .catch(err => reject(err));
 
@@ -800,7 +803,7 @@ class Night extends Period {
                 .then(sorciere => sorciere ? sorciere.processRole(this.GameConfiguration, this.shouldDieTonight.get("LGTarget")) : resolve(this))
                 .then(sorciere => {
 
-                    if (sorciere.savedLgTarget) {
+                    if (sorciere.savedLgTarget || sorciere.targetIsSavedBySalva) {
                         this.shouldDieTonight.set("LGTarget", null);
                     }
 
@@ -813,6 +816,7 @@ class Night extends Period {
                     }
 
                     sorciere.savedLgTarget = false;
+                    sorciere.targetIsSavedBySalva = false;
 
                 })
                 .then(() => this.GameConfiguration.channelsHandler.sendMessageToVillage(
