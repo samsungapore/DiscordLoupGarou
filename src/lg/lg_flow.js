@@ -748,7 +748,12 @@ class Night extends Period {
 
     callSalvateur() {
         return new Promise((resolve, reject) => {
-            resolve(true);
+
+            this.initRole("Salvateur", "Le ")
+                .then(salvateur => salvateur ? salvateur.processRole(this.GameConfiguration) : resolve(this))
+                .then(() => resolve(this))
+                .catch(err => reject(err));
+
         });
     }
 
