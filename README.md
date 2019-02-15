@@ -81,3 +81,25 @@ Pour le développement de ce jeu, une approche orientée objet paraît nécessai
 [La bibliothèque discord.js](https://discord.js.org) est celle utilisé pour le bot, compatible avec les normes mentionnées précédemment.
 {% endhint %}
 
+## Changelog
+
+### 18/01/2019 : Début du développement
+
+### 14/02/2019 : Beta 1.0
+
+* Tous les rôles de Thiercelieux
+* Jeu textuel
+
+### À venir
+
+* Les rôles de _Nouvelle Lune_ \(ceux compatibles\)
+* Annonces vocales
+* Musique
+* Les rôles de _Personnages_ \(ceux compatibles\)
+* Jeux à thèmes \(avec annonces, musiques personnalisables\)
+* Peut-être : les rôles de l'extension _Le Village_
+
+## Proposer des améliorations, signalement des bugs
+
+Vous pouvez proposer vos améliorations du bot et signaler les bugs sur [cette page MeisterTask](https://www.meistertask.com/projects/dp9gt43fec/join/). Vous êtes priés de ne pas mettre le bazar dans ce MeisterTask, car vous avez les droits de suppression sur celui-ci.
+
