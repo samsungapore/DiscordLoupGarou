@@ -751,9 +751,6 @@ class Night extends Period {
 
             this.initRole("Salvateur", "Le ")
                 .then(salvateur => salvateur ? salvateur.processRole(this.GameConfiguration) : resolve(this))
-                .then(salvateur => {
-
-                })
                 .then(() => resolve(this))
                 .catch(err => reject(err));
 
