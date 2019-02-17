@@ -1,4 +1,6 @@
 const lg_var = require("../lg_var");
+const get_random_in_array = require("../../functions/parsing_functions").get_random_in_array;
+const EveryOneVote = require("../lg_vote").EveryOneVote;
 const RichEmbed = require("discord.js").RichEmbed;
 
 class Player {
@@ -8,12 +10,13 @@ class Player {
         this.member = guildMember;
         this.gameinfo = null;
 
-        this.maire = false;
+        this.capitaine = false;
         this.immunity = false;
         this.alive = true;
         this.voted = false;
         this.infected = false;
         this.amoureux = undefined;
+        this.role = "Joueur";
 
         this.permission = {
             thiercelieux_lg: {
@@ -58,13 +61,60 @@ class Player {
 
     async die(configuration) {
 
+        let additionnalTargets = [];
+
         if (this.amoureux && configuration.getPlayerById(this.amoureux).alive) {
-            return [configuration.getPlayerById(this.amoureux)];
+            let amoureux = configuration.getPlayerById(this.amoureux);
+            additionnalTargets.push(amoureux);
+            await configuration.villageChannel.send(new RichEmbed()
+                .setAuthor(`${this.member.displayName} meurt de chagrin`, this.member.user.avatarURL)
+                .setTitle(this.role)
+                .setColor('RED')
+            );
         }
 
-        //si le maire meurt go réélire
+        //si le capitaine meurt go réélire
+        if (this.capitaine && configuration.getAlivePlayers().length > 0) {
+            let dmChannel = await this.getDMChannel();
 
-        return false;
+            await configuration.channelsHandler.sendMessageToVillage(
+                `${this.member.displayName}, le Capitaine, est mort(e), il va maintenant désigner son successeur`
+            );
+
+            let outcome = await new EveryOneVote(
+                "Qui sera ton successeur ?",
+                configuration,
+                30000,
+                dmChannel,
+                1
+            ).excludeDeadPlayers().runVote([this.member.id]);
+
+            let newCapitaine = null;
+
+            if (!outcome || outcome.length === 0) {
+                newCapitaine = get_random_in_array(configuration.getAlivePlayers());
+            } else {
+                newCapitaine = configuration.getPlayerById(outcome[0]);
+            }
+
+            this.capitaine = false;
+            newCapitaine.capitaine = true;
+
+            await configuration.channelsHandler.sendMessageToVillage(
+                `${newCapitaine.member.displayName} est le nouveau Capitaine de Thiercelieux !`,
+                newCapitaine.member.user.avatarURL
+            );
+
+        }
+
+        await configuration.villageChannel.send(new RichEmbed()
+            .setAuthor(`${this.member.displayName} est mort(e)`, this.member.user.avatarURL)
+            .setTitle(this.role)
+            .setImage(this.member.user.avatarURL)
+            .setColor('RED')
+        );
+
+        return additionnalTargets.length === 0 ? false : additionnalTargets;
     }
 
 }
