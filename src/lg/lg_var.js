@@ -67,10 +67,10 @@ let LGGameObject = class {
         this.kill_choice = false;
 
         /**
-         * Maire
+         * Capitaine
          * @type { GuildMember }
          */
-        this.maire = null;
+        this.capitaine = null;
 
         this.role_players_id = {
             Villageois: [],
@@ -99,7 +99,7 @@ let LGGameObject = class {
             Chevalier: [],
             JugeBegue: [],
             Corbeau: [],
-            Maire: []
+            Capitaine: []
         };
 
         this.role_conf = [
@@ -114,7 +114,7 @@ let LGGameObject = class {
                 Cupidon: 1,
                 Sorciere: 1,
                 PetiteFille: 1,
-                Maire: 1,
+                Capitaine: 1,
                 LoupGarou: 1
             },
 
@@ -480,21 +480,21 @@ const roles_desc = {
             }]
         }
     },
-    Maire: {
+    Capitaine: {
         embed: {
             color: botColor,
             author: {
                 name: "LG - Rôle"
             },
             fields: [{
-                name: "Maire",
-                value: "À l'aube du premier jour, les villageois élisent le capitaine (ou maire) du " +
+                name: "Capitaine",
+                value: "À l'aube du premier jour, les villageois élisent le capitaine (ou capitaine) du " +
                 "village.En cas d'égalité, la voix du capitaine l'emporte. Le capitaine peut être " +
                 "n'importe quel joueur (incluant les loups-garous). Si le capitaine meurt, dans son " +
                 "dernier souffle il désigne un successeur qui devient automatiquement le nouveau" +
                 "capitaine du village.\n\nS'il y a un désaccord pour le capitaine, celui-ci peut " +
                 "être choisi au hasard. Dans ce cas, glisser la carte du capitaine dans les cartes" +
-                " à distribuer. Le capitaine est celui qui reçoit cette carte. On l'appelle aussi maire. Le Maire peut aussi être élu par les deux sœurs, ou les trois frères."
+                " à distribuer. Le capitaine est celui qui reçoit cette carte. On l'appelle aussi capitaine. Le Capitaine peut aussi être élu par les deux sœurs, ou les trois frères."
             }]
         }
     },

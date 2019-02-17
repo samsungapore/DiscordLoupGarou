@@ -105,8 +105,8 @@ class Create {
         return new LoupBlanc(guildMember, gameInfo);
     }
 
-    static maire(guildMember, gameInfo) {
-        return new Maire(guildMember, gameInfo);
+    static capitaine(guildMember, gameInfo) {
+        return new Capitaine(guildMember, gameInfo);
     }*/
 
     static chasseur(guildMember, gameInfo) {
