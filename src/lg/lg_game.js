@@ -86,7 +86,7 @@ class Game extends IGame {
         LgLogger.info("Preparing game...", this.gameInfo);
         this.preparation.prepareGame().then(status => {
             if (!status) {
-                this.quit();
+                this.quit().catch(console.error);
                 return;
             }
 
@@ -131,14 +131,14 @@ class Game extends IGame {
                 setTimeout(() => {
                     msgSent.delete().catch(() => true);
                 });
-                Wait.seconds(5).then(() => this.quit());
+                Wait.seconds(5).then(() => this.quit()).catch(console.error);
             }).catch(console.error);
 
         }).catch(err => {
 
             this.stemmingChannel.send("Erreur rencontrée\n```" + err + "```").catch(console.error);
             console.error(err);
-            this.quit();
+            this.quit().catch(console.error);
 
         });
     }
@@ -172,7 +172,7 @@ class Game extends IGame {
 
                     reaction.remove(user).catch(() => true);
                     if (user.id === this.stemmingPlayer || this.guild.members.get(user.id).hasPermission('BAN_MEMBERS')) {
-                        this.quit();
+                        this.quit().catch(console.error);
                     }
                 }
                 reaction.remove(reaction.users.last()).catch(() => true);
@@ -195,33 +195,36 @@ class Game extends IGame {
     }
 
     quit() {
+        return new Promise((resolve, reject) => {
+            let LG = this.client.LG.get(this.guild.id);
 
-        let LG = this.client.LG.get(this.guild.id);
+            if (LG) LG.running = false;
 
-        if (LG) LG.running = false;
+            if (this.quitListener) this.quitListener.stop();
 
-        if (this.quitListener) this.quitListener.stop();
+            if (this.flow && this.flow.GameConfiguration && this.flow.GameConfiguration.loupGarouMsgCollector) {
+                this.flow.GameConfiguration.loupGarouMsgCollector.stop();
+            }
 
-        if (this.flow && this.flow.GameConfiguration && this.flow.GameConfiguration.loupGarouMsgCollector) {
-            this.flow.GameConfiguration.loupGarouMsgCollector.stop();
-        }
+            let quitPromises = [];
 
-        let quitPromises = [];
+            quitPromises.push(this.preparation.rolesHandler.deleteRoles());
 
-        quitPromises.push(this.preparation.rolesHandler.deleteRoles());
+            if (this.preparation.keepChannels === false) {
+                quitPromises.push(this.preparation.channelsHandler.deleteChannels());
+            } else {
 
-        if (this.preparation.keepChannels === false) {
-            quitPromises.push(this.preparation.channelsHandler.deleteChannels());
-        } else {
+                quitPromises.push(this.preparation.channelsHandler.deletePermissionsOverwrites());
+                quitPromises.push(this.cleanChannels());
 
-            quitPromises.push(this.preparation.channelsHandler.deletePermissionsOverwrites());
-            quitPromises.push(this.cleanChannels());
+            }
 
-        }
-
-        Promise.all(quitPromises).catch((err) => {
-            console.error(err);
-            this.stemmingChannel.send("Jeu arrêté, des erreurs se sont produite : ```" + err + "```").catch(console.error);
+            Promise.all(quitPromises).then(() => {
+                resolve(this);
+            }).catch((err) => {
+                this.stemmingChannel.send("Jeu arrêté, des erreurs se sont produite : ```" + err + "```").catch(console.error);
+                reject(err);
+            });
         });
     }
 
