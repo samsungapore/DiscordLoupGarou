@@ -25,7 +25,10 @@ class GameInfo {
     constructor(message, playTime) {
         this.guild = message.guild;
         this.playTime = playTime;
-        this.gameNumber = new Date().toString();
+        this.gameNumber = new Date().toUTCString().split(' ')[4];
+        if (this.gameNumber) {
+            this.gameNumber.replace(/:+/g, "42");
+        }
     }
 
     get serverName() {
@@ -370,6 +373,7 @@ class GamePreparation extends IGame {
             }, () => {
                 if (this.status === false) {
                     gamePreparationMsg.message.delete().catch(console.error);
+                    LgLogger.info("User decided to end game", this.gameInfo);
                     resolve(false);
                 } else {
                     gamePreparationMsg.removeReactionList(["🐺", "❇"]).catch(console.error);

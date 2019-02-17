@@ -11,6 +11,7 @@ const EveryOneVote = require("./lg_vote.js").EveryOneVote;
 const EventEmitter = require('events');
 const DayVote = require("./lg_vote").DayVote;
 const CommunicationHandler = require('./message_sending').CommunicationHandler;
+let timeToString = require('../functions/time');
 
 class IGame {
 
@@ -414,7 +415,7 @@ class Day extends Period {
         );
 
         await this.GameConfiguration.channelsHandler.sendMessageToVillage(
-            `Vous disposez de ${debateDuration} minutes pour débattre, et faire un vote`
+            `Vous disposez de ${timeToString(debateDuration)} minutes pour débattre, et faire un vote`
         );
 
         await Wait.minutes(debateDuration / 2);
@@ -440,7 +441,7 @@ class Day extends Period {
         );
 
         setTimeout(() => {
-            this.GameConfiguration.channelsHandler.sendMessageToVillage(`Il reste ${debateDuration / 4} minutes avant la fin du vote`)
+            this.GameConfiguration.channelsHandler.sendMessageToVillage(`Il reste ${timeToString(debateDuration / 4)} avant la fin du vote`)
         }, (debateDuration / 4) * 60 * 1000);
 
         await this.GameConfiguration.channelsHandler.sendMessageToVillage(
