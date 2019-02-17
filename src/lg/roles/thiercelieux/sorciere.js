@@ -36,6 +36,7 @@ class Sorciere extends Villageois {
 
         this.potions = {vie: 1, poison: 1};
 
+        this.targetIsSavedBySalva = false;
         this.savedLgTarget = false;
         this.target = null;
 
@@ -147,8 +148,16 @@ class Sorciere extends Villageois {
                 .then(() => {
                     let promise = [];
 
-                    if (this.potions.vie > 0 && !lgTarget.immunity) {
-                        promise.push(this.askIfWannaSave(lgTarget));
+                    if (this.potions.vie > 0) {
+
+                        // if salvateur didn't targeted this player
+                        if (!lgTarget.immunity) {
+                            promise.push(this.askIfWannaSave(lgTarget));
+                        } else {
+                            lgTarget.immunity = false;
+                            this.targetIsSavedBySalva = true;
+                        }
+
                     }
 
                     return Promise.all(promise);
