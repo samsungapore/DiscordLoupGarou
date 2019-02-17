@@ -15,6 +15,8 @@ class Chasseur extends Villageois {
     die(GameConfiguration) {
         return new Promise((resolve, reject) => {
 
+            let targets = [];
+
             GameConfiguration.channelsHandler.sendMessageToVillage(
                 `${this.member.displayName}, le Chasseur, est mort. Il va maintenant désigner une personne à emporter avec lui.`
             )
@@ -28,8 +30,6 @@ class Chasseur extends Villageois {
                     ).excludeDeadPlayers().runVote())
                 .then(outcome => {
 
-                    let targets = [];
-
                     if (!outcome || outcome.length === 0) {
                         targets.push(get_random_in_array(GameConfiguration.getAlivePlayers()));
                     } else {
@@ -38,8 +38,18 @@ class Chasseur extends Villageois {
 
                     this.dmChannel.send(`Vous avez choisi ${targets[0].member.displayName}`).catch(console.error);
 
-                    if (this.amoureux) targets.push(this.amoureux);
+                    if (this.amoureux && GameConfiguration.getPlayerById(this.amoureux).alive) {
+                        targets.push(GameConfiguration.getPlayerById(this.amoureux));
+                    }
 
+                    return super.die(GameConfiguration);
+
+                })
+                .then(additionnalDeath => {
+
+                    if (additionnalDeath) {
+                        targets = targets.concat(additionnalDeath);
+                    }
                     resolve(targets);
 
                 })
