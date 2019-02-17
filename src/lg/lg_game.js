@@ -83,63 +83,66 @@ class Game extends IGame {
     }
 
     launch() {
-        LgLogger.info("Preparing game...", this.gameInfo);
-        this.preparation.prepareGame().then(status => {
-            if (!status) {
-                this.quit().catch(console.error);
-                return;
-            }
+        return new Promise((resolve, reject) => {
+            LgLogger.info("Preparing game...", this.gameInfo);
+            this.preparation.prepareGame().then(status => {
+                if (!status) {
+                    this.quit().then(() => resolve(this)).catch(err => reject(err));
+                    return;
+                }
 
-            this.updateObjects(status);
+                this.updateObjects(status);
 
-            LgLogger.info("Game successfully prepared.", this.gameInfo);
+                LgLogger.info("Game successfully prepared.", this.gameInfo);
 
-            return this.msg.delete();
+                return this.msg.delete();
 
-        }).then(() => {
+            }).then(() => {
 
-            return this.stemmingChannel.send(CommunicationHandler.getLGSampleMsg()
+                return this.stemmingChannel.send(CommunicationHandler.getLGSampleMsg()
+                    .addField(
+                        "Joueurs",
+                        this.preparation.configuration
+                            .getPlayerNames()
+                            .toString()
+                            .replace(',', ', ')
+                    )
+                );
+
+            }).then(msg => {
+
+                this.msg = msg;
+
+                return this.listenQuitEvents();
+
+            }).then(() => this.stemmingChannel.send(CommunicationHandler.getLGSampleMsg()
                 .addField(
-                    "Joueurs",
-                    this.preparation.configuration
-                        .getPlayerNames()
-                        .toString()
-                        .replace(',', ', ')
+                    "Le jeu va bientôt commencer", "Début du jeu dans 5 secondes"
                 )
-            );
+            )).then((msg) => {
 
-        }).then(msg => {
+                LgLogger.info(`${this.flow.GameConfiguration.getGameConfString()}`, this.gameInfo);
 
-            this.msg = msg;
+                return Wait.seconds(5).then(() => msg.delete());
 
-            return this.listenQuitEvents();
+            }).then(() => this.flow.run()).then((endMsg) => {
 
-        }).then(() => this.stemmingChannel.send(CommunicationHandler.getLGSampleMsg()
-            .addField(
-                "Le jeu va bientôt commencer", "Début du jeu dans 5 secondes"
-            )
-        )).then((msg) => {
+                this.stemmingChannel.send(endMsg).catch(console.error);
+                this.stemmingChannel.send("Nettoyage des channels dans 5 secondes").then(msgSent => {
+                    setTimeout(() => {
+                        msgSent.delete().catch(() => true);
+                    });
+                    Wait.seconds(5).then(() => this.quit()).then(() => {
+                        resolve(this);
+                    }).catch(err => reject(err));
+                }).catch(err => reject(err));
 
-            LgLogger.info(`${this.flow.GameConfiguration.getGameConfString()}`, this.gameInfo);
+            }).catch(err => {
 
-            return Wait.seconds(5).then(() => msg.delete());
+                this.stemmingChannel.send("Erreur rencontrée\n```" + err + "```").catch(console.error);
+                this.quit().then(() => reject(err)).catch(err => reject(err));
 
-        }).then(() => this.flow.run()).then((endMsg) => {
-
-            this.stemmingChannel.send(endMsg).catch(console.error);
-            this.stemmingChannel.send("Nettoyage des channels dans 5 secondes").then(msgSent => {
-                setTimeout(() => {
-                    msgSent.delete().catch(() => true);
-                });
-                Wait.seconds(5).then(() => this.quit()).catch(console.error);
-            }).catch(console.error);
-
-        }).catch(err => {
-
-            this.stemmingChannel.send("Erreur rencontrée\n```" + err + "```").catch(console.error);
-            console.error(err);
-            this.quit().catch(console.error);
-
+            });
         });
     }
 
@@ -365,13 +368,18 @@ class GamePreparation extends IGame {
                 }
 
             }, () => {
-                gamePreparationMsg.removeReactionList(["🐺", "❇"]).catch(console.error);
-                this.rolesHandler.assignRoles(this.configuration)
-                    .then((configuration) => {
-                        this.configuration = configuration;
-                        resolve(this.status);
-                    })
-                    .catch(err => reject(err));
+                if (this.status === false) {
+                    gamePreparationMsg.message.delete().catch(console.error);
+                    resolve(false);
+                } else {
+                    gamePreparationMsg.removeReactionList(["🐺", "❇"]).catch(console.error);
+                    this.rolesHandler.assignRoles(this.configuration)
+                        .then((configuration) => {
+                            this.configuration = configuration;
+                            resolve(this.status);
+                        })
+                        .catch(err => reject(err));
+                }
             }, (reaction) => reaction.count > 1 && reaction.users.last().id !== this.client.user.id);
         });
     }

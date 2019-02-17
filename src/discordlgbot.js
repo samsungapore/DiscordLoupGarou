@@ -50,7 +50,7 @@ LGBot.on('message', message => {
 
     if (message.author.bot) return;
 
-    const args = message.content.slice(3).trim().split(/ +/g);
+    const args = message.content.slice(BotData.BotValues.botPrefix.length).trim().split(/ +/g);
     const command = args.shift().toLowerCase();
 
     if (!message.content.startsWith(BotData.BotValues.botPrefix)) {
