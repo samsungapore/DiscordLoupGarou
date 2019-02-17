@@ -38,7 +38,7 @@ Voici les channels que le bot générera si ils ne sont pas présents sur le ser
 ## [Ajouter le bot à son serveur discord](https://discordapp.com/api/oauth2/authorize?client_id=538344945673830410&scope=bot&permissions=468839664)
 
 ```text
-Bot en cours de développement, Beta 1.0
+Bot en cours de développement, Beta 1.1
 ```
 
 {% hint style="info" %}
@@ -89,6 +89,10 @@ Pour le développement de ce jeu, une approche orientée objet paraît nécessai
 
 * Tous les rôles de Thiercelieux
 * Jeu textuel
+
+### 17/02/2019 : Beta 1.1
+
+* Correction de bugs divers
 
 ### À venir
 
