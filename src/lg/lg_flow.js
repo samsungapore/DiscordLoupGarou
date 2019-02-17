@@ -761,17 +761,10 @@ class Night extends Period {
         return new Promise((resolve, reject) => {
 
             this.initRole("Voyante", "La ")
-                .then(voyante => {
-
-                    if (!voyante) return resolve(this);
-
-                    return voyante.processRole(this.GameConfiguration);
-
-                }).then(() => {
-                return this.GameConfiguration.channelsHandler.sendMessageToVillage(
+                .then(voyante => voyante ? voyante.processRole(this.GameConfiguration) : resolve(this))
+                .then(() => this.GameConfiguration.channelsHandler.sendMessageToVillage(
                     "La **Voyante** se rendort."
-                );
-            }).then(() => resolve(this)).catch(err => reject(err));
+                )).then(() => resolve(this)).catch(err => reject(err));
 
         });
     }
