@@ -127,7 +127,12 @@ class Game extends IGame {
         }).then(() => this.flow.run()).then((endMsg) => {
 
             this.stemmingChannel.send(endMsg).catch(console.error);
-            this.quit();
+            this.stemmingChannel.send("Nettoyage des channels dans 5 secondes").then(msgSent => {
+                setTimeout(() => {
+                    msgSent.delete().catch(() => true);
+                });
+                Wait.seconds(5).then(() => this.quit());
+            }).catch(console.error);
 
         }).catch(err => {
 
@@ -197,7 +202,7 @@ class Game extends IGame {
 
         if (this.quitListener) this.quitListener.stop();
 
-        if (this.flow.GameConfiguration.loupGarouMsgCollector) {
+        if (this.flow && this.flow.GameConfiguration && this.flow.GameConfiguration.loupGarouMsgCollector) {
             this.flow.GameConfiguration.loupGarouMsgCollector.stop();
         }
 
@@ -471,10 +476,10 @@ class GameConfiguration {
         return this.channelsHandler._channels.get(this.channelsHandler.channels.village_lg);
     }
 
-    get Maire() {
+    get Capitaine() {
 
         for (let player of this._players.values()) {
-            if (player.maire) return player;
+            if (player.capitaine) return player;
         }
 
         return null;
@@ -502,7 +507,6 @@ class GameConfiguration {
 
     addParticipant(guildMember) {
         this._participants.set(guildMember.id, guildMember);
-        this._table.push(guildMember);
     }
 
     removeParticipant(id) {
@@ -510,6 +514,9 @@ class GameConfiguration {
     }
 
     getTable() {
+        if (this._table.length === 0) {
+            this._table = Array.from(this._participants.values());
+        }
         return this._table;
     }
 
@@ -557,6 +564,16 @@ class GameConfiguration {
 
     getPlayers() {
         return this._players;
+    }
+
+    getDeadPlayers() {
+        let players = [];
+
+        for (let player of this._players.values()) {
+            if (!player.alive) players.push(player);
+        }
+
+        return players;
     }
 
     getAlivePlayers() {

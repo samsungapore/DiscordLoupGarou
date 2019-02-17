@@ -134,7 +134,7 @@ class GameFlow extends IGame {
                     .send(new RichEmbed().setColor(BotData.BotValues.botColor)
                         .addField(
                             "Table ronde",
-                            this.GameConfiguration.getTable().map(member => member.displayName).toString().replace(',', '\n')
+                            this.GameConfiguration.getTable().map(member => member.displayName).toString().replace(/,+/g, '\n')
                         )
                     )
                 ).catch(err => {
@@ -161,18 +161,18 @@ class GameFlow extends IGame {
 
         this.gameStats.addField(
             "Loups",
-            `${this.GameConfiguration.getMemberteams("LG").toString().replace(',', '\n')}`,
+            `${this.GameConfiguration.getMemberteams("LG").toString().replace(/,+/g, '\n')}`,
             true
         ).addField(
             "Villageois",
-            `${this.GameConfiguration.getMemberteams("VILLAGEOIS").toString().replace(',', '\n')}`,
+            `${this.GameConfiguration.getMemberteams("VILLAGEOIS").toString().replace(/,+/g, '\n')}`,
             true
         );
 
         if (this.GameConfiguration.getMemberteams("LOUPBLANC").length > 0) {
             this.gameStats.addField(
                 "Loup Blanc",
-                `${this.GameConfiguration.getMemberteams("LOUPBLANC").toString().replace(',', '\n')}`,
+                `${this.GameConfiguration.getMemberteams("LOUPBLANC").toString().replace(/,+/g, '\n')}`,
                 true
             )
         }
@@ -281,7 +281,7 @@ class GameFlow extends IGame {
 
         while (await this.gameEnded() === false) {
 
-            await Wait.seconds(4);
+            await Wait.seconds(3);
 
             while (this.onPause) {
                 await Wait.seconds(1);
@@ -295,9 +295,14 @@ class GameFlow extends IGame {
 
             this.deadPeople = [];
 
+            await Wait.seconds(2);
+
             while (this.onPause) {
                 await Wait.seconds(1);
             }
+
+            await this.GameConfiguration.channelsHandler.sendMessageToVillage("La nuit va bientôt tomber sur Thiercelieux...");
+            await Wait.seconds(23);
 
             shouldDie = await new Night(this.GameConfiguration, this.gameInfo, this.turnNb).goThrough();
 
@@ -353,6 +358,13 @@ class Period {
 
     }
 
+    async updateRoleMaps() {
+        this.roleMap = this.GameConfiguration.getRoleMap({dead: false, alive: true});
+        this.deadRoleMap = this.GameConfiguration.getRoleMap({dead: true, alive: false});
+        this.allRoleMap = this.GameConfiguration.getRoleMap({dead: true, alive: true});
+        return this;
+    }
+
 }
 
 class Day extends Period {
@@ -371,8 +383,8 @@ class Day extends Period {
         return new Promise((resolve, reject) => {
             LgLogger.info("Going through day", this.gameInfo);
 
-            this.displayNightOutcome()
-                .then(() => this.debateTime())
+            //this.displayNightOutcome()
+            this.debateTime()
                 .then((outcome) => this.pronounceSentence(outcome))
                 .then((victim) => resolve([victim]))
                 .catch(err => reject(err));
@@ -417,6 +429,16 @@ class Day extends Period {
             this.GameConfiguration.getAlivePlayers()
         );
 
+        await this.GameConfiguration.channelsHandler.switchPermissions(
+            this.GameConfiguration.channelsHandler.channels.thiercelieux_lg,
+            {
+                VIEW_CHANNEL: true,
+                SEND_MESSAGES: false,
+                ADD_REACTIONS: false
+            },
+            this.GameConfiguration.getDeadPlayers()
+        );
+
         setTimeout(() => {
             this.GameConfiguration.channelsHandler.sendMessageToVillage(`Il reste ${debateDuration / 4} minutes avant la fin du vote`)
         }, (debateDuration / 4) * 60 * 1000);
@@ -450,18 +472,18 @@ class Day extends Period {
 
         } else if (outcome.length > 1) {
 
-            // more than one victim voted, the maire must make a decision
-            // if no maire, random victim
-            // if maire refuse to make a decision, pick a random victim
+            // more than one victim voted, the capitaine must make a decision
+            // if no capitaine, random victim
+            // if capitaine refuse to make a decision, pick a random victim
 
-            let maire = this.GameConfiguration.Maire;
+            let capitaine = this.GameConfiguration.Capitaine;
 
-            if (maire) {
+            if (capitaine && capitaine.alive) {
 
-                await this.GameConfiguration.channelsHandler.sendMessageToVillage("Le vote est nul, le Maire va devoir trancher");
+                await this.GameConfiguration.channelsHandler.sendMessageToVillage("Le vote est nul, le Capitaine va devoir trancher");
 
                 victimId = await new Promise((resolve, reject) => {
-                    maire.getDMChannel()
+                    capitaine.getDMChannel()
                         .then(dmChannel => new EveryOneVote(
                             "Qui doit mourir ?",
                             this.GameConfiguration,
@@ -471,11 +493,11 @@ class Day extends Period {
                         ).excludeDeadPlayers().runVote(
                             this.GameConfiguration.getAlivePlayers().filter(p => !outcome.includes(p.member.id))
                         ))
-                        .then(maireDecision => {
-                            if (!maireDecision || maireDecision.length === 0) {
+                        .then(capitaineDecision => {
+                            if (!capitaineDecision || capitaineDecision.length === 0) {
                                 resolve(get_random_in_array(outcome));
                             } else {
-                                resolve(maireDecision[0]);
+                                resolve(capitaineDecision[0]);
                             }
                         })
                         .catch(err => reject(err));
@@ -501,8 +523,7 @@ class Day extends Period {
             let victim = this.GameConfiguration.getPlayerById(victimId);
 
             await this.GameConfiguration.channelsHandler.sendMessageToVillage(
-                `Le village a souhaité la mort de **${victim.member.displayName}**, étant ${victim.role}`,
-                victim.member.user.avatarURL
+                `Le village a souhaité la mort de **${victim.member.displayName}**, étant ${victim.role}`
             );
 
             return victim;
@@ -526,9 +547,9 @@ class FirstDay extends Period {
 
             this.GameConfiguration.channelsHandler.sendMessageToVillage(
                 "🌄 Le jour se lève à Thiercelieux." +
-                " Quand la neige éternelle ornera les montagnes, le maire devra être élu."
+                " Quand la neige éternelle ornera les montagnes, le capitaine devra être élu."
             ).then(() => Wait.minutes(1))
-                .then(() => this.maireElection())
+                .then(() => this.capitaineElection())
                 .then(() => this.GameConfiguration.channelsHandler.sendMessageToVillage("⛰ La nuit va bientôt tomber sur Thiercelieux."))
                 .then(() => Wait.seconds(30))
                 .then(() => resolve(this.GameConfiguration))
@@ -537,13 +558,13 @@ class FirstDay extends Period {
         });
     }
 
-    maireElection() {
+    capitaineElection() {
         return new Promise((resolve, reject) => {
 
-            LgLogger.info('Begining maire election.', this.gameInfo);
+            LgLogger.info('Begining capitaine election.', this.gameInfo);
 
             this.GameConfiguration.channelsHandler.sendMessageToVillage(
-                "🏔 Les villageois se réunissent afin d'élir leur maire\n" +
+                "🏔 Les villageois se réunissent afin d'élir leur capitaine\n" +
                 "C'est l'heure du vote !"
             ).then(() => {
 
@@ -566,7 +587,7 @@ class FirstDay extends Period {
                 ).catch(console.error);
 
                 return new EveryOneVote(
-                    "Qui voulez-vous élir comme maire ?",
+                    "Qui voulez-vous élir comme capitaine ?",
                     this.GameConfiguration,
                     120000,
                     this.GameConfiguration.channelsHandler._channels.get(this.GameConfiguration.channelsHandler.channels.thiercelieux_lg),
@@ -575,25 +596,25 @@ class FirstDay extends Period {
 
             }).then((outcome) => {
 
-                LgLogger.info("Maire outcome : " + outcome, this.gameInfo);
+                LgLogger.info("Capitaine outcome : " + outcome, this.gameInfo);
 
                 if (outcome.length === 0) {
                     this.GameConfiguration.channelsHandler.sendMessageToVillage(
-                        "Le village n'a pas voulu élire de Maire."
+                        "Le village n'a pas voulu élire de Capitaine."
                     ).catch(console.error);
                 } else if (outcome.length === 1) {
                     let id = outcome.shift();
-                    let maireElected = this.GameConfiguration._players.get(id);
+                    let capitaineElected = this.GameConfiguration._players.get(id);
 
                     this.GameConfiguration.channelsHandler.sendMessageToVillage(
-                        `${maireElected.member.displayName} a été élu Maire de Thiercelieux !`
+                        `${capitaineElected.member.displayName} a été élu Capitaine de Thiercelieux !`
                     ).catch(console.error);
-                    maireElected.maire = true;
-                    this.GameConfiguration._players.set(id, maireElected);
-                    this.GameConfiguration.maire = maireElected;
+                    capitaineElected.capitaine = true;
+                    this.GameConfiguration._players.set(id, capitaineElected);
+                    this.GameConfiguration.capitaine = capitaineElected;
                 } else if (outcome.length > 1) {
                     this.GameConfiguration.channelsHandler.sendMessageToVillage(
-                        "Le village n'a pas pu élire de Maire, les votes étant trop serrés."
+                        "Le village n'a pas pu élire de Capitaine, les votes étant trop serrés."
                     ).catch(console.error);
                 }
 
@@ -655,7 +676,14 @@ class Night extends Period {
     async initPetiteFilleListening() {
         let petitesFilles = this.roleMap.get("PetiteFille");
 
-        if (!petitesFilles || petitesFilles.length < 1) {
+        if (!petitesFilles || petitesFilles.length < 1 || !petitesFilles.alive) {
+            try {
+                if (this.GameConfiguration.loupGarouMsgCollector) {
+                    this.GameConfiguration.loupGarouMsgCollector.stop();
+                }
+            } catch (e) {
+                console.error(e);
+            }
             return;
         }
 
@@ -685,16 +713,19 @@ class Night extends Period {
                     this.callJoueurDeFlute(),
                     this.callSalvateur()
                 ]))
+                .then(() => this.updateRoleMaps())
                 .then(() => Promise.all([
                     this.callVoyante(),
                     this.callChaman(),
                     this.callInfectPereDesLoups(),
                     this.callFrereSoeurs()
                 ]))
+                .then(() => this.updateRoleMaps())
                 .then(() => Promise.all([
                     this.callSorciere(),
                     this.callRenard()
                 ]))
+                .then(() => this.updateRoleMaps())
                 .then(() => this.GameConfiguration.channelsHandler.switchPermissions(
                     this.GameConfiguration.channelsHandler.channels.village_lg,
                     {VIEW_CHANNEL: true, SEND_MESSAGES: true},
@@ -711,8 +742,8 @@ class Night extends Period {
 
             if (this.turnNb === 1) {
                 this.GameConfiguration.getLGChannel().send("Prenez garde à la petite fille...").catch(console.error);
-                this.initPetiteFilleListening().catch(console.error);
             }
+            this.initPetiteFilleListening().catch(console.error);
 
             this.GameConfiguration.channelsHandler.sendMessageToVillage(
                 `Les **Loups Garous** se réveillent 🐺`
@@ -839,23 +870,29 @@ class FirstNight extends Night {
 
             this.GameConfiguration.channelsHandler.sendMessageToVillage("🌌 La nuit tombe.")
                 .then(() => this.callVoleur())
+                .then(() => this.updateRoleMaps())
                 .then(() => this.callCupidon())
+                .then(() => this.updateRoleMaps())
                 .then(() => this.callEnfantSauvage())
+                .then(() => this.updateRoleMaps())
                 .then(() => Promise.all([
                     this.callLoupsGarou(),
                     this.callJoueurDeFlute(),
                     this.callSalvateur()
                 ]))
+                .then(() => this.updateRoleMaps())
                 .then(() => Promise.all([
                     this.callVoyante(),
                     this.callChaman(),
                     this.callInfectPereDesLoups(),
                     this.callFrereSoeurs()
                 ]))
+                .then(() => this.updateRoleMaps())
                 .then(() => Promise.all([
                     this.callSorciere(),
                     this.callRenard()
                 ]))
+                .then(() => this.updateRoleMaps())
                 .then(() => this.GameConfiguration.channelsHandler.switchPermissions(
                     this.GameConfiguration.channelsHandler.channels.village_lg,
                     {VIEW_CHANNEL: true, SEND_MESSAGES: true},
@@ -889,14 +926,20 @@ class FirstNight extends Night {
                     let promises = [];
 
                     Object.keys(newPlayer.permission).forEach((channelName) => {
-                        promises.push(
-                            this.GameConfiguration.channelsHandler._channels.get(
-                                this.GameConfiguration.channelsHandler.channels[channelName]
-                            ).overwritePermissions(
-                                newPlayer.member,
-                                newPlayer.permission[channelName]
-                            )
+
+                        let channel = this.GameConfiguration.channelsHandler._channels.get(
+                            this.GameConfiguration.channelsHandler.channels[channelName]
                         );
+
+                        if (channel) {
+                            promises.push(
+                                channel.overwritePermissions(
+                                    newPlayer.member,
+                                    newPlayer.permission[channelName]
+                                )
+                            );
+                        }
+
                     });
 
                     return Promise.all(promises);
