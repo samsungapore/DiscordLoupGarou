@@ -93,6 +93,7 @@ class Sorciere extends Villageois {
                     question.initCollector((reaction) => {
                             if (reaction.emoji.name === "✅") {
 
+                                this.potions.poison -= 1;
                                 promises.push(this.askTargetToKill(configuration));
 
                                 question.stop();
@@ -145,7 +146,14 @@ class Sorciere extends Villageois {
         return new Promise((resolve, reject) => {
             this.target = null;
             this.getDMChannel()
-                .then(() => {
+                .then((dmChannel) => {
+
+                    dmChannel.send(new RichEmbed().setColor(this.member.displayColor)
+                        .setAuthor("Voici ton inventaire de potions", this.member.user.avatarURL)
+                        .addField("Poison", this.potions.poison, true)
+                        .addField("Vie", this.potions.vie, true)
+                    ).catch(() => true);
+
                     let promise = [];
 
                     if (this.potions.vie > 0) {
