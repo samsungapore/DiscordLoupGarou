@@ -415,7 +415,7 @@ class Day extends Period {
         );
 
         await this.GameConfiguration.channelsHandler.sendMessageToVillage(
-            `Vous disposez de ${timeToString(debateDuration)} minutes pour débattre, et faire un vote`
+            `Vous disposez de ${timeToString(debateDuration)} pour débattre, et faire un vote`
         );
 
         await Wait.minutes(debateDuration / 2);
@@ -687,6 +687,8 @@ class Night extends Period {
             }
             return;
         }
+
+        LgLogger.info("Début de l'écoute petite fille", this.gameInfo);
 
         let petiteFille = petitesFilles[0];
 
@@ -997,7 +999,9 @@ class FirstNight extends Night {
                     cupidon.member.send(`${choice1.member.displayName} et ${choice2.member.displayName} sont en couple.`),
                     choice1.member.send(`Tu es en couple avec ${choice2.member.displayName} 💞`),
                     choice2.member.send(`Tu es en couple avec ${choice1.member.displayName} 💞`),
-                ]).then(() => resolve(this.GameConfiguration)).catch(err => reject(err));
+                ]).then(() => this.GameConfiguration.channelsHandler.sendMessageToVillage(
+                    "💘 **Cupidon** se rendort."
+                )).then(() => resolve(this.GameConfiguration)).catch(err => reject(err));
 
             }).catch(err => reject(err));
 
