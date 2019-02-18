@@ -78,6 +78,17 @@ class Game extends IGame {
 
         this.quitListener = undefined;
 
+        this.client.on('guildMemberRemove', (member) => {
+            if (member.guild.id === message.guild.id) {
+                if (this.preparation && this.preparation.configuration) {
+                    this.preparation.configuration._players.delete(member.id);
+                }
+                if (this.flow && this.flow.GameConfiguration && this.flow.GameConfiguration._players) {
+                    this.flow.GameConfiguration._players.delete(member.id);
+                }
+            }
+        });
+
         this.msgCollector = [];
         this.listenMsgCollector();
 
