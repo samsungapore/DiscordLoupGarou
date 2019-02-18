@@ -85,68 +85,55 @@ class Game extends IGame {
 
     }
 
-    launch() {
-        return new Promise((resolve, reject) => {
-            LgLogger.info("Preparing game...", this.gameInfo);
-            this.preparation.prepareGame().then(status => {
-                if (!status) {
-                    this.quit().then(() => resolve(this)).catch(err => reject(err));
-                    return;
-                }
+    async launch() {
+        LgLogger.info("Preparing game...", this.gameInfo);
 
-                this.updateObjects(status);
+        let status = await this.preparation.prepareGame();
 
-                LgLogger.info("Game successfully prepared.", this.gameInfo);
+        if (!status) {
+            await this.quit();
+            LgLogger.info("Quitting game", this.gameInfo);
+            return this;
+        }
 
-                return this.msg.delete();
+        this.updateObjects(status);
 
-            }).then(() => {
+        LgLogger.info("Game successfully prepared.", this.gameInfo);
 
-                return this.stemmingChannel.send(CommunicationHandler.getLGSampleMsg()
-                    .addField(
-                        "Joueurs",
-                        this.preparation.configuration
-                            .getPlayerNames()
-                            .toString()
-                            .replace(',', ', ')
-                    )
-                );
+        await this.msg.delete();
 
-            }).then(msg => {
+        this.msg = await this.stemmingChannel.send(CommunicationHandler.getLGSampleMsg()
+            .addField(
+                "Joueurs",
+                this.preparation.configuration
+                    .getPlayerNames()
+                    .toString()
+                    .replace(',', ', ')
+            )
+        );
 
-                this.msg = msg;
+        await this.listenQuitEvents();
 
-                return this.listenQuitEvents();
+        let msg = await this.stemmingChannel.send(CommunicationHandler.getLGSampleMsg()
+            .addField(
+                "Le jeu va bientôt commencer", "Début du jeu dans 5 secondes"
+            )
+        );
 
-            }).then(() => this.stemmingChannel.send(CommunicationHandler.getLGSampleMsg()
-                .addField(
-                    "Le jeu va bientôt commencer", "Début du jeu dans 5 secondes"
-                )
-            )).then((msg) => {
+        LgLogger.info(`${this.flow.GameConfiguration.getGameConfString()}`, this.gameInfo);
 
-                LgLogger.info(`${this.flow.GameConfiguration.getGameConfString()}`, this.gameInfo);
+        await Wait.seconds(5);
+        await msg.delete();
 
-                return Wait.seconds(5).then(() => msg.delete());
+        let endMsg = await this.flow.run();
 
-            }).then(() => this.flow.run()).then((endMsg) => {
+        await this.stemmingChannel.send(endMsg);
+        let msgSent = await this.stemmingChannel.send("Nettoyage des channels dans 5 secondes");
+        await Wait.seconds(5);
+        await msgSent.delete();
+        await this.quit();
 
-                this.stemmingChannel.send(endMsg).catch(console.error);
-                this.stemmingChannel.send("Nettoyage des channels dans 5 secondes").then(msgSent => {
-                    setTimeout(() => {
-                        msgSent.delete().catch(() => true);
-                    });
-                    Wait.seconds(5).then(() => this.quit()).then(() => {
-                        resolve(this);
-                    }).catch(err => reject(err));
-                }).catch(err => reject(err));
-
-            }).catch(err => {
-
-                this.stemmingChannel.send("Erreur rencontrée\n```" + err + "```").catch(console.error);
-                this.quit().then(() => reject(err)).catch(err => reject(err));
-
-            });
-        });
+        return this;
     }
 
     updateObjects(status) {
@@ -372,7 +359,7 @@ class GamePreparation extends IGame {
 
             }, () => {
                 if (this.status === false) {
-                    gamePreparationMsg.message.delete().catch(console.error);
+                    gamePreparationMsg.message.delete().catch(() => true);
                     LgLogger.info("User decided to end game", this.gameInfo);
                     resolve(false);
                 } else {

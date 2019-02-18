@@ -28,6 +28,7 @@ exports.run = (LGBot, message) => {
 
             try {
                 LGBot.LG.set(message.guild.id, LG);
+                message.channel.send("Partie stoppée").catch(console.error);
             } catch (e) {
                 console.error(e);
             }
@@ -37,6 +38,7 @@ exports.run = (LGBot, message) => {
 
         try {
             LGBot.LG.set(message.guild.id, LG);
+            message.channel.send("Partie interrompue").catch(console.error);
         } catch (e) {
             console.error(e);
         }

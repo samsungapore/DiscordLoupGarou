@@ -12,17 +12,22 @@ exports.run = (LGBot, message) => {
     if (LG === undefined || LG === null) {
         LG = botData.LG;
         LGBot.LG.set(message.guild.id, LG);
+        LG = LGBot.LG.get(message.guild.id);
     }
+
+    console.log(LG.running);
 
     if (!LG.running) {
 
         LG.running = true;
+        LGBot.LG.set(message.guild.id, LG);
         LG.game = new LoupGarou.Game(LGBot, message);
         LG.game.launch().catch(err => {
             console.error(err);
         }).finally(() => {
             LG.game = null;
             LG.running = false;
+            LGBot.LG.set(message.guild.id, LG);
         });
 
     } else {
