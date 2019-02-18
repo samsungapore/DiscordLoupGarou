@@ -25,10 +25,19 @@ class GameInfo {
     constructor(message, playTime) {
         this.guild = message.guild;
         this.playTime = playTime;
+        this._history = [];
         this.gameNumber = new Date().toUTCString().split(' ')[4];
         if (this.gameNumber) {
             this.gameNumber.replace(/:+/g, "42");
         }
+    }
+
+    addToHistory(msg) {
+        this._history.push(msg);
+    }
+
+    get history() {
+        return this._history;
     }
 
     get serverName() {
@@ -192,12 +201,6 @@ class Game extends IGame {
         });
     }
 
-    cleanChannels() {
-        this.msgCollector.forEach(msg => {
-            msg.delete().catch(() => true);
-        });
-    }
-
     quit() {
         return new Promise((resolve, reject) => {
             let LG = this.client.LG.get(this.guild.id);
@@ -219,10 +222,7 @@ class Game extends IGame {
             if (this.preparation.keepChannels === false) {
                 quitPromises.push(this.preparation.channelsHandler.deleteChannels());
             } else {
-
                 quitPromises.push(this.preparation.channelsHandler.deletePermissionsOverwrites());
-                quitPromises.push(this.cleanChannels());
-
             }
 
             Promise.all(quitPromises).then(() => {

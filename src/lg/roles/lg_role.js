@@ -126,7 +126,8 @@ class RolesHandler extends IGame {
                 JugeBegue: 1,
             },
             {
-                Villageois: Number.MAX_SAFE_INTEGER
+                Villageois: Number.MAX_SAFE_INTEGER,
+                LoupGarou: 2
             }
         ];
 
@@ -149,6 +150,14 @@ class RolesHandler extends IGame {
         for (let i = 1; i < this.gameTypeCopy.length ; i++) {
             gameTypeCopyObj = Object.assign(this.gameTypeCopy[0], this.gameTypeCopy[i]);
             this.gameTypeCopy[0] = gameTypeCopyObj;
+        }
+
+        try {
+            delete gameTypeCopyObj.Voleur;
+            delete gameTypeCopyObj.Cupidon;
+            delete gameTypeCopyObj.JoueurDeFlute;
+        } catch (e) {
+            console.error(e);
         }
 
         this.gameTypeCopy = [gameTypeCopyObj];

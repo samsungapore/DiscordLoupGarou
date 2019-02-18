@@ -603,9 +603,14 @@ class FirstDay extends Period {
                     this.GameConfiguration.channelsHandler.sendMessageToVillage(
                         "Le village n'a pas voulu élire de Capitaine."
                     ).catch(console.error);
+
+                    this.gameInfo.addToHistory(`Le village n'a pas élu de Capitaine du village.`);
+
                 } else if (outcome.length === 1) {
                     let id = outcome.shift();
                     let capitaineElected = this.GameConfiguration._players.get(id);
+
+                    this.gameInfo.addToHistory(`Le village a élu ${capitaineElected.member.displayName} Capitaine du village.`);
 
                     this.GameConfiguration.channelsHandler.sendMessageToVillage(
                         `${capitaineElected.member.displayName} a été élu Capitaine de Thiercelieux !`
@@ -614,6 +619,9 @@ class FirstDay extends Period {
                     this.GameConfiguration._players.set(id, capitaineElected);
                     this.GameConfiguration.capitaine = capitaineElected;
                 } else if (outcome.length > 1) {
+
+                    this.gameInfo.addToHistory(`Le village n'a pas élu de Capitaine du village.`);
+
                     this.GameConfiguration.channelsHandler.sendMessageToVillage(
                         "Le village n'a pas pu élire de Capitaine, les votes étant trop serrés."
                     ).catch(console.error);
@@ -913,7 +921,12 @@ class FirstNight extends Night {
 
         await voleur.proposeRoleChoice(this.GameConfiguration);
 
-        if (!voleur.roleChosen) return this;
+        if (!voleur.roleChosen) {
+            this.gameInfo.addToHistory(`[Voleur] ${voleur.member.displayName}: a choisi de garder son rôle`);
+            return this;
+        }
+
+        this.gameInfo.addToHistory(`[Voleur] ${voleur.member.displayName}: a choisi de prendre le rôle ${voleur.roleChosen}`);
 
         let voleurId = voleur.member.id;
 
