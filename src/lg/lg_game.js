@@ -204,6 +204,8 @@ class Game extends IGame {
 
             if (LG) LG.running = false;
 
+            this.client.LG.set(this.guild.id, LG);
+
             if (this.quitListener) this.quitListener.stop();
 
             if (this.flow && this.flow.GameConfiguration && this.flow.GameConfiguration.loupGarouMsgCollector) {
