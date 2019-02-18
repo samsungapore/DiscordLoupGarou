@@ -772,86 +772,81 @@ class Night extends Period {
         });
     }
 
-    callJoueurDeFlute() {
-        return new Promise((resolve, reject) => {
-            resolve(true);
-        });
+    async callJoueurDeFlute() {
+        return this;
     }
 
-    callSalvateur() {
-        return new Promise((resolve, reject) => {
+    async callSalvateur() {
 
-            this.initRole("Salvateur", "Le ")
-                .then(salvateur => salvateur ? salvateur.processRole(this.GameConfiguration) : resolve(this))
-                .then(() => resolve(this))
-                .catch(err => reject(err));
+        let salvateur = await this.initRole("Salvateur", "Le ");
 
-        });
+        if (!salvateur) return this;
+
+        await salvateur.processRole(this.GameConfiguration);
+
+        return this;
     }
 
-    callVoyante() {
-        return new Promise((resolve, reject) => {
+    async callVoyante() {
 
-            this.initRole("Voyante", "La ")
-                .then(voyante => voyante ? voyante.processRole(this.GameConfiguration) : resolve(this))
-                .then(() => this.GameConfiguration.channelsHandler.sendMessageToVillage(
-                    "La **Voyante** se rendort."
-                )).then(() => resolve(this)).catch(err => reject(err));
+        let voyante = await this.initRole("Voyante", "La ");
 
-        });
+        if (!voyante) {
+            return this;
+        }
+
+        await voyante.processRole(this.GameConfiguration);
+        await this.GameConfiguration.channelsHandler.sendMessageToVillage(
+            "La **Voyante** se rendort."
+        );
+
+        return this;
     }
 
-    callChaman() {
-        return new Promise((resolve, reject) => {
-            resolve(true);
-        });
+    async callChaman() {
+        return this;
     }
 
-    callInfectPereDesLoups() {
-        return new Promise((resolve, reject) => {
-            resolve(true);
-        });
+    async callInfectPereDesLoups() {
+        return this;
     }
 
-    callFrereSoeurs() {
-        return new Promise((resolve, reject) => {
-            resolve(true);
-        });
+    async callFrereSoeurs() {
+        return this;
     }
 
-    callSorciere() {
-        return new Promise((resolve, reject) => {
-            this.initRole("Sorciere", "La ", "Sorcière")
-                .then(sorciere => sorciere ? sorciere.processRole(this.GameConfiguration, this.shouldDieTonight.get("LGTarget")) : resolve(this))
-                .then(sorciere => {
+    async callSorciere() {
 
-                    if (sorciere.savedLgTarget || sorciere.targetIsSavedBySalva) {
-                        this.shouldDieTonight.set("LGTarget", null);
-                    }
+        let sorciere = await this.initRole("Sorciere", "La ", "Sorcière");
 
-                    this.shouldDieTonight.set("SorciereTarget", sorciere.target);
+        if (!sorciere) return this;
 
-                    if (sorciere.target) {
-                        LgLogger.info(`Sorciere target: ${sorciere.target.member.displayName}`, this.gameInfo);
-                        LgLogger.info(`Sorciere saved: ${sorciere.savedLgTarget}`, this.gameInfo);
-                        LgLogger.info(`Sorciere potions: vie[${sorciere.potions.vie}] poison[${sorciere.potions.poison}]`, this.gameInfo);
-                    }
+        await sorciere.processRole(this.GameConfiguration, this.shouldDieTonight.get("LGTarget"));
 
-                    sorciere.savedLgTarget = false;
-                    sorciere.targetIsSavedBySalva = false;
+        if (sorciere.savedLgTarget || sorciere.targetIsSavedBySalva) {
+            this.shouldDieTonight.set("LGTarget", null);
+        }
 
-                })
-                .then(() => this.GameConfiguration.channelsHandler.sendMessageToVillage(
-                    "La **Sorcière** se rendort"
-                ))
-                .then(() => resolve(this)).catch(err => reject(err));
-        });
+        this.shouldDieTonight.set("SorciereTarget", sorciere.target);
+
+        if (sorciere.target) {
+            LgLogger.info(`Sorciere target: ${sorciere.target.member.displayName}`, this.gameInfo);
+            LgLogger.info(`Sorciere saved: ${sorciere.savedLgTarget}`, this.gameInfo);
+            LgLogger.info(`Sorciere potions: vie[${sorciere.potions.vie}] poison[${sorciere.potions.poison}]`, this.gameInfo);
+        }
+
+        sorciere.savedLgTarget = false;
+        sorciere.targetIsSavedBySalva = false;
+
+        await this.GameConfiguration.channelsHandler.sendMessageToVillage(
+            "La **Sorcière** se rendort"
+        );
+
+        return this;
     }
 
-    callRenard() {
-        return new Promise((resolve, reject) => {
-            resolve(true);
-        });
+    async callRenard() {
+        return this;
     }
 
 }
@@ -907,53 +902,55 @@ class FirstNight extends Night {
         });
     }
 
-    callVoleur() {
-        return new Promise((resolve, reject) => {
+    async callVoleur() {
+        let newPlayer = null;
 
-            let newPlayer = null;
+        let voleur = await this.initRole("Voleur", "Le ");
 
-            this.initRole("Voleur", "Le ")
-                .then(voleur => voleur ? voleur.proposeRoleChoice(this.GameConfiguration) : resolve(this))
-                .then((voleur) => {
+        if (!voleur) return this;
 
-                    if (!voleur.roleChosen) return resolve(true);
+        await voleur.proposeRoleChoice(this.GameConfiguration);
 
-                    let voleurId = voleur.member.id;
+        if (!voleur.roleChosen) return this;
 
-                    this.GameConfiguration.removePlayer(voleurId);
-                    this.GameConfiguration.addPlayer(allRoles[voleur.roleChosen](voleur.member));
+        let voleurId = voleur.member.id;
 
-                    newPlayer = this.GameConfiguration.getPlayerById(voleurId);
-                    let promises = [];
+        this.GameConfiguration.removePlayer(voleurId);
+        this.GameConfiguration.addPlayer(allRoles[voleur.roleChosen](voleur.member));
 
-                    Object.keys(newPlayer.permission).forEach((channelName) => {
+        newPlayer = this.GameConfiguration.getPlayerById(voleurId);
+        let promises = [];
 
-                        let channel = this.GameConfiguration.channelsHandler._channels.get(
-                            this.GameConfiguration.channelsHandler.channels[channelName]
-                        );
+        Object.keys(newPlayer.permission).forEach((channelName) => {
 
-                        if (channel) {
-                            promises.push(
-                                channel.overwritePermissions(
-                                    newPlayer.member,
-                                    newPlayer.permission[channelName]
-                                )
-                            );
-                        }
+            let channel = this.GameConfiguration.channelsHandler._channels.get(
+                this.GameConfiguration.channelsHandler.channels[channelName]
+            );
 
-                    });
-
-                    return Promise.all(promises);
-
-                }).then(() => this.GameConfiguration.channelsHandler.switchPermissions(
-                this.GameConfiguration.channelsHandler.channels.village_lg,
-                {VIEW_CHANNEL: true, SEND_MESSAGES: false},
-                [newPlayer]
-            )).then(() => this.GameConfiguration.channelsHandler.sendMessageToVillage(
-                "**Le Voleur** se rendort."
-            )).then(() => resolve(this)).catch(err => reject(err));
+            if (channel) {
+                promises.push(
+                    channel.overwritePermissions(
+                        newPlayer.member,
+                        newPlayer.permission[channelName]
+                    )
+                );
+            }
 
         });
+
+        await Promise.all(promises);
+
+        await this.GameConfiguration.channelsHandler.switchPermissions(
+            this.GameConfiguration.channelsHandler.channels.village_lg,
+            {VIEW_CHANNEL: true, SEND_MESSAGES: false},
+            [newPlayer]
+        );
+
+        await this.GameConfiguration.channelsHandler.sendMessageToVillage(
+            "**Le Voleur** se rendort."
+        );
+
+        return this;
     }
 
     callCupidon() {
