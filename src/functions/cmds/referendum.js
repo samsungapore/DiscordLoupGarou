@@ -257,7 +257,7 @@ class SondageInfiniteChoice {
                             member = collectedVote.author;
                         }
 
-                        if (collectedVote.deletable) collectedVote.delete().catch(console.error);
+                        if (collectedVote.deletable) collectedVote.delete().catch(() => true);
 
                         if (isNaN(answer)) {
                             member.send("Veuillez envoyer un nombre").catch(console.error);
@@ -300,7 +300,7 @@ class SondageInfiniteChoice {
                         }
 
                     } else {
-                        if (this.deleteAll && collectedVote.deletable) collectedVote.delete().catch(console.error);
+                        if (this.deleteAll && collectedVote.deletable) collectedVote.delete().catch(() => true);
                     }
 
                 });
@@ -312,7 +312,7 @@ class SondageInfiniteChoice {
                     let higherChoice = this.getHigherChoice();
 
                     if (this.deleteIt === true) {
-                        this.msg.delete().catch(console.error);
+                        this.msg.delete().catch(() => true);
                     } else {
 
                         if (higherChoice.length > 1) {

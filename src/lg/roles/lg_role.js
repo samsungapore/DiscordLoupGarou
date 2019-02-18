@@ -6,6 +6,7 @@ const get_random_in_array = require("../../functions/parsing_functions").get_ran
 const shuffle_array = require("../../functions/parsing_functions").shuffle_array;
 const ReactionHandler = require("../../functions/reactionHandler").ReactionHandler;
 const RichEmbed = require("discord.js").RichEmbed;
+const clone = require('../../functions/clone');
 
 class IGame {
 
@@ -141,6 +142,17 @@ class RolesHandler extends IGame {
 
         this.gameType = this.thiercelieux;
 
+        this.gameTypeCopy = clone(this.gameType);
+
+        let gameTypeCopyObj;
+
+        for (let i = 1; i < this.gameTypeCopy.length ; i++) {
+            gameTypeCopyObj = Object.assign(this.gameTypeCopy[0], this.gameTypeCopy[i]);
+            this.gameTypeCopy[0] = gameTypeCopyObj;
+        }
+
+        this.gameTypeCopy = [gameTypeCopyObj];
+
         return this;
     }
 
@@ -272,7 +284,7 @@ class RolesHandler extends IGame {
 
             while (number > 0 && this.confHasSpace()) {
 
-                this.gameType.forEach(role_block => {
+                this.gameTypeCopy.forEach(role_block => {
                     if (!this.roleComplete(role_block)) {
 
                         let role_object = RolesHandler.cleanRoleArray(role_block);

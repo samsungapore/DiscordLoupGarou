@@ -25,7 +25,10 @@ class GameInfo {
     constructor(message, playTime) {
         this.guild = message.guild;
         this.playTime = playTime;
-        this.gameNumber = new Date().toString();
+        this.gameNumber = new Date().toUTCString().split(' ')[4];
+        if (this.gameNumber) {
+            this.gameNumber.replace(/:+/g, "42");
+        }
     }
 
     get serverName() {
@@ -82,65 +85,55 @@ class Game extends IGame {
 
     }
 
-    launch() {
+    async launch() {
         LgLogger.info("Preparing game...", this.gameInfo);
-        this.preparation.prepareGame().then(status => {
-            if (!status) {
-                this.quit();
-                return;
-            }
 
-            this.updateObjects(status);
+        let status = await this.preparation.prepareGame();
 
-            LgLogger.info("Game successfully prepared.", this.gameInfo);
+        if (!status) {
+            await this.quit();
+            LgLogger.info("Quitting game", this.gameInfo);
+            return this;
+        }
 
-            return this.msg.delete();
+        this.updateObjects(status);
 
-        }).then(() => {
+        LgLogger.info("Game successfully prepared.", this.gameInfo);
 
-            return this.stemmingChannel.send(CommunicationHandler.getLGSampleMsg()
-                .addField(
-                    "Joueurs",
-                    this.preparation.configuration
-                        .getPlayerNames()
-                        .toString()
-                        .replace(',', ', ')
-                )
-            );
+        await this.msg.delete();
 
-        }).then(msg => {
+        this.msg = await this.stemmingChannel.send(CommunicationHandler.getLGSampleMsg()
+            .addField(
+                "Joueurs",
+                this.preparation.configuration
+                    .getPlayerNames()
+                    .toString()
+                    .replace(',', ', ')
+            )
+        );
 
-            this.msg = msg;
+        await this.listenQuitEvents();
 
-            return this.listenQuitEvents();
-
-        }).then(() => this.stemmingChannel.send(CommunicationHandler.getLGSampleMsg()
+        let msg = await this.stemmingChannel.send(CommunicationHandler.getLGSampleMsg()
             .addField(
                 "Le jeu va bientôt commencer", "Début du jeu dans 5 secondes"
             )
-        )).then((msg) => {
+        );
 
-            LgLogger.info(`${this.flow.GameConfiguration.getGameConfString()}`, this.gameInfo);
+        LgLogger.info(`${this.flow.GameConfiguration.getGameConfString()}`, this.gameInfo);
 
-            return Wait.seconds(5).then(() => msg.delete());
+        await Wait.seconds(5);
+        await msg.delete();
 
-        }).then(() => this.flow.run()).then((endMsg) => {
+        let endMsg = await this.flow.run();
 
-            this.stemmingChannel.send(endMsg).catch(console.error);
-            this.stemmingChannel.send("Nettoyage des channels dans 5 secondes").then(msgSent => {
-                setTimeout(() => {
-                    msgSent.delete().catch(() => true);
-                });
-                Wait.seconds(5).then(() => this.quit());
-            }).catch(console.error);
+        await this.stemmingChannel.send(endMsg);
+        let msgSent = await this.stemmingChannel.send("Nettoyage des channels dans 5 secondes");
+        await Wait.seconds(5);
+        await msgSent.delete();
+        await this.quit();
 
-        }).catch(err => {
-
-            this.stemmingChannel.send("Erreur rencontrée\n```" + err + "```").catch(console.error);
-            console.error(err);
-            this.quit();
-
-        });
+        return this;
     }
 
     updateObjects(status) {
@@ -172,7 +165,7 @@ class Game extends IGame {
 
                     reaction.remove(user).catch(() => true);
                     if (user.id === this.stemmingPlayer || this.guild.members.get(user.id).hasPermission('BAN_MEMBERS')) {
-                        this.quit();
+                        this.quit().catch(console.error);
                     }
                 }
                 reaction.remove(reaction.users.last()).catch(() => true);
@@ -195,33 +188,36 @@ class Game extends IGame {
     }
 
     quit() {
+        return new Promise((resolve, reject) => {
+            let LG = this.client.LG.get(this.guild.id);
 
-        let LG = this.client.LG.get(this.guild.id);
+            if (LG) LG.running = false;
 
-        if (LG) LG.running = false;
+            if (this.quitListener) this.quitListener.stop();
 
-        if (this.quitListener) this.quitListener.stop();
+            if (this.flow && this.flow.GameConfiguration && this.flow.GameConfiguration.loupGarouMsgCollector) {
+                this.flow.GameConfiguration.loupGarouMsgCollector.stop();
+            }
 
-        if (this.flow && this.flow.GameConfiguration && this.flow.GameConfiguration.loupGarouMsgCollector) {
-            this.flow.GameConfiguration.loupGarouMsgCollector.stop();
-        }
+            let quitPromises = [];
 
-        let quitPromises = [];
+            quitPromises.push(this.preparation.rolesHandler.deleteRoles());
 
-        quitPromises.push(this.preparation.rolesHandler.deleteRoles());
+            if (this.preparation.keepChannels === false) {
+                quitPromises.push(this.preparation.channelsHandler.deleteChannels());
+            } else {
 
-        if (this.preparation.keepChannels === false) {
-            quitPromises.push(this.preparation.channelsHandler.deleteChannels());
-        } else {
+                quitPromises.push(this.preparation.channelsHandler.deletePermissionsOverwrites());
+                quitPromises.push(this.cleanChannels());
 
-            quitPromises.push(this.preparation.channelsHandler.deletePermissionsOverwrites());
-            quitPromises.push(this.cleanChannels());
+            }
 
-        }
-
-        Promise.all(quitPromises).catch((err) => {
-            console.error(err);
-            this.stemmingChannel.send("Jeu arrêté, des erreurs se sont produite : ```" + err + "```").catch(console.error);
+            Promise.all(quitPromises).then(() => {
+                resolve(this);
+            }).catch((err) => {
+                this.stemmingChannel.send("Jeu arrêté, des erreurs se sont produite : ```" + err + "```").catch(console.error);
+                reject(err);
+            });
         });
     }
 
@@ -362,13 +358,19 @@ class GamePreparation extends IGame {
                 }
 
             }, () => {
-                gamePreparationMsg.removeReactionList(["🐺", "❇"]).catch(console.error);
-                this.rolesHandler.assignRoles(this.configuration)
-                    .then((configuration) => {
-                        this.configuration = configuration;
-                        resolve(this.status);
-                    })
-                    .catch(err => reject(err));
+                if (this.status === false) {
+                    gamePreparationMsg.message.delete().catch(() => true);
+                    LgLogger.info("User decided to end game", this.gameInfo);
+                    resolve(false);
+                } else {
+                    gamePreparationMsg.removeReactionList(["🐺", "❇"]).catch(console.error);
+                    this.rolesHandler.assignRoles(this.configuration)
+                        .then((configuration) => {
+                            this.configuration = configuration;
+                            resolve(this.status);
+                        })
+                        .catch(err => reject(err));
+                }
             }, (reaction) => reaction.count > 1 && reaction.users.last().id !== this.client.user.id);
         });
     }
