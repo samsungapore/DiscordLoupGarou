@@ -677,7 +677,7 @@ class Night extends Period {
     async initPetiteFilleListening() {
         let petitesFilles = this.roleMap.get("PetiteFille");
 
-        if (!petitesFilles || petitesFilles.length < 1 || !petitesFilles.alive) {
+        if (!petitesFilles || petitesFilles.length < 1 || !petitesFilles[0].alive) {
             try {
                 if (this.GameConfiguration.loupGarouMsgCollector) {
                     this.GameConfiguration.loupGarouMsgCollector.stop();
