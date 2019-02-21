@@ -66,12 +66,14 @@ class ChannelsHandler extends IGame {
         });
 
         this.category = undefined;
+        this.vocal = undefined;
 
         this.channels = {
             thiercelieux_lg: undefined,
             village_lg: undefined,
             paradis_lg: undefined,
             loups_garou_lg: undefined,
+            vocal_lg: undefined
         };
 
         this._channels = new Map();
@@ -79,9 +81,14 @@ class ChannelsHandler extends IGame {
         return this;
     }
 
+    async moveVocalPlayers(configuration) {
+        return this;
+    }
+
     async checkChannelsOnGuild() {
         await this.checkCategory();
         await this.checkChannels();
+        await this.checkVocal();
     }
 
     /**
@@ -100,6 +107,20 @@ class ChannelsHandler extends IGame {
             }
 
             reject(false);
+        });
+    }
+
+    checkVocal() {
+        return new Promise((resolve, reject) => {
+            let channel = this.guild.channels.find(x => x.name === "vocal_lg");
+
+            if (channel && channel.type === "voice" && channel.parentID === this.category) {
+                this.vocal = channel.id;
+                this._channels.set(channel.id, channel);
+                return resolve(true);
+            }
+
+            return reject(false);
         });
     }
 

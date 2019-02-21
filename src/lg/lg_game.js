@@ -25,10 +25,19 @@ class GameInfo {
     constructor(message, playTime) {
         this.guild = message.guild;
         this.playTime = playTime;
+        this._history = [];
         this.gameNumber = new Date().toUTCString().split(' ')[4];
         if (this.gameNumber) {
             this.gameNumber.replace(/:+/g, "42");
         }
+    }
+
+    addToHistory(msg) {
+        this._history.push(msg);
+    }
+
+    get history() {
+        return this._history;
     }
 
     get serverName() {
@@ -77,6 +86,17 @@ class Game extends IGame {
         this.flow = new GameFlow(this.client, this.gameInfo);
 
         this.quitListener = undefined;
+
+        this.client.on('guildMemberRemove', (member) => {
+            if (member.guild.id === message.guild.id) {
+                if (this.preparation && this.preparation.configuration) {
+                    this.preparation.configuration._players.delete(member.id);
+                }
+                if (this.flow && this.flow.GameConfiguration && this.flow.GameConfiguration._players) {
+                    this.flow.GameConfiguration._players.delete(member.id);
+                }
+            }
+        });
 
         this.msgCollector = [];
         this.listenMsgCollector();
@@ -181,17 +201,13 @@ class Game extends IGame {
         });
     }
 
-    cleanChannels() {
-        this.msgCollector.forEach(msg => {
-            msg.delete().catch(() => true);
-        });
-    }
-
     quit() {
         return new Promise((resolve, reject) => {
             let LG = this.client.LG.get(this.guild.id);
 
             if (LG) LG.running = false;
+
+            this.client.LG.set(this.guild.id, LG);
 
             if (this.quitListener) this.quitListener.stop();
 
@@ -206,10 +222,7 @@ class Game extends IGame {
             if (this.preparation.keepChannels === false) {
                 quitPromises.push(this.preparation.channelsHandler.deleteChannels());
             } else {
-
                 quitPromises.push(this.preparation.channelsHandler.deletePermissionsOverwrites());
-                quitPromises.push(this.cleanChannels());
-
             }
 
             Promise.all(quitPromises).then(() => {
@@ -274,6 +287,7 @@ class GamePreparation extends IGame {
                     if (!status) return resolve(status);
                     return this.setupChannels()
                 })
+                .then(() => this.channelsHandler.moveVocalPlayers(this.configuration))
                 .then(() => this.rolesHandler.sendRolesToPlayers(this.configuration))
                 .then(() => resolve(this.configuration))
                 .catch(err => reject(err));
