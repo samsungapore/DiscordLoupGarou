@@ -127,7 +127,7 @@ class RolesHandler extends IGame {
             },
             {
                 Villageois: Number.MAX_SAFE_INTEGER,
-                LoupGarou: 2
+                LoupGarou: 1
             }
         ];
 
