@@ -4,7 +4,12 @@ let timeToString = (minutes) => {
 
     let seconds = (minutes * 60) % 60;
 
-    let timestring = `${(minutes % 60).toFixed()}m`;
+    if (minutes < 1) {
+        minutes = 0;
+    }
+
+    let timestring = `${(minutes % 60).toFixed()}`;
+
     if (hours >= 1) {
         timestring = `${hours.toFixed()}h${timestring}`;
     }

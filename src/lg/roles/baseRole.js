@@ -67,8 +67,9 @@ class Player {
             let amoureux = configuration.getPlayerById(this.amoureux);
             additionnalTargets.push(amoureux);
             await configuration.villageChannel.send(new RichEmbed()
-                .setAuthor(`${this.member.displayName} meurt de chagrin`, this.member.user.avatarURL)
-                .setTitle(this.role)
+                .setAuthor(`${amoureux.member.displayName} meurt de chagrin`, amoureux.member.user.avatarURL)
+                .setThumbnail(lg_var.roles_img[amoureux.role])
+                .setTitle(amoureux.role)
                 .setColor('RED')
             );
         }
@@ -102,7 +103,7 @@ class Player {
 
             await configuration.channelsHandler.sendMessageToVillage(
                 `${newCapitaine.member.displayName} est le nouveau Capitaine de Thiercelieux !`,
-                newCapitaine.member.user.avatarURL
+                lg_var.roles_img.Capitaine
             );
 
         }
@@ -111,6 +112,7 @@ class Player {
             .setAuthor(`${this.member.displayName} est mort(e)`, this.member.user.avatarURL)
             .setTitle(this.role)
             .setImage(this.member.user.avatarURL)
+            .setThumbnail(lg_var.roles_img[this.role])
             .setColor('RED')
         );
 

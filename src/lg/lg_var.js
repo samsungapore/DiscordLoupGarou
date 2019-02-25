@@ -752,7 +752,8 @@ const roles_img = {
     Chevalier: "https://www.loups-garous-en-ligne.com/jeu/assets/images/carte27.png",
     JugeBegue: "https://www.loups-garous-en-ligne.com/jeu/assets/images/carte29.png",
     Corbeau: "https://www.loups-garous-en-ligne.com/jeu/assets/images/carte17.png",
-    Chasseur: "https://www.loups-garous-en-ligne.com/jeu/assets/images/carte6.png"
+    Chasseur: "https://www.loups-garous-en-ligne.com/jeu/assets/images/carte6.png",
+    Capitaine: "https://p1.storage.canalblog.com/13/28/1355275/103540695_o.jpg"
 };
 
 const infinite_fill_roles = {
