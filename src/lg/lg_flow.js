@@ -9,7 +9,7 @@ const allRoles = require("./roles/roleFactory").allRoles;
 const Wait = require("../functions/wait.js").Wait;
 const EveryOneVote = require("./lg_vote.js").EveryOneVote;
 const EventEmitter = require('events');
-const DayVote = require("./lg_vote").DayVote;
+const Vote = require("./lg_vote").DayVote;
 const CommunicationHandler = require('./message_sending').CommunicationHandler;
 let timeToString = require('../functions/time');
 
@@ -374,6 +374,8 @@ class Day extends Period {
 
         super(configuration, gameInfo, turnNb);
 
+        configuration.voiceHandler.playDayBGM().catch(console.error);
+
         this.deadPeople = deadPeople;
 
         return this;
@@ -540,6 +542,8 @@ class FirstDay extends Period {
 
         super(configuration, gameInfo, turnNb);
 
+        configuration.voiceHandler.playFirstDayBGM().catch(console.error);
+
         return this;
     }
 
@@ -643,6 +647,8 @@ class Night extends Period {
     constructor(configuration, gameInfo, turnNb) {
 
         super(configuration, gameInfo, turnNb);
+
+        configuration.voiceHandler.playNightBGM().catch(console.error);
 
         this.LGTarget = null;
         this.shouldDieTonight = new Map();

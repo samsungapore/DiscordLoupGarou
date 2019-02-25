@@ -1,6 +1,7 @@
 const BotData = require("../BotData.js");
 const lg_var = require("./lg_var");
 const LgLogger = require("./lg_logger");
+const VoiceHandler = require("./lg_voice").VoiceHandler;
 const GameFlow = require("./lg_flow").GameFlow;
 const ChannelsHandler = require("./lg_channel").ChannelsHandler;
 const RolesHandler = require("./roles/lg_role").RolesHandler;
@@ -118,6 +119,9 @@ class Game extends IGame {
 
         this.updateObjects(status);
 
+        await this.flow.GameConfiguration.voiceHandler.join();
+        await this.flow.GameConfiguration.voiceHandler.playFirstDayBGM();
+
         LgLogger.info("Game successfully prepared.", this.gameInfo);
 
         await this.msg.delete();
@@ -161,6 +165,10 @@ class Game extends IGame {
 
         configuration.channelsHandler = this.preparation.channelsHandler;
         configuration.rolesHandler = this.preparation.rolesHandler;
+        configuration.voiceHandler = this.preparation.voiceHandler;
+        configuration.voiceHandler.voiceChannel = configuration.channelsHandler._channels.get(
+            configuration.channelsHandler.voiceChannels.vocal_lg
+        );
 
         this.msg = this.preparation.msg;
         this.flow.msg = this.preparation.msg;
@@ -211,11 +219,19 @@ class Game extends IGame {
 
             if (this.quitListener) this.quitListener.stop();
 
-            if (this.flow && this.flow.GameConfiguration && this.flow.GameConfiguration.loupGarouMsgCollector) {
-                this.flow.GameConfiguration.loupGarouMsgCollector.stop();
-            }
-
             let quitPromises = [];
+
+            if (this.flow && this.flow.GameConfiguration) {
+
+                if (this.flow.GameConfiguration.loupGarouMsgCollector) {
+                    this.flow.GameConfiguration.loupGarouMsgCollector.stop();
+                }
+
+                if (this.flow.GameConfiguration.voiceHandler) {
+                    quitPromises.push(this.flow.GameConfiguration.voiceHandler.destroy());
+                }
+
+            }
 
             quitPromises.push(this.preparation.rolesHandler.deleteRoles());
 
@@ -267,6 +283,7 @@ class GamePreparation extends IGame {
         this.configuration = new GameConfiguration(this.gameInfo);
         this.rolesHandler = new RolesHandler(client, guild, this.gameInfo);
         this.channelsHandler = new ChannelsHandler(client, guild, this.gameInfo);
+        this.voiceHandler = new VoiceHandler(this.channelsHandler._channels.get(this.channelsHandler.voiceChannels.vocal_lg));
 
         this.msg = undefined;
         this.richEmbed = undefined;
@@ -481,6 +498,7 @@ class GameConfiguration {
 
         this.channelsHandler = undefined;
         this.rolesHandler = undefined;
+        this.voiceHandler = undefined;
 
     }
 

@@ -9,10 +9,12 @@
     "enmap-level": "^2.1.0",
     "graceful-fs": "^4.1.15",
     "isomorphic-fetch": "^2.2.1",
+    "node-opus": "^0.3.1",
     "node-webhooks": "^1.4.0",
     "request": "latest",
     "winston": "^3.2.1",
-    "winston-daily-rotate-file": "^3.6.0"
+    "winston-daily-rotate-file": "^3.6.0",
+    "ytdl-core": "^0.29.1"
   },
   "scripts": {
     "start": "node src/main.js",

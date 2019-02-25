@@ -54,7 +54,14 @@ class ChannelsHandler extends IGame {
 
         this.mastermindPermissions = {};
 
-        ["loups_garou_de_thiercelieux", "thiercelieux_lg", "village_lg", "paradis_lg", "loups_garou_lg", "petite_fille_lg"].forEach(element => {
+        [
+            "loups_garou_de_thiercelieux",
+            "thiercelieux_lg",
+            "village_lg",
+            "paradis_lg",
+            "loups_garou_lg",
+            "petite_fille_lg"
+        ].forEach(element => {
             this.mastermindPermissions[element] = {
                 'VIEW_CHANNEL': true,
                 'SEND_MESSAGES': true,
@@ -66,14 +73,17 @@ class ChannelsHandler extends IGame {
         });
 
         this.category = undefined;
-        this.vocal = undefined;
 
         this.channels = {
             thiercelieux_lg: undefined,
             village_lg: undefined,
             paradis_lg: undefined,
             loups_garou_lg: undefined,
-            vocal_lg: undefined
+        };
+
+        this.voiceChannels = {
+            vocal_lg: undefined,
+            mort_lg: undefined,
         };
 
         this._channels = new Map();
@@ -88,7 +98,6 @@ class ChannelsHandler extends IGame {
     async checkChannelsOnGuild() {
         await this.checkCategory();
         await this.checkChannels();
-        await this.checkVocal();
     }
 
     /**
@@ -110,20 +119,6 @@ class ChannelsHandler extends IGame {
         });
     }
 
-    checkVocal() {
-        return new Promise((resolve, reject) => {
-            let channel = this.guild.channels.find(x => x.name === "vocal_lg");
-
-            if (channel && channel.type === "voice" && channel.parentID === this.category) {
-                this.vocal = channel.id;
-                this._channels.set(channel.id, channel);
-                return resolve(true);
-            }
-
-            return reject(false);
-        });
-    }
-
     /**
      *
      * @returns {Promise<boolean>}
@@ -133,6 +128,7 @@ class ChannelsHandler extends IGame {
 
             let allPresent = true;
 
+            // check text channels
             Object.keys(this.channels).forEach(channelToFind => {
 
                 let channel = this.guild.channels.find(x => x.name === channelToFind);
@@ -144,6 +140,23 @@ class ChannelsHandler extends IGame {
                 }
 
                 if (!this.channels[channelToFind]) {
+                    allPresent = false;
+                }
+
+            });
+
+            //check voice channels
+            Object.keys(this.voiceChannels).forEach(channelToFind => {
+
+                let channel = this.guild.channels.find(x => x.name === channelToFind);
+
+                if (channel && channel.type === "voice" &&
+                    channel.parentID === this.category) {
+                    this.voiceChannels[channelToFind] = channel.id;
+                    this._channels.set(channel.id, channel);
+                }
+
+                if (!this.voiceChannels[channelToFind]) {
                     allPresent = false;
                 }
 
@@ -200,9 +213,18 @@ class ChannelsHandler extends IGame {
             let promises = [];
             let promisesCategory = [];
 
+
+            //create text channels
             Object.keys(this.channels).forEach(channelName => {
                 if (!this.channels[channelName]) {
                     promises.push(this.guild.createChannel(channelName, "text"));
+                }
+            });
+
+            //create voice channels
+            Object.keys(this.voiceChannels).forEach(channelName => {
+                if (!this.voiceChannels[channelName]) {
+                    promises.push(this.guild.createChannel(channelName, "voice"));
                 }
             });
 
@@ -228,7 +250,13 @@ class ChannelsHandler extends IGame {
                         this.category = createdChannel.id;
                     } else {
                         otherPromises.push(createdChannel.setParent(this.category));
-                        this.channels[createdChannel.name] = createdChannel.id;
+
+                        if (createdChannel.type === "text") {
+                            this.channels[createdChannel.name] = createdChannel.id;
+                        } else if (createdChannel.type === "voice") {
+                            this.voiceChannels[createdChannel.name] = createdChannel.id;
+                        }
+
                     }
                     this._channels.set(createdChannel.id, createdChannel);
 
