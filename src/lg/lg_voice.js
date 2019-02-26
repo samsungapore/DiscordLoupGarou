@@ -1,7 +1,8 @@
 const get_random_in_array = require("../functions/parsing_functions").get_random_in_array;
-const fs = require('fs').promises;
+const fs = require('fs');
 const path = require('path');
 const ytdl = require('ytdl-core');
+const Wait = require('../functions/wait').Wait;
 
 class VoiceHandler {
 
@@ -10,12 +11,14 @@ class VoiceHandler {
         this.voiceChannel = voiceChannel ? voiceChannel : null;
         this.voiceConnection = null;
 
-        this.bgm = null;
-        this.announcement = null;
+        this.dispatcher = null;
+        this.bgmTime = null;
+        this.bgmLink = null;
+
+        this.bgmPaused = false;
 
         this.musics = {
             firstDay: [
-                'https://www.youtube.com/watch?v=totQBPwi4wo&feature=youtu.be',
                 'https://www.youtube.com/watch?v=x-oKZDNMy4Y',
                 'https://www.youtube.com/watch?v=_8Y4Hb2ZtQE',
             ],
@@ -43,8 +46,7 @@ class VoiceHandler {
     }
 
     async destroy() {
-        this.bgm.end();
-        this.announcement.end();
+        if (this.dispatcher) this.dispatcher.end();
 
         this.voiceConnection.disconnect();
         await this.voiceChannel.leave();
@@ -52,78 +54,208 @@ class VoiceHandler {
     }
 
     static dispatcherAvailable(dispatcher) {
-        return dispatcher && !dispatcher.destroyed;
+        return dispatcher;
     }
 
     async stopBGM() {
-        if (VoiceHandler.dispatcherAvailable(this.bgm)) {
-            this.bgm.end();
+        if (VoiceHandler.dispatcherAvailable(this.dispatcher)) {
+            this.dispatcher.end();
+            await Wait.seconds(2.5);
         }
     }
 
-    async pauseBGM() {
-        if (VoiceHandler.dispatcherAvailable(this.bgm)) {
-            this.bgm.pause();
-        }
+    pauseBGM() {
+        console.log("Pause BGM");
+        return new Promise((resolve, reject) => {
+            if (VoiceHandler.dispatcherAvailable(this.dispatcher)) {
+                this.bgmTime = this.dispatcher.time / 1000;
+                console.log(this.bgmTime);
+                this.dispatcher.end();
+                this.bgmPaused = true;
+                Wait.seconds(2).then(() => resolve(this));
+            } else {
+                console.log('test');
+                resolve(this);
+            }
+        });
     }
 
     async resumeBGM() {
-        if (VoiceHandler.dispatcherAvailable(this.bgm)) {
-            this.bgm.resume();
-        }
+        console.log(this.bgmTime + " Resume BGM " + this.bgmLink);
+
+        this.dispatcher = null;
+        this.dispatcher = await this.playYTSound(this.bgmLink, 0.1);
+        console.log("Success");
+        this.bgmPaused = false;
+        await Wait.seconds(1);
+
     }
 
-    async join() {
-        if (this.voiceChannel) this.voiceConnection = await this.voiceChannel.join();
+    join() {
+        return new Promise((resolve, reject) => {
+            if (this.voiceChannel) {
+                this.voiceChannel.join().then(voiceConnection => {
+
+                    this.voiceConnection = voiceConnection;
+
+                    resolve(this);
+
+                }).catch(err => reject(err));
+            } else {
+                resolve(this);
+            }
+        });
     }
 
-    playSoundAndWait(path, vol) {
+    async setupEvents() {
+
+        this.voiceConnection.on('debug', message => console.debug(message));
+        this.voiceConnection.on('error', error => console.error(error));
+        this.voiceConnection.on('failed', err => console.error(err));
+        this.voiceConnection.on('reconnecting', () => console.info('Voice connection reconnecting'));
+
+    }
+
+    playYTSoundAndWait(path, vol) {
         return new Promise((resolve, reject) => {
 
-            const stream = ytdl(path, { filter: 'audioonly' });
+            const stream = ytdl(path, {filter: 'audioonly'});
 
             stream.on('error', (err) => {
                 console.error(err);
             });
 
-            let dispatcher = this.voiceConnection.playStream(stream, {volume: vol});
+            this.dispatcher = this.voiceConnection.playStream(stream, {volume: vol});
 
-            dispatcher.on('error', (err) => reject(err));
-            dispatcher.on('end', () => resolve(this));
+            this.dispatcher.on('error', (err) => reject(err));
+            this.dispatcher.on('end', () => resolve(this));
+            this.dispatcher.on('debug', (msg) => console.debug(msg));
+
+        });
+    }
+
+    playYTSound(path, vol, momentum) {
+
+        return new Promise((resolve, reject) => {
+            const stream = ytdl(path, {filter: 'audioonly'});
+
+            stream.on('error', (err) => {
+                console.error(err);
+            });
+
+            this.dispatcher = this.voiceConnection.playStream(stream, {volume: vol, seek: (momentum ? momentum : 0)});
+
+            this.dispatcher.on('start', () => {
+                console.log("Music started");
+                resolve(this.dispatcher);
+            });
+            this.dispatcher.on('error', (err) => reject(err));
+            this.dispatcher.on('debug', (msg) => console.debug(msg));
+        });
+
+    }
+
+    playSoundAndWait(path, vol) {
+        return new Promise((resolve, reject) => {
+
+            this.dispatcher = this.voiceConnection.playFile(path, {volume: vol});
+
+            this.dispatcher.on('error', (err) => reject(err));
+            this.dispatcher.on('end', () => Wait.seconds(1).then(() => resolve(this)));
+            this.dispatcher.on('debug', (msg) => console.debug(msg));
 
         });
     }
 
     async playSound(path, vol) {
+        return new Promise((resolve, reject) => {
+            this.dispatcher = this.voiceConnection.playFile(path, {volume: vol});
 
-        const stream = ytdl(path, { filter: 'audioonly' });
-
-        stream.on('error', (err) => {
-            console.error(err);
+            this.dispatcher.on('start', () => Wait.seconds(1).then(() => resolve(this.dispatcher)));
+            this.dispatcher.on('error', (err) => reject(err));
+            this.dispatcher.on('debug', (msg) => console.debug(msg));
         });
-
-        return this.voiceConnection.playStream(stream, {volume: vol});
-
     }
 
     async playFirstDayBGM() {
 
-        this.bgm = await this.playSound(get_random_in_array(this.musics.firstDay), 0.1);
+        this.bgmLink = get_random_in_array(this.musics.firstDay);
+
+        this.dispatcher = await this.playYTSound(this.bgmLink, 0.1);
 
         return this;
     }
 
     async playNightBGM() {
 
-        this.bgm = await this.playSound(get_random_in_array(this.musics.night), 0.1);
+        this.bgmLink = get_random_in_array(this.musics.night);
+
+        this.dispatcher = await this.playYTSound(this.bgmLink, 0.1);
 
         return this;
     }
 
     async playDayBGM() {
 
-        this.announcement = await this.playSound(get_random_in_array(this.musics.day), 0.7);
+        this.bgmLink = get_random_in_array(this.musics.day);
 
+        this.dispatcher = await this.playYTSound(this.bgmLink, 0.1);
+
+        return this;
+    }
+
+    async playAnnouncement(path) {
+
+        if (require('fs').existsSync(path)) {
+
+            console.log("Announcement begin");
+            this.announcementOngoing = true;
+            await this.pauseBGM();
+            console.log("Play Announcement");
+            await this.playSoundAndWait(path, 0.7);
+            this.dispatcher = null;
+            await this.resumeBGM();
+            this.announcementOngoing = false;
+            console.log("Announcement end");
+
+        }
+
+        return this;
+
+    }
+
+    async announceRole(roleName, reveil) {
+
+        let file = '';
+
+        if (reveil) {
+            file = path.join(__dirname, `../../assets/${this.type}/announcements/${roleName}_reveil.mp3`);
+        } else {
+            file = path.join(__dirname, `../../assets/${this.type}/announcements/${roleName}_dort.mp3`);
+        }
+
+        await this.playAnnouncement(file);
+
+        return this;
+    }
+
+    async announceDayBegin() {
+
+        const link = path.join(__dirname, `../../assets/${this.type}/announcements/lejourseleve.mp3`);
+
+        await this.playAnnouncement(link);
+        return this;
+    }
+
+    async announceNightSoon() {
+        const link = path.join(__dirname, `../../assets/${this.type}/announcements/lanuitvabientot.mp3`);
+        await this.playAnnouncement(link);
+        return this;
+    }
+
+    async announceVoteCapitaine() {
+        const link = path.join(__dirname, `../../assets/${this.type}/announcements/lesvillageoissereunissent.mp3`);
+        await this.playAnnouncement(link);
         return this;
     }
 
@@ -137,11 +269,26 @@ class HigurashiVoiceHandler extends VoiceHandler {
         this.handlerType = "higurashi";
 
         this.musics = {
+            firstDay: [
+                'https://youtu.be/prtv1R_ULBM',
+                'https://youtu.be/wb2bFXo48T8',
+                'https://youtu.be/uTTd3Tq7L_0',
+                'https://youtu.be/8AdJOCrtOBw',
+                'https://youtu.be/KmmU8HWWgvg',
+            ],
             day: [
-                'https://www.youtube.com/watch?v=MBJKivjfLmo'
+                'https://youtu.be/prtv1R_ULBM',
+                'https://youtu.be/wb2bFXo48T8',
+                'https://youtu.be/uTTd3Tq7L_0',
+                'https://youtu.be/8AdJOCrtOBw',
+                'https://youtu.be/KmmU8HWWgvg',
             ],
             night: [
-                'https://www.youtube.com/watch?v=MBJKivjfLmo'
+                'https://youtu.be/2agvdGtGl8o',
+                'https://youtu.be/cHIcdmi6FP4',
+                'https://youtu.be/_YRX1S6M4Ps',
+                'https://youtu.be/VEy2U-Z4bpg',
+                'https://youtu.be/BDdewvQmIko'
             ]
         };
 

@@ -1,6 +1,8 @@
 const Discord = require('discord.js');
 const LGBot = new Discord.Client();
 
+const BGM = new Discord.Client();
+
 // UTC + x
 const UTC_LOCAL_TIMESIFT = 1;
 
@@ -23,6 +25,10 @@ LGBot.on('ready', () => {
     console.info(`Connected to ${LGBot.guilds.size} servers, servicing ${LGBot.users.size} users.`);
 
     LGBot.user.setActivity("lg/new - Réalisé par Kazuhiro#1248").catch(console.error);
+
+    LGBot.voiceConnections.array().forEach(voiceConnection => {
+        voiceConnection.disconnect();
+    });
 
     if (LGBot.Settings.Admins) {
         LGBot.Settings.Admins.forEach(adminID => {

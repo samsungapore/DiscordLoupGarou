@@ -1,6 +1,7 @@
 const BotData = require("../BotData.js");
 const lg_var = require("./lg_var");
 const LgLogger = require("./lg_logger");
+const HigurashiVoiceHandler = require("./lg_voice").HigurashiVoiceHandler;
 const VoiceHandler = require("./lg_voice").VoiceHandler;
 const GameFlow = require("./lg_flow").GameFlow;
 const ChannelsHandler = require("./lg_channel").ChannelsHandler;
@@ -120,6 +121,7 @@ class Game extends IGame {
         this.updateObjects(status);
 
         await this.flow.GameConfiguration.voiceHandler.join();
+        await this.flow.GameConfiguration.voiceHandler.setupEvents();
         await this.flow.GameConfiguration.voiceHandler.playFirstDayBGM();
 
         LgLogger.info("Game successfully prepared.", this.gameInfo);
@@ -283,7 +285,7 @@ class GamePreparation extends IGame {
         this.configuration = new GameConfiguration(this.gameInfo);
         this.rolesHandler = new RolesHandler(client, guild, this.gameInfo);
         this.channelsHandler = new ChannelsHandler(client, guild, this.gameInfo);
-        this.voiceHandler = new VoiceHandler(this.channelsHandler._channels.get(this.channelsHandler.voiceChannels.vocal_lg));
+        this.voiceHandler = new HigurashiVoiceHandler(this.channelsHandler._channels.get(this.channelsHandler.voiceChannels.vocal_lg));
 
         this.msg = undefined;
         this.richEmbed = undefined;

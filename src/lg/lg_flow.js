@@ -4,6 +4,7 @@ const lg_var = require('./lg_var.js');
 const LgLogger = require("./lg_logger");
 const botColor = require("./lg_var").botColor;
 const LoupGarouVote = require("./lg_vote").LoupGarouVote;
+const DayVote = require("./lg_vote").DayVote;
 const get_random_in_array = require("../functions/parsing_functions").get_random_in_array;
 const allRoles = require("./roles/roleFactory").allRoles;
 const Wait = require("../functions/wait.js").Wait;
@@ -189,6 +190,10 @@ class GameFlow extends IGame {
     }
 
     /**
+     * Problème d'architecture à venir avec l'infect père des loups :
+     * Il peut infecter un villageois spécial, qui devient loup garou tout en gardant
+     * ses pouvoirs précédents. Architecture à réfléchir pour pouvoir implémenter
+     * l'infect père des loups, car la personne infecté aura deux rôles simultanément
      *
      * @returns {Promise<boolean>} resolve true if game ended, false if not.
      */
@@ -553,9 +558,12 @@ class FirstDay extends Period {
             this.GameConfiguration.channelsHandler.sendMessageToVillage(
                 "🌄 Le jour se lève à Thiercelieux." +
                 " Quand la neige éternelle ornera les montagnes, le capitaine devra être élu."
-            ).then(() => Wait.minutes(1))
+            ).then(() => {
+                return this.GameConfiguration.voiceHandler.announceDayBegin();
+            }).then(() => Wait.minutes(1))
                 .then(() => this.capitaineElection())
                 .then(() => this.GameConfiguration.channelsHandler.sendMessageToVillage("⛰ La nuit va bientôt tomber sur Thiercelieux."))
+                .then(() => this.GameConfiguration.voiceHandler.announceNightSoon())
                 .then(() => Wait.seconds(30))
                 .then(() => resolve(this.GameConfiguration))
                 .catch(err => reject(err));
@@ -571,7 +579,7 @@ class FirstDay extends Period {
             this.GameConfiguration.channelsHandler.sendMessageToVillage(
                 "🏔 Les villageois se réunissent afin d'élir leur capitaine\n" +
                 "C'est l'heure du vote !"
-            ).then(() => {
+            ).then(() => this.GameConfiguration.voiceHandler.announceVoteCapitaine()).then(() => {
 
                 return this.GameConfiguration.channelsHandler.switchPermissions(
                     this.GameConfiguration.channelsHandler.channels.thiercelieux_lg,
@@ -764,7 +772,8 @@ class Night extends Period {
 
             this.GameConfiguration.channelsHandler.sendMessageToVillage(
                 `Les **Loups Garous** se réveillent 🐺`
-            ).then(() => new LoupGarouVote(
+            ).then(() => this.GameConfiguration.voiceHandler.announceRole("LoupGarou", true))
+                .then(() => new LoupGarouVote(
                 "Veuillez choisir votre proie.",
                 this.GameConfiguration,
                 60000,
@@ -783,7 +792,9 @@ class Night extends Period {
 
             }).then(() => this.GameConfiguration.channelsHandler.sendMessageToVillage(
                 `Les **Loups Garous** se rendorment.`
-            )).then(() => resolve(this)).catch(err => reject(err));
+            )).then(() => {
+                return this.GameConfiguration.voiceHandler.announceRole("LoupGarou", false);
+            }).then(() => resolve(this)).catch(err => reject(err));
 
         });
     }
@@ -811,10 +822,14 @@ class Night extends Period {
             return this;
         }
 
+        await this.GameConfiguration.voiceHandler.announceRole("Voyante", true);
+
         await voyante.processRole(this.GameConfiguration);
         await this.GameConfiguration.channelsHandler.sendMessageToVillage(
             "La **Voyante** se rendort."
         );
+
+        await this.GameConfiguration.voiceHandler.announceRole("Voyante", false);
 
         return this;
     }
@@ -837,6 +852,8 @@ class Night extends Period {
 
         if (!sorciere) return this;
 
+        await this.GameConfiguration.voiceHandler.announceRole("Sorciere", true);
+
         await sorciere.processRole(this.GameConfiguration, this.shouldDieTonight.get("LGTarget"));
 
         if (sorciere.savedLgTarget || sorciere.targetIsSavedBySalva) {
@@ -857,6 +874,8 @@ class Night extends Period {
         await this.GameConfiguration.channelsHandler.sendMessageToVillage(
             "La **Sorcière** se rendort"
         );
+
+        await this.GameConfiguration.voiceHandler.announceRole("Sorciere", false);
 
         return this;
     }
@@ -925,6 +944,8 @@ class FirstNight extends Night {
 
         if (!voleur) return this;
 
+        await this.GameConfiguration.voiceHandler.announceRole("Voleur", true);
+
         await voleur.proposeRoleChoice(this.GameConfiguration);
 
         if (!voleur.roleChosen) {
@@ -971,6 +992,8 @@ class FirstNight extends Night {
             "**Le Voleur** se rendort."
         );
 
+        await this.GameConfiguration.voiceHandler.announceRole("Voleur", false);
+
         return this;
     }
 
@@ -989,8 +1012,9 @@ class FirstNight extends Night {
                 "💘 **Cupidon** se réveille, il désignera __les amoureux__."
             ).catch(console.error);
 
-
-            cupidon.getChoice(this.GameConfiguration).then(([id1, id2]) => {
+            this.GameConfiguration.voiceHandler.announceRole("Cupidon", true)
+                .then(() => cupidon.getChoice(this.GameConfiguration))
+                .then(([id1, id2]) => {
 
                 let choice1 = this.GameConfiguration._players.get(id1);
                 let choice2 = this.GameConfiguration._players.get(id2);
@@ -1020,7 +1044,9 @@ class FirstNight extends Night {
                     choice2.member.send(`Tu es en couple avec ${choice1.member.displayName} 💞`),
                 ]).then(() => this.GameConfiguration.channelsHandler.sendMessageToVillage(
                     "💘 **Cupidon** se rendort."
-                )).then(() => resolve(this.GameConfiguration)).catch(err => reject(err));
+                )).then(() => {
+                    return this.GameConfiguration.voiceHandler.announceRole("Cupidon", false);
+                }).then(() => resolve(this.GameConfiguration)).catch(err => reject(err));
 
             }).catch(err => reject(err));
 
