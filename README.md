@@ -8,7 +8,7 @@ description: >-
 
 ## Permissions nécessaires
 
-![Permissions requises au bot pour pouvoir fonctionner](.gitbook/assets/sans-titre.png)
+![](.gitbook/assets/sans-titre%20%282%29.png)
 
 ## Informations très importantes
 
@@ -38,7 +38,7 @@ Voici les channels que le bot générera si ils ne sont pas présents sur le ser
 ## [Ajouter le bot à son serveur discord](https://discordapp.com/api/oauth2/authorize?client_id=538344945673830410&scope=bot&permissions=468839664)
 
 ```text
-Bot en cours de développement, Beta 1.1
+Bot en cours de développement, Beta 1.5
 ```
 
 {% hint style="info" %}
@@ -88,11 +88,14 @@ Vous pouvez proposer vos améliorations du bot et signaler les bugs sur [cette p
 
 * Correction de bugs divers
 
+### 26/02/2019 : Beta 1.5
+
+* Ajout de la Musique
+* Ajout des annonces vocales
+
 ### À venir
 
 * Les rôles de _Nouvelle Lune_ \(ceux compatibles\)
-* Annonces vocales
-* Musique
 * Les rôles de _Personnages_ \(ceux compatibles\)
 * Jeux à thèmes \(avec annonces, musiques personnalisables\)
 * Peut-être : les rôles de l'extension _Le Village_
