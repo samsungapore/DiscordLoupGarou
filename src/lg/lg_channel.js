@@ -275,7 +275,7 @@ class ChannelsHandler extends IGame {
             let promises = [];
 
             for (let channel of this._channels.values()) {
-                promises.push(channel.delete());
+                if (channel.type === 'text') promises.push(channel.delete());
             }
 
             Promise.all(promises).then(() => resolve(true)).catch(err => reject(err));
@@ -355,7 +355,7 @@ class ChannelsHandler extends IGame {
         });
     }
 
-    sendMessageToVillage(message, imageLink) {
+    sendMessageToVillage(message, imageLink, thumbnail) {
 
         let village = this._channels.get(this.channels.village_lg);
 
@@ -365,6 +365,7 @@ class ChannelsHandler extends IGame {
             .setAuthor("Loup-Garou de thiercelieux", lg_var.roles_img.LoupGarou);
 
         if (imageLink) msg.setImage(imageLink);
+        if (thumbnail) msg.setThumbnail(thumbnail);
 
         return village.send(msg);
 

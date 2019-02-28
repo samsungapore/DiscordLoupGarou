@@ -18,6 +18,10 @@ LGBot.Settings = new Enmap({provider: Settings});
 const LG = new EnmapLevel({name: "LG"});
 LGBot.LG = new Enmap({provider: LG});
 
+/*LGBot.commands = new Discord.Collection();
+
+const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));*/
+
 
 LGBot.on('ready', () => {
 
@@ -35,6 +39,17 @@ LGBot.on('ready', () => {
             let user = LGBot.users.get(adminID);
 
             if (user) user.send('Le bot Loup Garou a redémarré').catch(console.error);
+        });
+    } else {
+        LGBot.Settings.Admins = [];
+
+        LGBot.guilds.array().forEach(guild => {
+            LGBot.Settings.Admins.push(guild.ownerID);
+
+            let user = LGBot.users.get(guild.ownerID);
+
+            if (user) user.send('Le bot Loup Garou vient de redémarrer').catch(console.error);
+
         });
     }
 

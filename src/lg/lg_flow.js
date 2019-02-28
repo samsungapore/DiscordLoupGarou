@@ -689,7 +689,9 @@ class Night extends Period {
             let role = roles[0];
 
             this.GameConfiguration.channelsHandler.sendMessageToVillage(
-                `${prefix}**${realName ? realName : roleName}** se réveille.`
+                `${prefix}**${realName ? realName : roleName}** se réveille.`,
+                undefined,
+                lg_var.roles_img[roleName]
             ).catch(err => LgLogger.warn(err, this.gameInfo));
 
             resolve(role);
@@ -771,7 +773,7 @@ class Night extends Period {
             this.initPetiteFilleListening().catch(console.error);
 
             this.GameConfiguration.channelsHandler.sendMessageToVillage(
-                `Les **Loups Garous** se réveillent 🐺`
+                `Les **Loups Garous** se réveillent 🐺`, undefined, lg_var.roles_img.LoupGarou
             ).then(() => this.GameConfiguration.voiceHandler.announceRole("LoupGarou", true))
                 .then(() => new LoupGarouVote(
                 "Veuillez choisir votre proie.",
@@ -791,10 +793,8 @@ class Night extends Period {
                 );
 
             }).then(() => this.GameConfiguration.channelsHandler.sendMessageToVillage(
-                `Les **Loups Garous** se rendorment.`
-            )).then(() => {
-                return this.GameConfiguration.voiceHandler.announceRole("LoupGarou", false);
-            }).then(() => resolve(this)).catch(err => reject(err));
+                `Les **Loups Garous** se rendorment.`, undefined, lg_var.roles_img.LoupGarou
+            )).then(() => resolve(this)).catch(err => reject(err));
 
         });
     }
@@ -826,10 +826,8 @@ class Night extends Period {
 
         await voyante.processRole(this.GameConfiguration);
         await this.GameConfiguration.channelsHandler.sendMessageToVillage(
-            "La **Voyante** se rendort."
+            "La **Voyante** se rendort.", undefined, lg_var.roles_img.Voyante
         );
-
-        await this.GameConfiguration.voiceHandler.announceRole("Voyante", false);
 
         return this;
     }
@@ -872,10 +870,8 @@ class Night extends Period {
         sorciere.targetIsSavedBySalva = false;
 
         await this.GameConfiguration.channelsHandler.sendMessageToVillage(
-            "La **Sorcière** se rendort"
+            "La **Sorcière** se rendort", undefined, lg_var.roles_img.Sorciere
         );
-
-        await this.GameConfiguration.voiceHandler.announceRole("Sorciere", false);
 
         return this;
     }
@@ -989,10 +985,8 @@ class FirstNight extends Night {
         );
 
         await this.GameConfiguration.channelsHandler.sendMessageToVillage(
-            "**Le Voleur** se rendort."
+            "**Le Voleur** se rendort.", undefined, lg_var.roles_img.Voleur
         );
-
-        await this.GameConfiguration.voiceHandler.announceRole("Voleur", false);
 
         return this;
     }
@@ -1009,7 +1003,8 @@ class FirstNight extends Night {
             let cupidon = cupidons[0];
 
             this.GameConfiguration.channelsHandler.sendMessageToVillage(
-                "💘 **Cupidon** se réveille, il désignera __les amoureux__."
+                "💘 **Cupidon** se réveille, il désignera __les amoureux__.", undefined,
+                lg_var.roles_img.Cupidon
             ).catch(console.error);
 
             this.GameConfiguration.voiceHandler.announceRole("Cupidon", true)
@@ -1026,8 +1021,8 @@ class FirstNight extends Night {
                     let randomChoice = get_random_in_array(players);
                     players.splice(players.indexOf(randomChoice));
 
-                    choice1 = randomChoice;
-                    choice2 = get_random_in_array(players);
+                    if (!choice1) choice1 = randomChoice;
+                    if (!choice2) choice2 = get_random_in_array(players);
                 }
 
                 choice1.amoureux = choice2.member.id;
@@ -1043,10 +1038,8 @@ class FirstNight extends Night {
                     choice1.member.send(`Tu es en couple avec ${choice2.member.displayName} 💞`),
                     choice2.member.send(`Tu es en couple avec ${choice1.member.displayName} 💞`),
                 ]).then(() => this.GameConfiguration.channelsHandler.sendMessageToVillage(
-                    "💘 **Cupidon** se rendort."
-                )).then(() => {
-                    return this.GameConfiguration.voiceHandler.announceRole("Cupidon", false);
-                }).then(() => resolve(this.GameConfiguration)).catch(err => reject(err));
+                    "💘 **Cupidon** se rendort.", undefined, lg_var.roles_img.Cupidon
+                )).then(() => resolve(this.GameConfiguration)).catch(err => reject(err));
 
             }).catch(err => reject(err));
 
@@ -1063,10 +1056,13 @@ class FirstNight extends Night {
             enfantSauvage = enfantSauvage[0];
 
             this.GameConfiguration.channelsHandler.sendMessageToVillage(
-                "L'**Enfant Sauvage** se réveille."
+                "L'**Enfant Sauvage** se réveille.", undefined, lg_var.roles_img.EnfantSauvage
             ).catch(err => LgLogger.warn(err, this.gameInfo));
 
             enfantSauvage.askForModel(this.GameConfiguration)
+                .then(() => this.GameConfiguration.channelsHandler.sendMessageToVillage(
+                    "L'**Enfant Sauvage** se rendort.", undefined, lg_var.roles_img.EnfantSauvage
+                ))
                 .then(() => resolve(this))
                 .catch(err => reject(err));
 

@@ -437,10 +437,14 @@ class GamePreparation extends IGame {
     }
 
     updateParticipantsDisplay() {
-        this.richEmbed.fields[this.richEmbed.fields.length - 1].value = this.configuration.getParticipantsNames().toString();
+        this.richEmbed.fields[this.richEmbed.fields.length - 1].value = this.configuration
+            .getParticipantsNames()
+            .toString()
+            .replace(/,+/g, "\n");
         if (this.richEmbed.fields[this.richEmbed.fields.length - 1].value === "") {
             this.richEmbed.fields[this.richEmbed.fields.length - 1].value = "Aucun participant pour le moment";
         }
+        this.richEmbed.setFooter(`Nombre de joueurs : **${this.configuration.getParticipantsNames().length}**`);
         this.msg.edit(this.richEmbed).catch(console.error);
     }
 

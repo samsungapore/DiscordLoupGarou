@@ -65,27 +65,22 @@ class VoiceHandler {
     }
 
     pauseBGM() {
-        console.log("Pause BGM");
         return new Promise((resolve, reject) => {
             if (VoiceHandler.dispatcherAvailable(this.dispatcher)) {
                 this.bgmTime = this.dispatcher.time / 1000;
-                console.log(this.bgmTime);
                 this.dispatcher.end();
                 this.bgmPaused = true;
                 Wait.seconds(2).then(() => resolve(this));
             } else {
-                console.log('test');
                 resolve(this);
             }
         });
     }
 
     async resumeBGM() {
-        console.log(this.bgmTime + " Resume BGM " + this.bgmLink);
 
         this.dispatcher = null;
         this.dispatcher = await this.playYTSound(this.bgmLink, 0.1);
-        console.log("Success");
         this.bgmPaused = false;
         await Wait.seconds(1);
 
@@ -146,7 +141,6 @@ class VoiceHandler {
             this.dispatcher = this.voiceConnection.playStream(stream, {volume: vol, seek: (momentum ? momentum : 0)});
 
             this.dispatcher.on('start', () => {
-                console.log("Music started");
                 resolve(this.dispatcher);
             });
             this.dispatcher.on('error', (err) => reject(err));
@@ -208,15 +202,12 @@ class VoiceHandler {
 
         if (require('fs').existsSync(path)) {
 
-            console.log("Announcement begin");
             this.announcementOngoing = true;
             await this.pauseBGM();
-            console.log("Play Announcement");
             await this.playSoundAndWait(path, 0.7);
             this.dispatcher = null;
             await this.resumeBGM();
             this.announcementOngoing = false;
-            console.log("Announcement end");
 
         }
 

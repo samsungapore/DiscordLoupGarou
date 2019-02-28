@@ -237,7 +237,7 @@ class SondageInfiniteChoice {
 
                 vote.on("collect", collectedVote => {
 
-                    let answerCollected = collectedVote.cleanContent;
+                    let answerCollected = collectedVote.cleanContent.toLowerCase();
                     let answerTab = answerCollected.split(/ +/g);
 
                     if (answerTab.length === 1) {
