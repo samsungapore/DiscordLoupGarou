@@ -8,7 +8,7 @@ description: >-
 
 ## Permissions nécessaires
 
-![Permissions requises au bot pour pouvoir fonctionner](.gitbook/assets/sans-titre.png)
+![](.gitbook/assets/sans-titre%20%282%29.png)
 
 ## Informations très importantes
 
