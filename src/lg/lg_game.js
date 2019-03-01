@@ -10,6 +10,13 @@ const ReactionHandler = require("../functions/reactionHandler").ReactionHandler;
 const RichEmbed = require("discord.js").RichEmbed;
 const Wait = require('../functions/wait').Wait;
 
+class GameOptions {
+    constructor() {
+        this.voice = true;
+        this.music = true;
+    }
+}
+
 class IGame {
 
     constructor(client) {
@@ -420,17 +427,9 @@ class GamePreparation extends IGame {
         return new Promise((resolve, reject) => {
 
             this.channelsHandler.checkChannelsOnGuild().then(() => {
-                if (this.stemmingPlayer.hasPermission("BAN_MEMBERS")) {
-                    this.askForChannelGeneration().then(() => resolve(true)).catch(err => reject(err));
-                } else {
-                    resolve(true);
-                }
+                resolve(true);
             }).catch(() => {
-                if (this.stemmingPlayer.hasPermission("BAN_MEMBERS")) {
-                    this.askForChannelGeneration().then(() => resolve(false)).catch(err => reject(err));
-                } else {
-                    resolve(false);
-                }
+                resolve(false);
             });
 
         });
@@ -444,7 +443,7 @@ class GamePreparation extends IGame {
         if (this.richEmbed.fields[this.richEmbed.fields.length - 1].value === "") {
             this.richEmbed.fields[this.richEmbed.fields.length - 1].value = "Aucun participant pour le moment";
         }
-        this.richEmbed.setFooter(`Nombre de joueurs : **${this.configuration.getParticipantsNames().length}**`);
+        this.richEmbed.setFooter(`Nombre de joueurs : ${this.configuration.getParticipantsNames().length}`);
         this.msg.edit(this.richEmbed).catch(console.error);
     }
 
@@ -493,6 +492,7 @@ class GameConfiguration {
     constructor(gameInfo) {
 
         this.gameInfo = gameInfo;
+        this.globalTimer = null;
 
         this._table = [];
 

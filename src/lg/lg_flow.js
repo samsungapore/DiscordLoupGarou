@@ -13,6 +13,8 @@ const EventEmitter = require('events');
 const Vote = require("./lg_vote").DayVote;
 const CommunicationHandler = require('./message_sending').CommunicationHandler;
 let timeToString = require('../functions/time');
+const ReactionHandler = require("../functions/reactionHandler").ReactionHandler;
+const Message = require('discord.js').Message;
 
 class IGame {
 
@@ -22,6 +24,105 @@ class IGame {
 
         return this;
 
+    }
+
+}
+
+class GlobalTimer {
+    constructor(channel, secInterval) {
+        this.embed = CommunicationHandler
+            .getLGSampleMsg()
+            .addField(
+                `⏭`,
+                "Réagissez avec ⏭ pour skip l'attente. Tout le monde doit skip pour pouvoir procéder."
+            );
+        this.timer = null;
+        this.message = null;
+        this.channel = channel;
+        this.secInterval = secInterval ? secInterval : 5;
+
+        this.count = 0;
+        this.max = 0;
+        this.time = null;
+        return this;
+    }
+
+    async end() {
+        clearInterval(this.timer);
+        this.count = 0;
+        await this.message.delete();
+        this.message = null;
+        return this;
+    }
+
+    setTimer(minutes, title, playerNb) {
+        return new Promise((resolve, reject) => {
+            if (this.timer) clearInterval(this.timer);
+
+            this.max = playerNb;
+
+            this.time = minutes;
+
+            this.embed.setTitle(`${title} : ${timeToString(minutes)}`);
+
+            let msgPromise = [];
+
+            if (!this.message) {
+                msgPromise.push(this.channel.send(this.embed));
+            } else {
+                msgPromise.push(this.message.edit(this.embed));
+            }
+
+            Promise.all(msgPromise)
+                .then((msgs) => {
+                    this.message = msgs.shift();
+                    return new ReactionHandler(this.message, ["⏭"]).addReactions()
+                })
+                .then(reactionHandler => {
+
+                    reactionHandler.initCollector(
+                        (reaction) => {
+                            if (reaction.emoji.name === "⏭") {
+                                this.count += 1;
+                                if (this.count === this.max) {
+                                    reactionHandler.stop();
+                                }
+                            }
+                        },
+                        () => {
+                            this.message.delete()
+                                .then(() => {
+                                    this.end().catch(() => this.message = null);
+                                    resolve(this);
+                                })
+                                .catch(err => reject(err));
+                        },
+                        (reaction) => reaction.count > 1
+                    );
+
+                    this.timer = setInterval(() => {
+                        this.update().then(isDone => {
+                            if (isDone) resolve(this);
+                        }).catch(console.error);
+                    }, this.secInterval * 1000);
+
+                })
+                .catch(err => reject(err));
+
+        });
+    }
+
+    async update() {
+        this.time = ((this.time * 60) - this.secInterval) / 60;
+
+        if (this.time <= 0) {
+            this.end().catch(() => this.message = null);
+            return true;
+        } else {
+            this.embed.setTitle(`${this.embed.title.split(':')[0]}: ${timeToString(this.time)}`);
+            await this.message.edit(this.embed);
+            return false;
+        }
     }
 
 }
@@ -93,6 +194,10 @@ class GameFlow extends IGame {
                     this.GameConfiguration.rolesHandler.removePlayerRole(deadPlayer.member).catch(console.error);
                     this.GameConfiguration.rolesHandler.addDeadRole(deadPlayer.member).catch(console.error);
 
+                    deadPlayer.member.setVoiceChannel(this.GameConfiguration.channelsHandler._channels.get(
+                        this.GameConfiguration.channelsHandler.voiceChannels.mort_lg
+                    )).catch(() => true);
+
                     if (somebodyNew) {
                         somebodyNew.forEach(person => setImmediate(() => this.killer.emit("death", person)));
                     }
@@ -115,9 +220,15 @@ class GameFlow extends IGame {
     run() {
         return new Promise((resolve, reject) => {
 
+            this.GameConfiguration.globalTimer = new GlobalTimer(this.GameConfiguration.channelsHandler._channels.get(
+                this.GameConfiguration.channelsHandler.channels.thiercelieux_lg
+            ));
+
             this.listenDeaths();
 
             LgLogger.info('Game start', this.gameInfo);
+
+            this.moveEveryPlayersToVocalChannel().catch(console.error);
 
             this.GameConfiguration.channelsHandler._channels.get(this.GameConfiguration.channelsHandler.channels.thiercelieux_lg)
                 .send(new RichEmbed().setColor(BotData.BotValues.botColor)
@@ -158,33 +269,43 @@ class GameFlow extends IGame {
         });
     }
 
+    async moveEveryPlayersToVocalChannel() {
+        for (let player of this.GameConfiguration.getPlayers().values()) {
+            player.member.setVoiceChannel(this.GameConfiguration.channelsHandler._channels.get(
+                this.GameConfiguration.channelsHandler.voiceChannels.vocal_lg
+            )).catch(() => true);
+        }
+    }
+
     async fillGameStats() {
         this.gameStats.setFooter(`Jeu terminé au bout de ${this.gameInfo.getPlayTime()}`);
 
         this.gameStats.addField(
             "Loups",
-            `${this.GameConfiguration.getMemberteams("LG").toString().replace(/,+/g, '\n')}`,
+            `${this.GameConfiguration.getMemberteams("LG")
+                .toString().replace(/,+/g, '\n')}`,
             true
         ).addField(
             "Villageois",
-            `${this.GameConfiguration.getMemberteams("VILLAGEOIS").toString().replace(/,+/g, '\n')}`,
+            `${this.GameConfiguration.getMemberteams("VILLAGEOIS")
+                .toString().replace(/,+/g, '\n')}`,
             true
         );
 
         if (this.GameConfiguration.getMemberteams("LOUPBLANC").length > 0) {
             this.gameStats.addField(
                 "Loup Blanc",
-                `${this.GameConfiguration.getMemberteams("LOUPBLANC").toString().replace(/,+/g, '\n')}`,
+                `${this.GameConfiguration.getMemberteams("LOUPBLANC")
+                    .toString().replace(/,+/g, '\n')}`,
                 true
             )
         }
 
+        let winners = this.GameConfiguration.getAlivePlayers().map(player => `__**${player.member.displayName}**__`);
+
         this.gameStats.setDescription(
-            `Vainqueur(s): ${this.GameConfiguration.getAlivePlayers()
-                .map(player => player.member.displayName)
-                .toString()
-                .replace(',', ', ')
-                }`
+            `Vainqueur(s):\n\n${winners ? winners.toString()
+                .replace(/,+/g, '\n') : "**Personne n'a gagné !**"}`
         );
 
     }
@@ -234,9 +355,11 @@ class GameFlow extends IGame {
 
             if (alivePerson.team === "LG") {
                 this.gameStats.setTitle("Les Loups Garou ont gagnés !");
+                this.gameStats.setImage(lg_var.roles_img.LoupGarou);
                 this.gameStats.setColor('RED');
             } else if (alivePerson.team === "VILLAGEOIS") {
                 this.gameStats.setTitle("Les Villageois ont gagnés !");
+                this.gameStats.setImage(lg_var.roles_img.Villageois);
                 this.gameStats.setColor('BLUE');
             }
 
@@ -248,6 +371,7 @@ class GameFlow extends IGame {
 
             gameHasEnded = true;
             this.gameStats.setTitle(`Le couple ${alivePlayers[0].member.displayName} 💗 ${alivePlayers[1].member.displayName} a gagné la partie !`);
+            this.gameStats.setImage(lg_var.roles_img.Cupidon);
             this.gameStats.setColor('GOLD');
             await this.fillGameStats();
 
@@ -308,7 +432,11 @@ class GameFlow extends IGame {
             }
 
             await this.GameConfiguration.channelsHandler.sendMessageToVillage("La nuit va bientôt tomber sur Thiercelieux...");
-            await Wait.seconds(23);
+            await this.GameConfiguration.globalTimer.setTimer(
+                23 / 60,
+                "Temps avant la tombée de la nuit",
+                this.GameConfiguration.getAlivePlayers().length
+            );
 
             shouldDie = await new Night(this.GameConfiguration, this.gameInfo, this.turnNb).goThrough();
 
@@ -391,8 +519,8 @@ class Day extends Period {
         return new Promise((resolve, reject) => {
             LgLogger.info("Going through day", this.gameInfo);
 
-            //this.displayNightOutcome()
-            this.debateTime()
+            this.displayNightOutcome()
+                .then(() => this.debateTime())
                 .then((outcome) => this.pronounceSentence(outcome))
                 .then((victim) => resolve([victim]))
                 .catch(err => reject(err));
@@ -401,14 +529,8 @@ class Day extends Period {
     }
 
     async displayNightOutcome() {
-        for (let i = 0; i < this.deadPeople.length; i++) {
-            await this.GameConfiguration.villageChannel.send(new RichEmbed()
-                .setAuthor(`${this.deadPeople[i].member.displayName} est mort(e)`, this.deadPeople[i].member.user.avatarURL)
-                .setTitle(this.deadPeople[i].role)
-                .setImage(this.deadPeople[i].member.user.avatarURL)
-                .setColor('RED')
-            )
-        }
+
+
 
         return this;
     }
@@ -425,7 +547,11 @@ class Day extends Period {
             `Vous disposez de ${timeToString(debateDuration)} pour débattre, et faire un vote`
         );
 
-        await Wait.minutes(debateDuration / 2);
+        await this.GameConfiguration.globalTimer.setTimer(
+            debateDuration / 2,
+            "Temps avant le début du vote",
+            this.GameConfiguration.getAlivePlayers().length
+        );
 
         await this.GameConfiguration.channelsHandler.switchPermissions(
             this.GameConfiguration.channelsHandler.channels.thiercelieux_lg,
@@ -560,11 +686,19 @@ class FirstDay extends Period {
                 " Quand la neige éternelle ornera les montagnes, le capitaine devra être élu."
             ).then(() => {
                 return this.GameConfiguration.voiceHandler.announceDayBegin();
-            }).then(() => Wait.minutes(1))
+            }).then(() => this.GameConfiguration.globalTimer.setTimer(
+                1,
+                "Temps avant le vote du capitaine",
+                this.GameConfiguration.getAlivePlayers().length
+            ))
                 .then(() => this.capitaineElection())
                 .then(() => this.GameConfiguration.channelsHandler.sendMessageToVillage("⛰ La nuit va bientôt tomber sur Thiercelieux."))
                 .then(() => this.GameConfiguration.voiceHandler.announceNightSoon())
-                .then(() => Wait.seconds(30))
+                .then(() => this.GameConfiguration.globalTimer.setTimer(
+                    0.5,
+                    "Temps avant la tombée de la nuit",
+                    this.GameConfiguration.getAlivePlayers().length
+                ))
                 .then(() => resolve(this.GameConfiguration))
                 .catch(err => reject(err));
 
@@ -776,11 +910,11 @@ class Night extends Period {
                 `Les **Loups Garous** se réveillent 🐺`, undefined, lg_var.roles_img.LoupGarou
             ).then(() => this.GameConfiguration.voiceHandler.announceRole("LoupGarou", true))
                 .then(() => new LoupGarouVote(
-                "Veuillez choisir votre proie.",
-                this.GameConfiguration,
-                60000,
-                this.GameConfiguration.getLGChannel()
-            ).excludeDeadPlayers().runVote(this.GameConfiguration.getLGIds())).then(outcome => {
+                    "Veuillez choisir votre proie.",
+                    this.GameConfiguration,
+                    60000,
+                    this.GameConfiguration.getLGChannel()
+                ).excludeDeadPlayers().runVote(this.GameConfiguration.getLGIds())).then(outcome => {
 
                 if (!outcome || outcome.length === 0) {
                     this.shouldDieTonight.set("LGTarget", get_random_in_array(this.GameConfiguration.getVillageois(false)));
@@ -1011,37 +1145,37 @@ class FirstNight extends Night {
                 .then(() => cupidon.getChoice(this.GameConfiguration))
                 .then(([id1, id2]) => {
 
-                let choice1 = this.GameConfiguration._players.get(id1);
-                let choice2 = this.GameConfiguration._players.get(id2);
+                    let choice1 = this.GameConfiguration._players.get(id1);
+                    let choice2 = this.GameConfiguration._players.get(id2);
 
-                if (!choice1 || !choice2) {
-                    LgLogger.info("Cupidon n'a pas fait son choix", this.gameInfo);
+                    if (!choice1 || !choice2) {
+                        LgLogger.info("Cupidon n'a pas fait son choix", this.gameInfo);
 
-                    let players = Array.from(this.GameConfiguration._players.values());
-                    let randomChoice = get_random_in_array(players);
-                    players.splice(players.indexOf(randomChoice));
+                        let players = Array.from(this.GameConfiguration._players.values());
+                        let randomChoice = get_random_in_array(players);
+                        players.splice(players.indexOf(randomChoice));
 
-                    if (!choice1) choice1 = randomChoice;
-                    if (!choice2) choice2 = get_random_in_array(players);
-                }
+                        if (!choice1) choice1 = randomChoice;
+                        if (!choice2) choice2 = get_random_in_array(players);
+                    }
 
-                choice1.amoureux = choice2.member.id;
-                choice2.amoureux = choice1.member.id;
+                    choice1.amoureux = choice2.member.id;
+                    choice2.amoureux = choice1.member.id;
 
-                this.GameConfiguration._players.set(choice1.member.id, choice1);
-                this.GameConfiguration._players.set(choice2.member.id, choice2);
+                    this.GameConfiguration._players.set(choice1.member.id, choice1);
+                    this.GameConfiguration._players.set(choice2.member.id, choice2);
 
-                LgLogger.info(`${choice1.member.displayName} et ${choice2.member.displayName} sont en couple.`, this.gameInfo);
+                    LgLogger.info(`${choice1.member.displayName} et ${choice2.member.displayName} sont en couple.`, this.gameInfo);
 
-                Promise.all([
-                    cupidon.member.send(`${choice1.member.displayName} et ${choice2.member.displayName} sont en couple.`),
-                    choice1.member.send(`Tu es en couple avec ${choice2.member.displayName} 💞`),
-                    choice2.member.send(`Tu es en couple avec ${choice1.member.displayName} 💞`),
-                ]).then(() => this.GameConfiguration.channelsHandler.sendMessageToVillage(
-                    "💘 **Cupidon** se rendort.", undefined, lg_var.roles_img.Cupidon
-                )).then(() => resolve(this.GameConfiguration)).catch(err => reject(err));
+                    Promise.all([
+                        cupidon.member.send(`${choice1.member.displayName} et ${choice2.member.displayName} sont en couple.`),
+                        choice1.member.send(`Tu es en couple avec ${choice2.member.displayName} 💞`),
+                        choice2.member.send(`Tu es en couple avec ${choice1.member.displayName} 💞`),
+                    ]).then(() => this.GameConfiguration.channelsHandler.sendMessageToVillage(
+                        "💘 **Cupidon** se rendort.", undefined, lg_var.roles_img.Cupidon
+                    )).then(() => resolve(this.GameConfiguration)).catch(err => reject(err));
 
-            }).catch(err => reject(err));
+                }).catch(err => reject(err));
 
         });
     }
