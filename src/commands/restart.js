@@ -42,8 +42,11 @@ module.exports = {
             let occupiedGuilds = getOccupiedGuilds(LGBot);
 
             if (occupiedGuilds.length === 0) {
+                message.reply("Restarting bot immediately").catch(console.error);
                 restartBot(message);
             } else {
+
+                message.reply("Restarting bot when all servers ended their games").catch(console.error);
 
                 occupiedGuilds.forEach(userId => {
                     LGBot.users.get(userId).send("Veuillez attendre que le bot redémarre avant de lancer une nouvelle " +
@@ -60,6 +63,8 @@ module.exports = {
 
             }
 
+        } else {
+            message.reply("Vous n'avez pas la permission").catch(console.error);
         }
     },
 };

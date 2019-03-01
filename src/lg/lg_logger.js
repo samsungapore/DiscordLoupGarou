@@ -22,24 +22,21 @@ if (!hasFoo){
 // ------------------------
 
 class LgLogger {
-    constructor() {
-
-    }
 
     /**
      * @param message message to send
      * @param gameInfo gameinfo object
      */
     static info(message, gameInfo) {
-        logger.info(`${gameInfo.serverName} | game ${gameInfo.gameNb} | ${message} | ${gameInfo.stemmingTime}`);
+        logger.info(`${gameInfo.serverName} | game ${gameInfo.gameNb} | ${message}`);
     }
 
     static warn(message, gameInfo) {
-        logger.warn(`${gameInfo.serverName} | game ${gameInfo.gameNb} | ${message} | ${gameInfo.stemmingTime}`);
+        logger.warn(`${gameInfo.serverName} | game ${gameInfo.gameNb} | ${message}`);
     }
 
     static error(message, gameInfo) {
-        logger.error(`${gameInfo.serverName} | game ${gameInfo.gameNb} | ${message} | ${gameInfo.stemmingTime}`);
+        logger.error(`${gameInfo.serverName} | game ${gameInfo.gameNb} | ${message}`);
     }
 }
 

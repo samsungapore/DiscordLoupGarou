@@ -18,10 +18,13 @@ LGBot.Settings = new Enmap({provider: Settings});
 const LG = new EnmapLevel({name: "LG"});
 LGBot.LG = new Enmap({provider: LG});
 
-/*LGBot.commands = new Discord.Collection();
+LGBot.commands = new Discord.Collection();
 
-const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));*/
+for (const file of fs.readdirSync('./src/commands')) {
+    const command = require(`./commands/${file}`);
 
+    LGBot.commands.set(command.name, command);
+}
 
 LGBot.on('ready', () => {
 
@@ -78,13 +81,13 @@ LGBot.on('message', message => {
         return;
     }
 
+    if (!LGBot.commands.has(command)) return;
+
     try {
-        let commandFile = require(`./commands/${command}.js`);
-
-        commandFile.run(LGBot, message, args);
-
-    } catch (e) {
-        console.error(e);
+        LGBot.commands.get(command).execute(LGBot, message, args);
+    } catch (error) {
+        console.error(error);
+        message.reply('there was an error trying to execute that command!');
     }
 
 });

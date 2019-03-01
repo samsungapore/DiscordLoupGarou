@@ -201,13 +201,13 @@ class SondageInfiniteChoice {
     updateDisplay() {
         this.embed.fields[2].value = this.getVoteData().toString();
         this.embed.fields[4].value = this.getVoters().toString();
-        this.msg.edit(this.embed).catch(console.error);
+        this.msg.edit(this.embed).catch(() => true);
     }
 
     updateTimer() {
         this.embed.setFooter(`${(this.time / 1000) - this.timerInterval} secondes avant la fin du vote`);
         this.timerInterval += 5;
-        this.msg.edit(this.embed).catch(console.error);
+        this.msg.edit(this.embed).catch(() => true);
     }
 
     post() {
