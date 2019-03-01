@@ -71,13 +71,14 @@ class Game extends IGame {
 
         super(client);
 
+        this.playTime = new Date();
+        this.gameInfo = new GameInfo(message, this.playTime);
+
         LgLogger.info('New lg game created', this.gameInfo);
 
         this.guild = message.guild;
 
-        this.playTime = new Date();
 
-        this.gameInfo = new GameInfo(message, this.playTime);
         this.gameOptions = gameOptions;
 
         this.stemmingChannel = message.channel;
