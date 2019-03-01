@@ -1,6 +1,3 @@
-const lg_var = require("./lg_var");
-const RichEmbed = require("discord.js").RichEmbed;
-
 module.exports = {
 
     /**
@@ -42,86 +39,6 @@ module.exports = {
 
         // If we can't find the user, return null
         return res;
-    },
-
-    /**
-     * Switch permissions for night and day
-     * @param client
-     * @param message
-     * @param time "day" or "night"
-     * @returns {Promise<null>}
-     */
-    switch_permissions: (client, message, time) => new Promise((resolve, reject) => {
-
-        const lg_var = require('./lg_var.js');
-        let gSettings = client.guilds_settings.get(message.guild.id);
-
-        let joueur_role = LG.lg_game_roles.JoueurLG.object;
-
-        let permissionPromises = [];
-
-        permissionPromises.push(LG.lg_game_channels.village_lg.overwritePermissions(
-            joueur_role, lg_var.permission.JoueurLG.village_lg[time]
-        ));
-
-        LG.role_players_id.LoupGarou.concat(
-            LG.role_players_id.LoupBlanc
-        ).forEach(id => {
-
-            console.log(`Changing permission lg of ${LG.players[id].display_name} which is ${LG.players[id].role}`);
-
-            permissionPromises.push(LG.lg_game_channels.loups_garou_lg.overwritePermissions(
-                LG.players[id].member_object, lg_var.permission.LoupGarou.loups_garous_lg[time]
-            ));
-        });
-
-        Promise.all(permissionPromises).then(() => {
-            resolve(null);
-        }).catch(err => reject(err));
-
-    }),
-
-    /**
-     * Returns players list
-     * @param client
-     * @param message
-     * @param exceptions_ids Array
-     * @returns {*[players : String, players_array : Array]}
-     */
-    get_player_list: (client, message, exceptions_ids) => {
-        let gSettings = client.guilds_settings.get(message.guild.id);
-        let players = '';
-
-        // Contains id
-        let players_array = [];
-        let i = 1;
-
-        console.log(LG.players);
-        Object.keys(LG.players).forEach(id => {
-
-            if (LG.players[id].alive) {
-
-                if (exceptions_ids !== undefined) {
-                    let continue_foreach = false;
-                    exceptions_ids.forEach(exception_id => {
-                        if (exception_id === id) {
-                            continue_foreach = true;
-                        }
-                    });
-                    if (continue_foreach) {
-                        return;
-                    }
-                }
-
-                players += `**${i}** - *${LG.players[id].display_name}*\n`;
-                players_array.push(id);
-                i += 1;
-
-            }
-
-        });
-
-        return {string: players, array: players_array};
     },
 
     /**

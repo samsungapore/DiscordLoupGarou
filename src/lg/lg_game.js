@@ -1,7 +1,6 @@
 const BotData = require("../BotData.js");
 const lg_var = require("./lg_var");
 const LgLogger = require("./lg_logger");
-const HigurashiVoiceHandler = require("./lg_voice").HigurashiVoiceHandler;
 const VoiceHandler = require("./lg_voice").VoiceHandler;
 const GameFlow = require("./lg_flow").GameFlow;
 const ChannelsHandler = require("./lg_channel").ChannelsHandler;
@@ -68,24 +67,26 @@ class GameInfo {
 
 class Game extends IGame {
 
-    constructor(client, message) {
+    constructor(client, message, gameOptions) {
 
         super(client);
+
+        LgLogger.info('New lg game created', this.gameInfo);
 
         this.guild = message.guild;
 
         this.playTime = new Date();
 
         this.gameInfo = new GameInfo(message, this.playTime);
-        LgLogger.info('New lg game created', this.gameInfo);
+        this.gameOptions = gameOptions;
 
         this.stemmingChannel = message.channel;
         this.stemmingPlayer = message.member;
 
         this.preparation = new GamePreparation(
-            this.client, this.stemmingChannel, this.stemmingPlayer, this.guild, this.gameInfo
+            this.client, this.stemmingChannel, this.stemmingPlayer, this.guild, this.gameInfo, gameOptions
         );
-        this.flow = new GameFlow(this.client, this.gameInfo);
+        this.flow = new GameFlow(this.client, this.gameInfo, gameOptions);
 
         this.quitListener = undefined;
 
@@ -134,7 +135,7 @@ class Game extends IGame {
                 this.preparation.configuration
                     .getPlayerNames()
                     .toString()
-                    .replace(',', ', ')
+                    .replace(/,+/g, '\n')
             )
         );
 
@@ -271,7 +272,7 @@ class Game extends IGame {
 
 class GamePreparation extends IGame {
 
-    constructor(client, channel, player, guild, gameInfo) {
+    constructor(client, channel, player, guild, gameInfo, gameOptions) {
 
         super(client);
 
@@ -280,6 +281,7 @@ class GamePreparation extends IGame {
         this.status = false;
 
         this.gameInfo = gameInfo;
+        this.gameOptions = gameOptions;
 
         this.guild = guild;
         this.stemmingPlayer = player;
@@ -287,7 +289,7 @@ class GamePreparation extends IGame {
         this.configuration = new GameConfiguration(this.gameInfo);
         this.rolesHandler = new RolesHandler(client, guild, this.gameInfo);
         this.channelsHandler = new ChannelsHandler(client, guild, this.gameInfo);
-        this.voiceHandler = new HigurashiVoiceHandler(this.channelsHandler._channels.get(this.channelsHandler.voiceChannels.vocal_lg));
+        this.voiceHandler = new VoiceHandler(this.channelsHandler._channels.get(this.channelsHandler.voiceChannels.vocal_lg), gameOptions.musicMode);
 
         this.msg = undefined;
         this.richEmbed = undefined;

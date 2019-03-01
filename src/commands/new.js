@@ -32,15 +32,13 @@ class GameOptions {
         return this._music;
     }
 
-    static async get Musics() {
-        return await getMusics();
-    }
-
 }
 
 let askMusicMode = async (message) => {
 
-    let musicModes = Object.keys(await GameOptions.Musics.games);
+    let musicModes = await getMusics();
+    let musicsData = musicModes.gameData;
+    musicModes = Object.keys(musicsData);
 
     let embed = new RichEmbed()
         .setTitle("Cliquez ici pour rajouter vos musiques")
@@ -49,7 +47,7 @@ let askMusicMode = async (message) => {
 
     let choiceArray = await new SondageInfiniteChoice(
         "Quel set de musiques voulez-vous utiliser ?",
-        musicModes, message.channel, 10000, embed, true, false
+        musicModes, message.channel, 30000, embed, true, false
     ).post();
 
     let result = [];
@@ -58,7 +56,15 @@ let askMusicMode = async (message) => {
         result.push(musicModes[choice[0] - 1]);
     });
 
-    return get_random_in_array(result);
+    let finalChoice = null;
+
+    if (result.length === 0) {
+        finalChoice = get_random_in_array(musicModes);
+    } else {
+        finalChoice = get_random_in_array(result);
+    }
+
+    return musicsData[finalChoice];
 };
 
 let askOptions = async (message) => {
@@ -108,8 +114,6 @@ module.exports = {
             LGBot.LG.set(message.guild.id, LG);
             LG = LGBot.LG.get(message.guild.id);
         }
-
-        console.log(LG.running);
 
         if (!LG.running) {
 

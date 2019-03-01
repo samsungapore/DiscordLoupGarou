@@ -129,11 +129,12 @@ class GlobalTimer {
 
 class GameFlow extends IGame {
 
-    constructor(client, gameInfo) {
+    constructor(client, gameInfo, gameOptions) {
 
         super(client);
 
         this.gameInfo = gameInfo;
+        this.gameOptions = gameOptions;
 
         this.GameConfiguration = null;
         this.msg = null;

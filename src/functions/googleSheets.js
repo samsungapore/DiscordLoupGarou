@@ -60,7 +60,9 @@ class Musics {
             Object.keys(this.data[sequence]).forEach(game => {
 
                 if (!this.gameData[game]) {
-                    this.gameData[game] = {};
+                    this.gameData[game] = {
+                        name: game
+                    };
                 }
 
                 if (!this.gameData[game][sequence]) {
