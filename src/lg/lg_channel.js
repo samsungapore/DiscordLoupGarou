@@ -189,22 +189,15 @@ class ChannelsHandler extends IGame {
         });
     }
 
-    setupChannels(areChannelsReady, configuration) {
-        return new Promise((resolve, reject) => {
+    async setupChannels(areChannelsReady, configuration) {
 
-            if (!areChannelsReady) {
-                this.createChannels()
-                    .then(() => this.removeAllOverwrites())
-                    .then(() => this.setupChannelPermissions(configuration))
-                    .then(() => resolve(true))
-                    .catch(err => reject(err));
-            } else {
-                this.removeAllOverwrites()
-                    .then(() => this.setupChannelPermissions(configuration))
-                    .then(() => resolve(true))
-                    .catch(err => reject(err));
-            }
-        });
+        if (!areChannelsReady) {
+            await this.createChannels();
+        }
+        await this.removeAllOverwrites();
+        await this.setupChannelPermissions(configuration);
+
+        return true;
     }
 
     async createChannels() {

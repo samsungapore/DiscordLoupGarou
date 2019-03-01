@@ -427,17 +427,9 @@ class GamePreparation extends IGame {
         return new Promise((resolve, reject) => {
 
             this.channelsHandler.checkChannelsOnGuild().then(() => {
-                if (this.stemmingPlayer.hasPermission("BAN_MEMBERS")) {
-                    this.askForChannelGeneration().then(() => resolve(true)).catch(err => reject(err));
-                } else {
-                    resolve(true);
-                }
+                resolve(true);
             }).catch(() => {
-                if (this.stemmingPlayer.hasPermission("BAN_MEMBERS")) {
-                    this.askForChannelGeneration().then(() => resolve(false)).catch(err => reject(err));
-                } else {
-                    resolve(false);
-                }
+                resolve(false);
             });
 
         });

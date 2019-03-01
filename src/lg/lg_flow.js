@@ -29,36 +29,41 @@ class IGame {
 }
 
 class GlobalTimer {
-    constructor(channel, playerNb, secInterval) {
-        this.embed = CommunicationHandler.getLGSampleMsg();
+    constructor(channel, secInterval) {
+        this.embed = CommunicationHandler
+            .getLGSampleMsg()
+            .addField(
+                `⏭`,
+                "Réagissez avec ⏭ pour skip l'attente. Tout le monde doit skip pour pouvoir procéder."
+            );
         this.timer = null;
-        this.messageObject = null;
+        this.message = null;
         this.channel = channel;
         this.secInterval = secInterval ? secInterval : 5;
 
         this.count = 0;
-        this.max = playerNb;
+        this.max = 0;
         this.time = null;
         return this;
     }
 
-    get message() {
-        if (this.messageObject) {
-            return this.messageObject;
-        } else {
-            console.error("Message undefined");
-            return null;
-        }
+    async end() {
+        clearInterval(this.timer);
+        this.count = 0;
+        await this.message.delete();
+        this.message = null;
+        return this;
     }
 
-    setTimer(minutes, title) {
+    setTimer(minutes, title, playerNb) {
         return new Promise((resolve, reject) => {
             if (this.timer) clearInterval(this.timer);
+
+            this.max = playerNb;
 
             this.time = minutes;
 
             this.embed.setTitle(`${title} : ${timeToString(minutes)}`);
-            this.embed.addField(`⏭`, "Réagissez avec ⏭ pour skip l'attente. Tout le monde doit skip pour pouvoir procéder.");
 
             let msgPromise = [];
 
@@ -69,7 +74,10 @@ class GlobalTimer {
             }
 
             Promise.all(msgPromise)
-                .then(() => new ReactionHandler(this.message, ["⏭"]).addReactions())
+                .then((msgs) => {
+                    this.message = msgs.shift();
+                    return new ReactionHandler(this.message, ["⏭"]).addReactions()
+                })
                 .then(reactionHandler => {
 
                     reactionHandler.initCollector(
@@ -83,7 +91,10 @@ class GlobalTimer {
                         },
                         () => {
                             this.message.delete()
-                                .then(() => resolve(this))
+                                .then(() => {
+                                    this.end().catch(() => this.message = null);
+                                    resolve(this);
+                                })
                                 .catch(err => reject(err));
                         },
                         (reaction) => reaction.count > 1
@@ -105,7 +116,7 @@ class GlobalTimer {
         this.time = ((this.time * 60) - this.secInterval) / 60;
 
         if (this.time <= 0) {
-            await this.message.delete();
+            this.end().catch(() => this.message = null);
             return true;
         } else {
             this.embed.setTitle(`${this.embed.title.split(':')[0]}: ${timeToString(this.time)}`);
@@ -183,7 +194,7 @@ class GameFlow extends IGame {
                     this.GameConfiguration.rolesHandler.removePlayerRole(deadPlayer.member).catch(console.error);
                     this.GameConfiguration.rolesHandler.addDeadRole(deadPlayer.member).catch(console.error);
 
-                    deadPlayer.setVoiceChannel(this.GameConfiguration.channelsHandler._channels.get(
+                    deadPlayer.member.setVoiceChannel(this.GameConfiguration.channelsHandler._channels.get(
                         this.GameConfiguration.channelsHandler.voiceChannels.mort_lg
                     )).catch(() => true);
 
@@ -260,7 +271,7 @@ class GameFlow extends IGame {
 
     async moveEveryPlayersToVocalChannel() {
         for (let player of this.GameConfiguration.getPlayers().values()) {
-            player.setVoiceChannel(this.GameConfiguration.channelsHandler._channels.get(
+            player.member.setVoiceChannel(this.GameConfiguration.channelsHandler._channels.get(
                 this.GameConfiguration.channelsHandler.voiceChannels.vocal_lg
             )).catch(() => true);
         }
@@ -421,7 +432,11 @@ class GameFlow extends IGame {
             }
 
             await this.GameConfiguration.channelsHandler.sendMessageToVillage("La nuit va bientôt tomber sur Thiercelieux...");
-            await this.GameConfiguration.globalTimer.setTimer(23 / 60, "Temps avant la tombée de la nuit");
+            await this.GameConfiguration.globalTimer.setTimer(
+                23 / 60,
+                "Temps avant la tombée de la nuit",
+                this.GameConfiguration.getAlivePlayers().length
+            );
 
             shouldDie = await new Night(this.GameConfiguration, this.gameInfo, this.turnNb).goThrough();
 
@@ -532,7 +547,11 @@ class Day extends Period {
             `Vous disposez de ${timeToString(debateDuration)} pour débattre, et faire un vote`
         );
 
-        await this.GameConfiguration.globalTimer.setTimer(debateDuration / 2, "Temps avant le début du vote")
+        await this.GameConfiguration.globalTimer.setTimer(
+            debateDuration / 2,
+            "Temps avant le début du vote",
+            this.GameConfiguration.getAlivePlayers().length
+        );
 
         await this.GameConfiguration.channelsHandler.switchPermissions(
             this.GameConfiguration.channelsHandler.channels.thiercelieux_lg,
@@ -667,11 +686,19 @@ class FirstDay extends Period {
                 " Quand la neige éternelle ornera les montagnes, le capitaine devra être élu."
             ).then(() => {
                 return this.GameConfiguration.voiceHandler.announceDayBegin();
-            }).then(() => this.GameConfiguration.globalTimer.setTimer(1, "Temps avant le vote du capitaine"))
+            }).then(() => this.GameConfiguration.globalTimer.setTimer(
+                1,
+                "Temps avant le vote du capitaine",
+                this.GameConfiguration.getAlivePlayers().length
+            ))
                 .then(() => this.capitaineElection())
                 .then(() => this.GameConfiguration.channelsHandler.sendMessageToVillage("⛰ La nuit va bientôt tomber sur Thiercelieux."))
                 .then(() => this.GameConfiguration.voiceHandler.announceNightSoon())
-                .then(() => this.GameConfiguration.globalTimer.setTimer(0.5, "Temps avant la tombée de la nuit"))
+                .then(() => this.GameConfiguration.globalTimer.setTimer(
+                    0.5,
+                    "Temps avant la tombée de la nuit",
+                    this.GameConfiguration.getAlivePlayers().length
+                ))
                 .then(() => resolve(this.GameConfiguration))
                 .catch(err => reject(err));
 
