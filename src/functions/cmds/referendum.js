@@ -112,6 +112,18 @@ class Sondage {
 
 class SondageInfiniteChoice {
 
+    /**
+     *
+     * @param question String
+     * @param choices Array
+     * @param channel Channel
+     * @param time Milliseconds
+     * @param embed RichEmbed
+     * @param deleteIt Delete sondage afterwards
+     * @param deleteAll Delete all responses
+     * @param maxVotes Maximum votes
+     * @returns {SondageInfiniteChoice}
+     */
     constructor(question, choices, channel, time, embed, deleteIt, deleteAll, maxVotes) {
 
         this.question = question;
@@ -121,7 +133,7 @@ class SondageInfiniteChoice {
         this.deleteIt = deleteIt;
         this.deleteAll = deleteAll;
 
-        if (maxVotes === 0) {
+        if (!maxVotes || maxVotes === 0) {
             this.maxVotes = undefined;
         } else {
             this.maxVotes = maxVotes;

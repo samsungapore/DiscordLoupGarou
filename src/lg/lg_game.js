@@ -10,13 +10,6 @@ const ReactionHandler = require("../functions/reactionHandler").ReactionHandler;
 const RichEmbed = require("discord.js").RichEmbed;
 const Wait = require('../functions/wait').Wait;
 
-class GameOptions {
-    constructor() {
-        this.voice = true;
-        this.music = true;
-    }
-}
-
 class IGame {
 
     constructor(client) {
@@ -282,6 +275,8 @@ class GamePreparation extends IGame {
 
         super(client);
 
+        this.MAX_PLAYERS = 29;
+
         this.status = false;
 
         this.gameInfo = gameInfo;
@@ -378,6 +373,10 @@ class GamePreparation extends IGame {
                     this.rolesHandler.addPlayerRole(guildMember).catch(console.error);
                     this.updateParticipantsDisplay();
                     reaction.remove(guildMember.user).catch(console.error);
+                    if (this.configuration.getParticipantsNames().length === this.MAX_PLAYERS) {
+                        this.status = true;
+                        gamePreparationMsg.collector.stop();
+                    }
                 } else if (reaction.emoji.name === "🚪") {
                     this.rolesHandler.removeRoles(guildMember);
                     this.configuration.removeParticipant(guildMember.id);
@@ -386,8 +385,10 @@ class GamePreparation extends IGame {
                 } else if (reaction.emoji.name === "❇") {
                     reaction.remove(guildMember.user).catch(console.error);
                     if (guildMember.id === this.stemmingPlayer.id || guildMember.hasPermission('BAN_MEMBERS')) {
-                        this.status = true;
-                        gamePreparationMsg.collector.stop();
+                        if (this.configuration.getParticipantsNames().length > 1) {
+                            this.status = true;
+                            gamePreparationMsg.collector.stop();
+                        }
                     }
                 } else if (reaction.emoji.name === "🔚") {
                     reaction.remove(guildMember.user).catch(console.error);

@@ -4,9 +4,16 @@ const path = require('path');
 const ytdl = require('ytdl-core');
 const Wait = require('../functions/wait').Wait;
 
+
+class VoiceHandlerGenerator {
+    constructor() {
+
+    }
+}
+
 class VoiceHandler {
 
-    constructor(voiceChannel) {
+    constructor(voiceChannel, type) {
 
         this.voiceChannel = voiceChannel ? voiceChannel : null;
         this.voiceConnection = null;
@@ -19,24 +26,23 @@ class VoiceHandler {
 
         this.musics = {
             firstDay: [
-                'https://www.youtube.com/watch?v=x-oKZDNMy4Y',
-                'https://www.youtube.com/watch?v=_8Y4Hb2ZtQE',
+                'https://www.youtube.com/watch?v=QpLzuPLFU2E'
             ],
             day: [
-                'https://www.youtube.com/watch?v=9rLLKXf3jQc',
-                'https://www.youtube.com/watch?v=x-oKZDNMy4Y',
-                'https://www.youtube.com/watch?v=_8Y4Hb2ZtQE'
+                'https://www.youtube.com/watch?v=fMjZ-fkSPOQ',
+                'https://youtu.be/x-oKZDNMy4Y',
+                'https://youtu.be/tFuPROyzygc',
+                'https://youtu.be/_8Y4Hb2ZtQE',
             ],
             night: [
-                'https://www.youtube.com/watch?v=MBJKivjfLmo',
-                'https://www.youtube.com/watch?v=d1onQJtO_bw',
-                'https://www.youtube.com/watch?v=LG3E4hqI9Dw',
                 'https://www.youtube.com/watch?v=dNX4oGT_FVg',
-                'https://www.youtube.com/watch?v=n8HPtslZubw'
+                'https://www.youtube.com/watch?v=LG3E4hqI9Dw',
+                'https://youtu.be/n8HPtslZubw',
+                'https://youtu.be/jBfom3wYOuY',
             ]
         };
 
-        this.handlerType = "default";
+        this.handlerType = type ? type : "default";
 
         return this;
     }
@@ -255,7 +261,7 @@ class VoiceHandler {
 class HigurashiVoiceHandler extends VoiceHandler {
 
     constructor(voiceChannel) {
-        super(voiceChannel);
+        super(voiceChannel, "higurashi");
 
         this.handlerType = "higurashi";
 
