@@ -301,7 +301,7 @@ class GameFlow extends IGame {
             )
         }
 
-        let winners = this.GameConfiguration.getAlivePlayers().map(player => player.member.displayName);
+        let winners = this.GameConfiguration.getAlivePlayers().map(player => `**${player.member.displayName}**`);
 
         this.gameStats.setDescription(
             `Vainqueur(s):\n\n${winners ? winners.toString()
