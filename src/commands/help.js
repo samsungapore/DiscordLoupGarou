@@ -16,7 +16,7 @@ module.exports = {
 
         for (const file of fs.readdirSync('./src/commands')) {
 
-            const command = require(`./commands/${file}`);
+            const command = require(`./${file}`);
 
             if (i === 25) {
                 message.channel.send(helpMsg).catch(console.error);

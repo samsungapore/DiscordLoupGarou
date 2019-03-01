@@ -37,24 +37,30 @@ LGBot.on('ready', () => {
         voiceConnection.disconnect();
     });
 
-    if (LGBot.Settings.Admins) {
-        LGBot.Settings.Admins.forEach(adminID => {
-            let user = LGBot.users.get(adminID);
+    //const msg = LGBot.Settings.get("RestartMsg");
 
-            if (user) user.send('Le bot Loup Garou a redémarré').catch(console.error);
-        });
-    } else {
-        LGBot.Settings.Admins = [];
+    /*if (msg && msg.length > 0) {
 
-        LGBot.guilds.array().forEach(guild => {
-            LGBot.Settings.Admins.push(guild.ownerID);
+        if (LGBot.Settings.Admins) {
+            LGBot.Settings.Admins.forEach(adminID => {
+                let user = LGBot.users.get(adminID);
 
-            let user = LGBot.users.get(guild.ownerID);
+                if (user) user.send('Le bot Loup Garou a redémarré. ' + msg).catch(console.error);
+            });
+        } else {
+            LGBot.Settings.Admins = [];
 
-            if (user) user.send('Le bot Loup Garou vient de redémarrer').catch(console.error);
+            LGBot.guilds.array().forEach(guild => {
+                LGBot.Settings.Admins.push(guild.ownerID);
 
-        });
-    }
+                let user = LGBot.users.get(guild.ownerID);
+
+                if (user) user.send('Le bot Loup Garou vient de redémarrer. ' + msg).catch(console.error);
+
+            });
+        }
+
+    }*/
 
 });
 

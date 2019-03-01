@@ -129,11 +129,12 @@ class GlobalTimer {
 
 class GameFlow extends IGame {
 
-    constructor(client, gameInfo) {
+    constructor(client, gameInfo, gameOptions) {
 
         super(client);
 
         this.gameInfo = gameInfo;
+        this.gameOptions = gameOptions;
 
         this.GameConfiguration = null;
         this.msg = null;
@@ -280,6 +281,7 @@ class GameFlow extends IGame {
     async fillGameStats() {
         this.gameStats.setFooter(`Jeu terminé au bout de ${this.gameInfo.getPlayTime()}`);
 
+        this.gameStats.addBlankField();
         this.gameStats.addField(
             "Loups",
             `${this.GameConfiguration.getMemberteams("LG")
@@ -304,8 +306,8 @@ class GameFlow extends IGame {
         let winners = this.GameConfiguration.getAlivePlayers().map(player => `__**${player.member.displayName}**__`);
 
         this.gameStats.setDescription(
-            `Vainqueur(s):\n\n${winners ? winners.toString()
-                .replace(/,+/g, '\n') : "**Personne n'a gagné !**"}`
+            `Vainqueur(s):\n\n${winners.length > 0 ? winners.toString()
+                .replace(/,+/g, '\n') : "__**Personne n'a gagné !**__"}`
         );
 
     }

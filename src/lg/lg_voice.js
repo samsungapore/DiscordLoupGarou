@@ -4,9 +4,10 @@ const path = require('path');
 const ytdl = require('ytdl-core');
 const Wait = require('../functions/wait').Wait;
 
+
 class VoiceHandler {
 
-    constructor(voiceChannel) {
+    constructor(voiceChannel, musicMode) {
 
         this.voiceChannel = voiceChannel ? voiceChannel : null;
         this.voiceConnection = null;
@@ -18,25 +19,12 @@ class VoiceHandler {
         this.bgmPaused = false;
 
         this.musics = {
-            firstDay: [
-                'https://www.youtube.com/watch?v=x-oKZDNMy4Y',
-                'https://www.youtube.com/watch?v=_8Y4Hb2ZtQE',
-            ],
-            day: [
-                'https://www.youtube.com/watch?v=9rLLKXf3jQc',
-                'https://www.youtube.com/watch?v=x-oKZDNMy4Y',
-                'https://www.youtube.com/watch?v=_8Y4Hb2ZtQE'
-            ],
-            night: [
-                'https://www.youtube.com/watch?v=MBJKivjfLmo',
-                'https://www.youtube.com/watch?v=d1onQJtO_bw',
-                'https://www.youtube.com/watch?v=LG3E4hqI9Dw',
-                'https://www.youtube.com/watch?v=dNX4oGT_FVg',
-                'https://www.youtube.com/watch?v=n8HPtslZubw'
-            ]
+            firstDay: musicMode["Musiques premier jour"],
+            day: musicMode["Musiques jour"],
+            night: musicMode["Musiques nuit"]
         };
 
-        this.handlerType = "default";
+        this.handlerType = musicMode.name;
 
         return this;
     }
@@ -252,40 +240,4 @@ class VoiceHandler {
 
 }
 
-class HigurashiVoiceHandler extends VoiceHandler {
-
-    constructor(voiceChannel) {
-        super(voiceChannel);
-
-        this.handlerType = "higurashi";
-
-        this.musics = {
-            firstDay: [
-                'https://youtu.be/prtv1R_ULBM',
-                'https://youtu.be/wb2bFXo48T8',
-                'https://youtu.be/uTTd3Tq7L_0',
-                'https://youtu.be/8AdJOCrtOBw',
-                'https://youtu.be/KmmU8HWWgvg',
-            ],
-            day: [
-                'https://youtu.be/prtv1R_ULBM',
-                'https://youtu.be/wb2bFXo48T8',
-                'https://youtu.be/uTTd3Tq7L_0',
-                'https://youtu.be/8AdJOCrtOBw',
-                'https://youtu.be/KmmU8HWWgvg',
-            ],
-            night: [
-                'https://youtu.be/2agvdGtGl8o',
-                'https://youtu.be/cHIcdmi6FP4',
-                'https://youtu.be/_YRX1S6M4Ps',
-                'https://youtu.be/VEy2U-Z4bpg',
-                'https://youtu.be/BDdewvQmIko'
-            ]
-        };
-
-        return this;
-    }
-
-}
-
-module.exports = {VoiceHandler, HigurashiVoiceHandler};
+module.exports = {VoiceHandler};
