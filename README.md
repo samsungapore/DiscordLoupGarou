@@ -50,11 +50,7 @@ Bot en cours de développement, Beta 1.5
 
 | Commandes | Fonctionnalité |
 | :--- | :--- |
-| lg/thiercelieux | lancer une nouvelle partie de _Loup Garou_ de **Thiercelieux** |
-| lg/nouvelleLune | lancer une nouvelle partie de _Loup Garou_ avec l'extension **Nouvelle Lune** |
-| lg/personnage | lancer une nouvelle partie de _Loup Garou_ avec l'extension **Personnages** |
-| lg/village | lancer une nouvelle partie de _Loup Garou_ avec l'extension **Le Village** |
-| lg/all | lancer une nouvelle partie de _Loup Garou_ avec toutes les extensions |
+| lg/new | lancer une nouvelle partie de Loup Garou de Thiercelieux |
 | lg/stop | stopper une partie |
 | lg/help | afficher le guide |
 
