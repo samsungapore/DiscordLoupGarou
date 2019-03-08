@@ -27,10 +27,13 @@ Assurez-vous de ne pas déjà avoir sur votre serveur des rôles importants nomm
 
 Voici les channels que le bot générera si ils ne sont pas présents sur le serveur, ou utilisera directement si ils sont déjà présents sur le serveur  :
 
-* _**thiercelieux\_lg**_ Channel où se passent les annonces et les référendums
-* _**village\_lg**_ Channel du village, où les joueurs se rencontrent et discutent
-* _**paradis\_lg**_ Channel des morts, où les joueurs défunts discutent au paradis
-* _**loups\_garou\_lg**_ Channel des loups garous, où les loups se concertent pour désigner leurs proies
+* _**loups\_garou\_de\_thiercelieux**_ Catégorie englobant tous les channels
+* _**thiercelieux\_lg**_ Channel textuel où se passent les annonces et les référendums
+* _**village\_lg**_ Channel textuel du village, où les joueurs se rencontrent et discutent
+* _**paradis\_lg**_ Channel textuel des morts, où les joueurs défunts discutent au paradis
+* _**loups\_garou\_lg**_ Channel textuel des loups garous, où les loups se concertent pour désigner leurs proies
+* _**vocal\_lg**_ Channel vocal pour les joueurs vivants
+* _**mort\_lg**_ Channel vocal pour les joueurs morts
 {% endhint %}
 
 ![Channels g&#xE9;n&#xE9;r&#xE9;s par le bot](.gitbook/assets/lg_channelsecategory.png)
@@ -47,7 +50,11 @@ Bot en cours de développement, Beta 1.5
 
 | Commandes | Fonctionnalité |
 | :--- | :--- |
-| lg/new | lancer une nouvelle partie |
+| lg/thiercelieux | lancer une nouvelle partie de _Loup Garou_ de **Thiercelieux** |
+| lg/nouvelleLune | lancer une nouvelle partie de _Loup Garou_ avec l'extension **Nouvelle Lune** |
+| lg/personnage | lancer une nouvelle partie de _Loup Garou_ avec l'extension **Personnages** |
+| lg/village | lancer une nouvelle partie de _Loup Garou_ avec l'extension **Le Village** |
+| lg/all | lancer une nouvelle partie de _Loup Garou_ avec toutes les extensions |
 | lg/stop | stopper une partie |
 | lg/help | afficher le guide |
 
