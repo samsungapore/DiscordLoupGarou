@@ -6,6 +6,8 @@ description: >-
 
 # LGDB - Loup Garou Discord Bot
 
+[![Discord Bots](https://discordbots.org/api/widget/538344945673830410.svg)](https://discordbots.org/bot/538344945673830410)
+
 ## Permissions nécessaires
 
 ![](.gitbook/assets/sans-titre%20%282%29.png)
