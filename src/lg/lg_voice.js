@@ -18,13 +18,13 @@ class VoiceHandler {
 
         this.bgmPaused = false;
 
-        this.musics = {
+        this.musics = musicMode ? {
             firstDay: musicMode["Musiques premier jour"],
             day: musicMode["Musiques jour"],
             night: musicMode["Musiques nuit"]
-        };
+        } : null;
 
-        this.handlerType = musicMode.name;
+        if (musicMode) this.handlerType = musicMode.name;
 
         return this;
     }
@@ -161,27 +161,35 @@ class VoiceHandler {
 
     async playFirstDayBGM() {
 
+        if (this.musics) {
         this.bgmLink = get_random_in_array(this.musics.firstDay);
 
         this.dispatcher = await this.playYTSound(this.bgmLink, 0.1);
+        }
 
         return this;
     }
 
     async playNightBGM() {
 
-        this.bgmLink = get_random_in_array(this.musics.night);
+        if (this.musics) {
 
+        this.bgmLink = get_random_in_array(this.musics.night);
         this.dispatcher = await this.playYTSound(this.bgmLink, 0.1);
+        } 
+
 
         return this;
     }
 
     async playDayBGM() {
 
-        this.bgmLink = get_random_in_array(this.musics.day);
+        if (this.musics) {
 
+        this.bgmLink = get_random_in_array(this.musics.day);
         this.dispatcher = await this.playYTSound(this.bgmLink, 0.1);
+        }
+
 
         return this;
     }

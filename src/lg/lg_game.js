@@ -290,7 +290,7 @@ class GamePreparation extends IGame {
         this.configuration = new GameConfiguration(this.gameInfo);
         this.rolesHandler = new RolesHandler(client, guild, this.gameInfo);
         this.channelsHandler = new ChannelsHandler(client, guild, this.gameInfo);
-        this.voiceHandler = new VoiceHandler(this.channelsHandler._channels.get(this.channelsHandler.voiceChannels.vocal_lg), gameOptions.musicMode);
+        this.voiceHandler = new VoiceHandler(this.channelsHandler._channels.get(this.channelsHandler.voiceChannels.vocal_lg), gameOptions ? gameOptions.musicMode : null);
 
         this.msg = undefined;
         this.richEmbed = undefined;

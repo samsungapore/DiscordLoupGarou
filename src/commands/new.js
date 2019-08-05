@@ -82,13 +82,17 @@ let askOptions = async (message) => {
 
 let launchNewGame = async (LGBot, message, LG) => {
 
-    let gameOptions = await askOptions(message);
+    let gameOptions = null;
 
-    LG.running = true;
-    LG.stemming = message.author.id;
-    LGBot.LG.set(message.guild.id, LG);
+    try {
 
-    LG.game = new LoupGarou.Game(LGBot, message, gameOptions);
+        gameOptions = await askOptions(message);
+
+    } catch (e) {
+
+    }
+
+    LG.game = new LoupGarou.Game(LGBot, message, null);
 
     await LG.game.launch();
 
@@ -116,6 +120,10 @@ module.exports = {
         }
 
         if (!LG.running) {
+
+        	LG.running = true;
+        	LG.stemming = message.author.id;
+        	LGBot.LG.set(message.guild.id, LG);
 
             launchNewGame(LGBot, message, LG).catch(console.error);
 
