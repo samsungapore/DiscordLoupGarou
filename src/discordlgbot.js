@@ -6,17 +6,14 @@ const BGM = new Discord.Client();
 // UTC + x
 const UTC_LOCAL_TIMESIFT = 1;
 
-const Enmap = require('enmap');
-const EnmapLevel = require('enmap-level');
+//const Keyv = require('keyv');
 
 const fs = require('graceful-fs');
 const BotData = require("./BotData");
 
-const Settings = new EnmapLevel({name: "Settings"});
-LGBot.Settings = new Enmap({provider: Settings});
+LGBot.Settings = new Map();
 
-const LG = new EnmapLevel({name: "LG"});
-LGBot.LG = new Enmap({provider: LG});
+LGBot.LG = new Map();
 
 LGBot.commands = new Discord.Collection();
 

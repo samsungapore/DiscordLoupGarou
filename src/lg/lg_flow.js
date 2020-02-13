@@ -509,7 +509,7 @@ class Day extends Period {
 
         super(configuration, gameInfo, turnNb);
 
-        configuration.voiceHandler.playDayBGM().catch(console.error);
+        //configuration.voiceHandler.playDayBGM().catch(console.error);
 
         this.deadPeople = deadPeople;
 
@@ -675,7 +675,7 @@ class FirstDay extends Period {
 
         super(configuration, gameInfo, turnNb);
 
-        configuration.voiceHandler.playFirstDayBGM().catch(console.error);
+        //configuration.voiceHandler.playFirstDayBGM().catch(console.error);
 
         return this;
     }
@@ -686,16 +686,13 @@ class FirstDay extends Period {
             this.GameConfiguration.channelsHandler.sendMessageToVillage(
                 "🌄 Le jour se lève à Thiercelieux." +
                 " Quand la neige éternelle ornera les montagnes, le capitaine devra être élu."
-            ).then(() => {
-                return this.GameConfiguration.voiceHandler.announceDayBegin();
-            }).then(() => this.GameConfiguration.globalTimer.setTimer(
+            ).then(() => this.GameConfiguration.globalTimer.setTimer(
                 1,
                 "Temps avant le vote du capitaine",
                 this.GameConfiguration.getAlivePlayers().length
             ))
                 .then(() => this.capitaineElection())
                 .then(() => this.GameConfiguration.channelsHandler.sendMessageToVillage("⛰ La nuit va bientôt tomber sur Thiercelieux."))
-                .then(() => this.GameConfiguration.voiceHandler.announceNightSoon())
                 .then(() => this.GameConfiguration.globalTimer.setTimer(
                     0.5,
                     "Temps avant la tombée de la nuit",
@@ -715,7 +712,7 @@ class FirstDay extends Period {
             this.GameConfiguration.channelsHandler.sendMessageToVillage(
                 "🏔 Les villageois se réunissent afin d'élir leur capitaine\n" +
                 "C'est l'heure du vote !"
-            ).then(() => this.GameConfiguration.voiceHandler.announceVoteCapitaine()).then(() => {
+            ).then(() => {
 
                 return this.GameConfiguration.channelsHandler.switchPermissions(
                     this.GameConfiguration.channelsHandler.channels.thiercelieux_lg,
@@ -800,7 +797,7 @@ class Night extends Period {
 
         super(configuration, gameInfo, turnNb);
 
-        configuration.voiceHandler.playNightBGM().catch(console.error);
+        //configuration.voiceHandler.playNightBGM().catch(console.error);
 
         this.LGTarget = null;
         this.shouldDieTonight = new Map();
@@ -910,8 +907,7 @@ class Night extends Period {
 
             this.GameConfiguration.channelsHandler.sendMessageToVillage(
                 `Les **Loups Garous** se réveillent 🐺`, undefined, lg_var.roles_img.LoupGarou
-            ).then(() => this.GameConfiguration.voiceHandler.announceRole("LoupGarou", true))
-                .then(() => new LoupGarouVote(
+            ).then(() => new LoupGarouVote(
                     "Veuillez choisir votre proie.",
                     this.GameConfiguration,
                     60000,
@@ -958,7 +954,7 @@ class Night extends Period {
             return this;
         }
 
-        await this.GameConfiguration.voiceHandler.announceRole("Voyante", true);
+        //await this.GameConfiguration.voiceHandler.announceRole("Voyante", true);
 
         await voyante.processRole(this.GameConfiguration);
         await this.GameConfiguration.channelsHandler.sendMessageToVillage(
@@ -986,7 +982,7 @@ class Night extends Period {
 
         if (!sorciere) return this;
 
-        await this.GameConfiguration.voiceHandler.announceRole("Sorciere", true);
+        //await this.GameConfiguration.voiceHandler.announceRole("Sorciere", true);
 
         await sorciere.processRole(this.GameConfiguration, this.shouldDieTonight.get("LGTarget"));
 
@@ -1076,7 +1072,7 @@ class FirstNight extends Night {
 
         if (!voleur) return this;
 
-        await this.GameConfiguration.voiceHandler.announceRole("Voleur", true);
+        //await this.GameConfiguration.voiceHandler.announceRole("Voleur", true);
 
         await voleur.proposeRoleChoice(this.GameConfiguration);
 
@@ -1143,8 +1139,7 @@ class FirstNight extends Night {
                 lg_var.roles_img.Cupidon
             ).catch(console.error);
 
-            this.GameConfiguration.voiceHandler.announceRole("Cupidon", true)
-                .then(() => cupidon.getChoice(this.GameConfiguration))
+                cupidon.getChoice(this.GameConfiguration)
                 .then(([id1, id2]) => {
 
                     let choice1 = this.GameConfiguration._players.get(id1);

@@ -15,10 +15,10 @@ let addAdmins = (LGBot, message) => {
         Settings.Admins.push(message.mentions.members.array().map(member => member.id));
         Settings.Admins = [...new Set(Settings.Admins)];
 
-        LGBot.Settings.set(message.guild.id, Settings);
+        LGBot.Settings.set(message.guild.id, Settings)
 
     } else {
-        message.reply("Tu n'as pas la permission").catch(console.error);
+        message.reply("Tu n'as pas la permission")
     }
 
 };

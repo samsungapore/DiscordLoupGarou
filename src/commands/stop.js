@@ -29,7 +29,7 @@ module.exports = {
                 LG.game = null;
 
                 try {
-                    LGBot.LG.set(message.guild.id, LG);
+                    LGBot.LG.set(message.guild.id, LG)
                     message.channel.send("Partie stoppée").catch(console.error);
                 } catch (e) {
                     console.error(e);
@@ -39,7 +39,7 @@ module.exports = {
         } else {
 
             try {
-                LGBot.LG.set(message.guild.id, LG);
+                LGBot.LG.set(message.guild.id, LG)
                 message.channel.send("Partie interrompue").catch(console.error);
             } catch (e) {
                 console.error(e);

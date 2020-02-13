@@ -3,22 +3,21 @@
   "version": "1.0.0",
   "description": "Discord bot to play Loup Garou games",
   "dependencies": {
-    "discord.js": "^11.4.2",
-    "dotenv": "^6.2.0",
-    "enmap": "^4.7.0",
-    "enmap-level": "^2.1.0",
-    "googleapis": "^27.0.0",
-    "graceful-fs": "^4.1.15",
+    "discord.js": "^11.5.1",
+    "dotenv": "^8.2.0",
+    "googleapis": "^47.0.0",
+    "graceful-fs": "^4.2.3",
     "isomorphic-fetch": "^2.2.1",
-    "node-opus": "^0.3.1",
-    "node-webhooks": "^1.4.0",
+    "keyv": "^4.0.0",
+    "node-opus": "^0.3.3",
+    "node-webhooks": "^1.4.2",
     "request": "latest",
     "winston": "^3.2.1",
-    "winston-daily-rotate-file": "^3.6.0",
-    "ytdl-core": "^0.29.1"
+    "winston-daily-rotate-file": "^4.4.2",
+    "ytdl-core": "^1.0.7"
   },
   "scripts": {
-    "start": "node src/main.js",
+    "start": "node src/discordlgbot.js",
     "run": "pm2 src/main.js",
     "restart": "pm2 main restart",
     "stop": "pm2 main stop"
