@@ -19,12 +19,12 @@ class VoiceHandler {
         this.bgmPaused = false;
 
         this.musics = {
-            firstDay: musicMode["Musiques premier jour"],
-            day: musicMode["Musiques jour"],
-            night: musicMode["Musiques nuit"]
+            firstDay: musicMode ? musicMode["Musiques premier jour"] : null,
+            day: musicMode ? musicMode["Musiques jour"] : null,
+            night: musicMode ? musicMode["Musiques nuit"] : null
         };
 
-        this.handlerType = musicMode.name;
+        this.handlerType = musicMode ? musicMode.name : null;
 
         return this;
     }

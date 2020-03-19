@@ -174,17 +174,17 @@ class ChannelsHandler extends IGame {
     removeAllOverwrites() {
         return new Promise((resolve, reject) => {
 
-            let promises = [];
-
             for (let channel of this._channels.values()) {
 
                 channel.permissionOverwrites.array().forEach(overwrite => {
-                    promises.push(overwrite.delete());
+                    overwrite.delete().catch(() => true);
                 });
 
             }
 
-            Promise.all(promises).then(() => resolve(true)).catch(err => reject(err));
+            setTimeout(() => {
+                resolve(true);
+            }, 1000);
 
         });
     }

@@ -122,9 +122,9 @@ class Game extends IGame {
 
         this.updateObjects(status);
 
-        await this.flow.GameConfiguration.voiceHandler.join();
-        await this.flow.GameConfiguration.voiceHandler.setupEvents();
-        await this.flow.GameConfiguration.voiceHandler.playFirstDayBGM();
+        //await this.flow.GameConfiguration.voiceHandler.join();
+        //await this.flow.GameConfiguration.voiceHandler.setupEvents();
+        //await this.flow.GameConfiguration.voiceHandler.playFirstDayBGM();
 
         LgLogger.info("Game successfully prepared.", this.gameInfo);
 
@@ -169,10 +169,10 @@ class Game extends IGame {
 
         configuration.channelsHandler = this.preparation.channelsHandler;
         configuration.rolesHandler = this.preparation.rolesHandler;
-        configuration.voiceHandler = this.preparation.voiceHandler;
-        configuration.voiceHandler.voiceChannel = configuration.channelsHandler._channels.get(
-            configuration.channelsHandler.voiceChannels.vocal_lg
-        );
+        //configuration.voiceHandler = this.preparation.voiceHandler;
+        //configuration.voiceHandler.voiceChannel = configuration.channelsHandler._channels.get(
+        //    configuration.channelsHandler.voiceChannels.vocal_lg
+        //);
 
         this.msg = this.preparation.msg;
         this.flow.msg = this.preparation.msg;
@@ -231,9 +231,9 @@ class Game extends IGame {
                     this.flow.GameConfiguration.loupGarouMsgCollector.stop();
                 }
 
-                if (this.flow.GameConfiguration.voiceHandler) {
-                    quitPromises.push(this.flow.GameConfiguration.voiceHandler.destroy());
-                }
+                //if (this.flow.GameConfiguration.voiceHandler) {
+                //    quitPromises.push(this.flow.GameConfiguration.voiceHandler.destroy());
+                //}
 
             }
 
@@ -290,7 +290,7 @@ class GamePreparation extends IGame {
         this.configuration = new GameConfiguration(this.gameInfo);
         this.rolesHandler = new RolesHandler(client, guild, this.gameInfo);
         this.channelsHandler = new ChannelsHandler(client, guild, this.gameInfo);
-        this.voiceHandler = new VoiceHandler(this.channelsHandler._channels.get(this.channelsHandler.voiceChannels.vocal_lg), gameOptions.musicMode);
+        //this.voiceHandler = new VoiceHandler(this.channelsHandler._channels.get(this.channelsHandler.voiceChannels.vocal_lg), gameOptions.musicMode);
 
         this.msg = undefined;
         this.richEmbed = undefined;
@@ -311,7 +311,6 @@ class GamePreparation extends IGame {
                     if (!status) return resolve(status);
                     return this.setupChannels()
                 })
-                .then(() => this.channelsHandler.moveVocalPlayers(this.configuration))
                 .then(() => this.rolesHandler.sendRolesToPlayers(this.configuration))
                 .then(() => resolve(this.configuration))
                 .catch(err => reject(err));
@@ -508,7 +507,7 @@ class GameConfiguration {
 
         this.channelsHandler = undefined;
         this.rolesHandler = undefined;
-        this.voiceHandler = undefined;
+        //this.voiceHandler = undefined;
 
     }
 

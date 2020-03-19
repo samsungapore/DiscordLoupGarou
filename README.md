@@ -6,6 +6,8 @@ description: >-
 
 # LGDB - Loup Garou Discord Bot
 
+[![Discord Bots](https://discordbots.org/api/widget/538344945673830410.svg)](https://discordbots.org/bot/538344945673830410)
+
 ## Permissions nécessaires
 
 ![](.gitbook/assets/sans-titre%20%282%29.png)
@@ -74,9 +76,7 @@ Le bot distribue de manière équitable et aléatoire les rôles ; enfin, le bot
 
 ## Proposer des améliorations, signalement des bugs
 
-![](.gitbook/assets/sans-titre%20%281%29.png)
-
-Vous pouvez proposer vos améliorations du bot et signaler les bugs sur [cette page MeisterTask](https://www.meistertask.com/projects/dp9gt43fec/join/). Vous êtes priés de ne pas mettre le bazar dans ce MeisterTask, car vous avez les droits de suppression sur celui-ci.
+Vous pouvez proposer vos améliorations du bot et signaler les bugs en envoyant un mail à cette adresse : incoming+amadeussalieri-discordloupgarou-12262556-issue-@incoming.gitlab.com
 
 ## Changelog
 

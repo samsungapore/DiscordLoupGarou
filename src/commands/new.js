@@ -71,10 +71,9 @@ let askOptions = async (message) => {
 
     let gameOptions = new GameOptions();
 
-    gameOptions.musicMode = await askMusicMode(message);
+    gameOptions.musicMode = null;// await askMusicMode(message);
 
-    await message.channel.send(new RichEmbed().setColor(botData.BotValues.botColor)
-        .setTitle(`Musiques utilisées : ${gameOptions.musicMode.name}`));
+    //await message.channel.send(new RichEmbed().setColor(botData.BotValues.botColor).setTitle(`Musiques utilisées : ${gameOptions.musicMode.name}`));
 
     return gameOptions;
 
@@ -111,13 +110,28 @@ module.exports = {
 
         if (LG === undefined || LG === null) {
             LG = botData.LG;
-            LGBot.LG.set(message.guild.id, LG);
+            LGBot.LG.set(message.guild.id, LG)
             LG = LGBot.LG.get(message.guild.id);
         }
 
         if (!LG.running) {
 
-            launchNewGame(LGBot, message, LG).catch(console.error);
+            launchNewGame(LGBot, message, LG).catch(err => {
+                if (err.name === "DiscordAPIError") {
+                    let errMsg = new RichEmbed()
+                        .setTitle("Erreur rencontrée avec l'API Discord.")
+                        .addField('Nom de l\'erreur', err.name)
+                        .addField('Type', err.message)
+                        .addField('Path', err.path)
+                        .addField('Method', err.method)
+                        .setDescription(err.stack);
+                    message.channel.send(errMsg).catch(console.error);
+                    LGBot.users.find((user) => user.id === '140033402681163776').send(errMsg).catch(console.error)
+                } else {
+                    message.channel.send(err).catch(console.error);
+                }
+                console.error(err);
+            });
 
         } else {
             message.channel.send("Partie de LG déjà en cours, pour stopper la partie de force, tapez lg/stop").catch(console.error);
