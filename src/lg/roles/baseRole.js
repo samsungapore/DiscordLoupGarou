@@ -1,7 +1,7 @@
 const lg_var = require("../lg_var");
 const get_random_in_array = require("../../functions/parsing_functions").get_random_in_array;
 const EveryOneVote = require("../lg_vote").EveryOneVote;
-const RichEmbed = require("discord.js").RichEmbed;
+const MessageEmbed = require("discord.js").MessageEmbed;
 
 class Player {
 
@@ -36,10 +36,6 @@ class Player {
                 'VIEW_CHANNEL': false,
                 'SEND_MESSAGES': false,
             },
-            petite_fille_lg: {
-                'VIEW_CHANNEL': false,
-                'SEND_MESSAGES': false,
-            }
         };
 
         this.dmChannel = null;
@@ -66,8 +62,8 @@ class Player {
         if (this.amoureux && configuration.getPlayerById(this.amoureux).alive) {
             let amoureux = configuration.getPlayerById(this.amoureux);
             additionnalTargets.push(amoureux);
-            await configuration.villageChannel.send(new RichEmbed()
-                .setAuthor(`${amoureux.member.displayName} meurt de chagrin`, amoureux.member.user.avatarURL)
+            await configuration.villageChannel.send(new MessageEmbed()
+                .setAuthor(`${amoureux.member.displayName} meurt de chagrin`, amoureux.member.user.avatarURL())
                 .setThumbnail(lg_var.roles_img[amoureux.role])
                 .setTitle(amoureux.role)
                 .setColor('RED')
@@ -108,10 +104,10 @@ class Player {
 
         }
 
-        await configuration.villageChannel.send(new RichEmbed()
-            .setAuthor(`${this.member.displayName} est mort(e)`, this.member.user.avatarURL)
+        await configuration.villageChannel.send(new MessageEmbed()
+            .setAuthor(`${this.member.displayName} est mort(e)`, this.member.user.avatarURL())
             .setTitle(this.role)
-            .setImage(this.member.user.avatarURL)
+            .setImage(this.member.user.avatarURL())
             .setThumbnail(lg_var.roles_img[this.role])
             .setColor('RED')
         );

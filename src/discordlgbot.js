@@ -1,12 +1,8 @@
 const Discord = require('discord.js');
 const LGBot = new Discord.Client();
 
-const BGM = new Discord.Client();
-
 // UTC + x
 const UTC_LOCAL_TIMESIFT = 1;
-
-//const Keyv = require('keyv');
 
 const fs = require('graceful-fs');
 const BotData = require("./BotData");
@@ -26,38 +22,9 @@ for (const file of fs.readdirSync('./src/commands')) {
 LGBot.on('ready', () => {
 
     console.info('The bot is ready.');
-    console.info(`Connected to ${LGBot.guilds.size} servers, servicing ${LGBot.users.size} users.`);
+    console.info(`Connected to ${LGBot.guilds.cache.size} servers, servicing ${LGBot.users.cache.size} users.`);
 
-    LGBot.user.setActivity("lg/new - Réalisé par Kazuhiro#1248").catch(console.error);
-
-    LGBot.voiceConnections.array().forEach(voiceConnection => {
-        voiceConnection.disconnect();
-    });
-
-    //const msg = LGBot.Settings.get("RestartMsg");
-
-    /*if (msg && msg.length > 0) {
-
-        if (LGBot.Settings.Admins) {
-            LGBot.Settings.Admins.forEach(adminID => {
-                let user = LGBot.users.get(adminID);
-
-                if (user) user.send('Le bot Loup Garou a redémarré. ' + msg).catch(console.error);
-            });
-        } else {
-            LGBot.Settings.Admins = [];
-
-            LGBot.guilds.array().forEach(guild => {
-                LGBot.Settings.Admins.push(guild.ownerID);
-
-                let user = LGBot.users.get(guild.ownerID);
-
-                if (user) user.send('Le bot Loup Garou vient de redémarrer. ' + msg).catch(console.error);
-
-            });
-        }
-
-    }*/
+    LGBot.user.setActivity("lg/new - Réalisé par Kazuhiro - 和宏 - 龙马 - 카즈히로#1248").catch(console.error);
 
 });
 

@@ -2,7 +2,7 @@ const lg_var = require("../../lg_var");
 const LgLogger = require("../../lg_logger");
 const ReactionHandler = require("../../../functions/reactionHandler").ReactionHandler;
 const Villageois = require("../baseRole").Villageois;
-const RichEmbed = require('discord.js').RichEmbed;
+const MessageEmbed = require('discord.js').MessageEmbed;
 
 /**
  * Si on décide de jouer avec le voleur, on doit ajouter deux cartes de plus au paquet de cartes qui seront distribuée
@@ -53,8 +53,8 @@ class Voleur extends Villageois {
                 .then(roles => {
                     this.additionnalRoles = roles;
 
-                    let propositionMsg = new RichEmbed()
-                        .setAuthor(`${this.member.displayName}`, this.member.user.avatarURL)
+                    let propositionMsg = new MessageEmbed()
+                        .setAuthor(`${this.member.displayName}`, this.member.user.avatarURL())
                         .setTitle('Tu es le voleur de la partie')
                         .setDescription('Tu as le choix d\'échanger ton rôle de voleur considéré ' +
                             'comme villageois avec deux carte. Tu ne dois en choisir qu\'une seule')

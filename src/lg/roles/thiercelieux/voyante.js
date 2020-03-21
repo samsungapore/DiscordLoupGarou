@@ -1,7 +1,7 @@
 const roles_img = require("../../lg_var").roles_img;
 const EveryOneVote = require("../../lg_vote").EveryOneVote;
 const Villageois = require("../baseRole").Villageois;
-let RichEmbed = require('discord.js').RichEmbed;
+let MessageEmbed = require('discord.js').MessageEmbed;
 
 class Voyante extends Villageois {
 
@@ -39,8 +39,8 @@ class Voyante extends Villageois {
 
                     roleDetected = target.role;
 
-                    return this.dmChannel.send(new RichEmbed()
-                        .setAuthor(target.member.displayName, target.member.user.avatarURL)
+                    return this.dmChannel.send(new MessageEmbed()
+                        .setAuthor(target.member.displayName, target.member.user.avatarURL())
                         .setTitle(target.role)
                         .setImage(roles_img[target.role])
                         .setColor(target.member.displayColor)

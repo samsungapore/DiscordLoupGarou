@@ -1,4 +1,4 @@
-const RichEmbed = require('discord.js').RichEmbed;
+const MessageEmbed = require('discord.js').MessageEmbed;
 let botData = require("../BotData.js");
 
 let addAdmins = (LGBot, message) => {

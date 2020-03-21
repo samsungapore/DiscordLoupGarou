@@ -1,4 +1,4 @@
-const RichEmbed = require("discord.js").RichEmbed;
+const MessageEmbed = require("discord.js").MessageEmbed;
 const BotData = require("../BotData.js");
 const lg_var = require('./lg_var.js');
 const LgLogger = require("./lg_logger");
@@ -50,7 +50,7 @@ class GlobalTimer {
     async end() {
         clearInterval(this.timer);
         this.count = 0;
-        await this.message.delete();
+        if (this.message && this.message.deletable) await this.message.delete();
         this.message = null;
         return this;
     }
@@ -90,12 +90,15 @@ class GlobalTimer {
                             }
                         },
                         () => {
-                            this.message.delete()
-                                .then(() => {
-                                    this.end().catch(() => this.message = null);
-                                    resolve(this);
-                                })
-                                .catch(err => reject(err));
+                            if (this.message) {
+                                this.message.delete()
+                                    .then(() => {
+                                        this.end().catch(() => this.message = null);
+                                        resolve(this);
+                                    }).catch(err => reject(err));
+                            } else {
+                                this.end().catch(() => this.message = null);
+                            }
                         },
                         (reaction) => reaction.count > 1
                     );
@@ -103,7 +106,7 @@ class GlobalTimer {
                     this.timer = setInterval(() => {
                         this.update().then(isDone => {
                             if (isDone) resolve(this);
-                        }).catch(console.error);
+                        }).catch(() => true);
                     }, this.secInterval * 1000);
 
                 })
@@ -146,7 +149,7 @@ class GameFlow extends IGame {
 
         this.turnNb = 1;
 
-        this.gameStats = new RichEmbed().setColor(botColor).setDescription("Fin de partie");
+        this.gameStats = new MessageEmbed().setColor(botColor).setDescription("Fin de partie");
 
         this.deadPeople = [];
 
@@ -195,9 +198,9 @@ class GameFlow extends IGame {
                     this.GameConfiguration.rolesHandler.removePlayerRole(deadPlayer.member).catch(console.error);
                     this.GameConfiguration.rolesHandler.addDeadRole(deadPlayer.member).catch(console.error);
 
-                    deadPlayer.member.setVoiceChannel(this.GameConfiguration.channelsHandler._channels.get(
-                        this.GameConfiguration.channelsHandler.voiceChannels.mort_lg
-                    )).catch(() => true);
+                    //deadPlayer.member.setVoiceChannel(this.GameConfiguration.channelsHandler._channels.get(
+                    //    this.GameConfiguration.channelsHandler.voiceChannels.mort_lg
+                    //)).catch(() => true);
 
                     if (somebodyNew) {
                         somebodyNew.forEach(person => setImmediate(() => this.killer.emit("death", person)));
@@ -229,12 +232,12 @@ class GameFlow extends IGame {
 
             LgLogger.info('Game start', this.gameInfo);
 
-            this.moveEveryPlayersToVocalChannel().catch(console.error);
+            //this.moveEveryPlayersToVocalChannel().catch(console.error);
 
             this.GameConfiguration.channelsHandler._channels.get(this.GameConfiguration.channelsHandler.channels.thiercelieux_lg)
-                .send(new RichEmbed().setColor(BotData.BotValues.botColor)
-                    .setAuthor("Les Loups-garous de Thiercelieux [v2.2]", lg_var.roles_img.LoupGarou)
-                    .setDescription('Développé par Kazuhiro#1248.\n\n*Thiercelieux est un petit village rural d\'apparence paisible,' +
+                .send(new MessageEmbed().setColor(BotData.BotValues.botColor)
+                    .setAuthor("Les Loups-garous de Thiercelieux [v2.3]", lg_var.roles_img.LoupGarou)
+                    .setDescription('Développé par Kazuhiro - 和宏 - 龙马 - 카즈히로#1248.\n\n*Thiercelieux est un petit village rural d\'apparence paisible,' +
                         ' mais chaque nuit certains villageois se transforment en loups-garou pour dévorer d\'autres villageois...*\n')
                     .addField("Règles :",
                         'Les joueurs sont divisés en deux camps : les villageois (certains d\'entre eux jouant ' +
@@ -245,7 +248,7 @@ class GameFlow extends IGame {
                         "ses traditions ancestrales et ses mystères inquiétants.", lg_var.roles_img.LoupGarou)
                     .setImage(lg_var.roles_img.LoupGarou))
                 .then(() => this.GameConfiguration.channelsHandler._channels.get(this.GameConfiguration.channelsHandler.channels.thiercelieux_lg)
-                    .send(new RichEmbed().setColor(BotData.BotValues.botColor)
+                    .send(new MessageEmbed().setColor(BotData.BotValues.botColor)
                         .addField(
                             "Table ronde",
                             this.GameConfiguration.getTable().map(member => member.displayName).toString().replace(/,+/g, '\n')
@@ -281,7 +284,6 @@ class GameFlow extends IGame {
     async fillGameStats() {
         this.gameStats.setFooter(`Jeu terminé au bout de ${this.gameInfo.getPlayTime()}`);
 
-        this.gameStats.addBlankField();
         this.gameStats.addField(
             "Loups",
             `${this.GameConfiguration.getMemberteams("LG")
@@ -402,7 +404,7 @@ class GameFlow extends IGame {
 
         }
 
-        LgLogger.info(`Game ended: ${gameHasEnded} | game status: ${gameStatus}`, this.gameInfo);
+        LgLogger.info(`Game ended: ${gameHasEnded} | game status: ${JSON.stringify(gameStatus)}`, this.gameInfo);
 
         return gameHasEnded
     }
@@ -583,15 +585,13 @@ class Day extends Period {
             `Votez dans le channel ${this.GameConfiguration.channelsHandler._channels.get(this.GameConfiguration.channelsHandler.channels.thiercelieux_lg).toString()} !`
         );
 
-        let outcome = await new DayVote(
+        return await new DayVote(
             "Qui doit mourir ?",
             this.GameConfiguration,
             (debateDuration / 2) * 60 * 1000,
             this.GameConfiguration.channelsHandler._channels.get(this.GameConfiguration.channelsHandler.channels.thiercelieux_lg),
             this.GameConfiguration.getAlivePlayers().length
         ).excludeDeadPlayers().runVote();
-
-        return outcome;
     }
 
     async pronounceSentence(outcome) {
@@ -1099,7 +1099,7 @@ class FirstNight extends Night {
 
             if (channel) {
                 promises.push(
-                    channel.overwritePermissions(
+                    channel.createOverwrite(
                         newPlayer.member,
                         newPlayer.permission[channelName]
                     )

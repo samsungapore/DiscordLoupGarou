@@ -1,4 +1,4 @@
-const RichEmbed = require('discord.js').RichEmbed;
+const MessageEmbed = require('discord.js').MessageEmbed;
 let botData = require("../BotData.js");
 
 let restartBot = (message) => {
@@ -18,7 +18,7 @@ let getOccupiedGuilds = (LGBot) => {
 
     let occupiedGuilds = [];
 
-    LGBot.guilds.array().forEach(guild => {
+    LGBot.guilds.cache.array().forEach(guild => {
 
         let LG = LGBot.LG.get(guild.id);
 

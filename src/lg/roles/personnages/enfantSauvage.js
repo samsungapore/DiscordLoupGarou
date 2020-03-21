@@ -1,4 +1,4 @@
-const RichEmbed = require("discord.js").RichEmbed;
+const MessageEmbed = require("discord.js").MessageEmbed;
 const LgLogger = require("../../lg_logger");
 const EveryOneVote = require("../../lg_vote").EveryOneVote;
 const Villageois = require("../baseRole").Villageois;
@@ -29,8 +29,8 @@ class EnfantSauvage extends Villageois {
 
             Promise.all(dmchanpromise).then(() => {
 
-                let propositionMsg = new RichEmbed()
-                    .setAuthor(`${this.member.displayName}`, this.member.user.avatarURL)
+                let propositionMsg = new MessageEmbed()
+                    .setAuthor(`${this.member.displayName}`, this.member.user.avatarURL())
                     .setTitle('Tu es l\'enfant sauvage')
                     .setDescription("Tu peux choisir ton modèle parmis les autres habitants du village." +
                         " Si ton modèle meurt, tu deviendras un Loup-Garou.");

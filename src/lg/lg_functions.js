@@ -10,7 +10,7 @@ module.exports = {
         let res = null;
 
         // iterates over all members
-        guild.members.array().forEach(member => {
+        guild.members.cache.array().forEach(member => {
 
             /*
             toLowerCase() method converts all characters into lower case

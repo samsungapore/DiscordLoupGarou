@@ -5,7 +5,7 @@ const LgLogger = require("../lg_logger");
 const get_random_in_array = require("../../functions/parsing_functions").get_random_in_array;
 const shuffle_array = require("../../functions/parsing_functions").shuffle_array;
 const ReactionHandler = require("../../functions/reactionHandler").ReactionHandler;
-const RichEmbed = require("discord.js").RichEmbed;
+const MessageEmbed = require("discord.js").MessageEmbed;
 const clone = require('../../functions/clone');
 
 class IGame {
@@ -147,7 +147,7 @@ class RolesHandler extends IGame {
 
         let gameTypeCopyObj;
 
-        for (let i = 1; i < this.gameTypeCopy.length ; i++) {
+        for (let i = 1; i < this.gameTypeCopy.length; i++) {
             gameTypeCopyObj = Object.assign(this.gameTypeCopy[0], this.gameTypeCopy[i]);
             this.gameTypeCopy[0] = gameTypeCopyObj;
         }
@@ -165,71 +165,55 @@ class RolesHandler extends IGame {
         return this;
     }
 
-    deleteOlderRoles() {
-        return new Promise((resolve, reject) => {
+    async deleteOlderRoles() {
+        let promises = [];
 
-            let promises = [];
-
-            this.guild.roles.array().forEach(role => {
-
-                Object.keys(this.roles).forEach(roleName => {
-                    if (role.name === roleName) {
-                        promises.push(role.delete());
-                    }
-                });
-
-            });
-
-            Promise.all(promises).then(() => resolve(true)).catch(err => reject(err));
-
+        Object.keys(this.roles).forEach(roleName => {
+            let role = this.guild.roles.cache.find(roleobj => roleobj.name === roleName);
+            if (role) {
+                promises.push(role.delete());
+            }
         });
+
+        await Promise.allSettled(promises);
+
     }
 
-    createRoles() {
-        return new Promise((resolve, reject) => {
+    async createRoles() {
 
-            this.deleteOlderRoles().then(() => {
+        await this.deleteOlderRoles();
 
-                let rolePromises = [];
+        let rolePromises = [];
 
-                Object.keys(this.roles).forEach(role_name => {
+        Object.keys(this.roles).forEach(role_name => {
 
-                    // creating the role 'role_name'
-                    rolePromises.push(this.guild.createRole({
-                        name: role_name,
-                        color: this.roles[role_name].color,
-                        hoist: true
-                    }));
-
-                });
-
-                return Promise.all(rolePromises);
-
-            }).then((roleArray) => {
-
-                roleArray.forEach(role => {
-                    this.roles[role.name].object = role;
-                });
-
-                resolve(true);
-
-            }).catch(err => reject(err));
+            // creating the role 'role_name'
+            rolePromises.push(this.guild.roles.create({
+                data: {
+                    name: role_name,
+                    color: this.roles[role_name].color,
+                    hoist: true
+                }
+            }));
 
         });
+
+        (await Promise.all(rolePromises)).forEach(role => {
+            this.roles[role.name].object = role;
+        });
+
     }
 
-    deleteRoles() {
-        return new Promise((resolve, reject) => {
+    async deleteRoles() {
 
-            let promises = [];
+        let promises = [];
 
-            Object.keys(this.roles).forEach(roleName => {
-                promises.push(this.roles[roleName].object.delete());
-            });
-
-            Promise.all(promises).then(() => resolve(true)).catch(() => resolve(true));
-
+        Object.keys(this.roles).forEach(roleName => {
+            promises.push(this.roles[roleName].object.delete());
         });
+
+        await Promise.allSettled(promises);
+
     }
 
     /**
@@ -238,19 +222,19 @@ class RolesHandler extends IGame {
      * @returns {Promise<GuildMember>}
      */
     addPlayerRole(guildMember) {
-        return guildMember.addRole(this.roles.JoueurLG.object);
+        return guildMember.roles.add(this.roles.JoueurLG.object);
     }
 
     addDeadRole(guildMember) {
-        return guildMember.addRole(this.roles.MortLG.object);
+        return guildMember.roles.add(this.roles.MortLG.object);
     }
 
     removePlayerRole(guildMember) {
-        return guildMember.removeRole(this.roles.JoueurLG.object);
+        return guildMember.roles.remove(this.roles.JoueurLG.object);
     }
 
     removeDeadRole(guildMember) {
-        return guildMember.removeRole(this.roles.MortLG.object);
+        return guildMember.roles.remove(this.roles.MortLG.object);
     }
 
     /**
@@ -258,8 +242,8 @@ class RolesHandler extends IGame {
      * @param guildMember
      */
     removeRoles(guildMember) {
-        guildMember.removeRole(this.roles.JoueurLG.object).catch(() => true);
-        guildMember.removeRole(this.roles.MortLG.object).catch(() => true);
+        guildMember.roles.remove(this.roles.JoueurLG.object).catch(() => true);
+        guildMember.roles.remove(this.roles.MortLG.object).catch(() => true);
     }
 
     assignRoles(configuration) {

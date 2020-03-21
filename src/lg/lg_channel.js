@@ -1,6 +1,7 @@
 const BotData = require("../BotData.js");
 const lg_var = require("./lg_var");
-const RichEmbed = require("discord.js").RichEmbed;
+const LgLogger = require("./lg_logger");
+const MessageEmbed = require("discord.js").MessageEmbed;
 
 class IGame {
 
@@ -23,7 +24,7 @@ class ChannelsHandler extends IGame {
 
         this.guild = guild;
 
-        this.everyoneRole = this.guild.roles.find(x => x.name === '@everyone');
+        this.everyoneRole = this.guild.roles.everyone;
         this.everyonePermission = {
             loups_garou_de_thiercelieux: {
                 'VIEW_CHANNEL': true,
@@ -60,7 +61,6 @@ class ChannelsHandler extends IGame {
             "village_lg",
             "paradis_lg",
             "loups_garou_lg",
-            "petite_fille_lg"
         ].forEach(element => {
             this.mastermindPermissions[element] = {
                 'VIEW_CHANNEL': true,
@@ -96,8 +96,20 @@ class ChannelsHandler extends IGame {
     }
 
     async checkChannelsOnGuild() {
-        await this.checkCategory();
-        await this.checkChannels();
+
+        let results = await Promise.allSettled([
+            this.checkCategory(),
+            this.checkChannels()
+        ]);
+
+        for (const result of results) {
+            if (result.status === "rejected") {
+                LgLogger.info('Channels are not ready', this.gameInfo);
+                throw `${result.reason}`;
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -107,7 +119,7 @@ class ChannelsHandler extends IGame {
     checkCategory() {
         return new Promise((resolve, reject) => {
 
-            let channel = this.guild.channels.find(x => x.name === "loups_garou_de_thiercelieux");
+            let channel = this.guild.channels.cache.find(x => x.name === "loups_garou_de_thiercelieux");
 
             if (channel && channel.type === "category") {
                 this.category = channel.id;
@@ -131,7 +143,7 @@ class ChannelsHandler extends IGame {
             // check text channels
             Object.keys(this.channels).forEach(channelToFind => {
 
-                let channel = this.guild.channels.find(x => x.name === channelToFind);
+                let channel = this.guild.channels.cache.find(x => x.name === channelToFind);
 
                 if (channel && channel.type === "text" &&
                     channel.parentID === this.category) {
@@ -148,7 +160,7 @@ class ChannelsHandler extends IGame {
             //check voice channels
             Object.keys(this.voiceChannels).forEach(channelToFind => {
 
-                let channel = this.guild.channels.find(x => x.name === channelToFind);
+                let channel = this.guild.channels.cache.find(x => x.name === channelToFind);
 
                 if (channel && channel.type === "voice" &&
                     channel.parentID === this.category) {
@@ -171,22 +183,20 @@ class ChannelsHandler extends IGame {
         });
     }
 
-    removeAllOverwrites() {
-        return new Promise((resolve, reject) => {
+    async removeAllOverwrites() {
 
-            for (let channel of this._channels.values()) {
+        let promises = [];
 
-                channel.permissionOverwrites.array().forEach(overwrite => {
-                    overwrite.delete().catch(() => true);
-                });
+        for (let channel of this._channels.values()) {
 
-            }
+            channel.permissionOverwrites.array().forEach(overwrite => {
+                promises.push(overwrite.delete());
+            });
 
-            setTimeout(() => {
-                resolve(true);
-            }, 1000);
+        }
 
-        });
+        await Promise.allSettled(promises);
+
     }
 
     async setupChannels(areChannelsReady, configuration) {
@@ -201,65 +211,50 @@ class ChannelsHandler extends IGame {
     }
 
     async createChannels() {
-        return new Promise((resolve, reject) => {
 
-            let promises = [];
-            let promisesCategory = [];
+        let promises = [];
 
+        if (!this.category) {
+            let categoriesCreated = await this.guild.channels.create("loups_garou_de_thiercelieux", {type: 'category'});
+            this.category = categoriesCreated.id;
+            this._channels.set(categoriesCreated.id, categoriesCreated);
+        }
 
-            //create text channels
-            Object.keys(this.channels).forEach(channelName => {
-                if (!this.channels[channelName]) {
-                    promises.push(this.guild.createChannel(channelName, "text"));
-                }
-            });
+        //create text channels
+        Object.keys(this.channels).forEach(channelName => {
+            if (!this.channels[channelName]) {
+                promises.push(this.guild.channels.create(channelName, {
+                    type: "text",
+                    parent: this._channels.get(this.category)
+                }));
+            }
+        });
 
-            //create voice channels
-            Object.keys(this.voiceChannels).forEach(channelName => {
-                if (!this.voiceChannels[channelName]) {
-                    promises.push(this.guild.createChannel(channelName, "voice"));
-                }
-            });
+        //create voice channels
+        Object.keys(this.voiceChannels).forEach(channelName => {
+            if (!this.voiceChannels[channelName]) {
+                promises.push(this.guild.channels.create(channelName, {
+                    type: "voice",
+                    parent: this._channels.get(this.category)
+                }));
+            }
+        });
 
-            if (!this.category) {
-                promisesCategory.push(this.guild.createChannel("loups_garou_de_thiercelieux", "category"));
+        let channelsCreated = await Promise.all(promises);
+
+        channelsCreated.forEach(createdChannel => {
+
+            if (createdChannel.type === "text") {
+                this.channels[createdChannel.name] = createdChannel.id;
+            } else if (createdChannel.type === "voice") {
+                this.voiceChannels[createdChannel.name] = createdChannel.id;
             }
 
-            Promise.all(promisesCategory).then((categoriesCreated) => {
-
-                if (categoriesCreated && categoriesCreated[0]) {
-                    this.category = categoriesCreated[0].id;
-                    this._channels.set(categoriesCreated[0].id, categoriesCreated[0]);
-                }
-
-                return Promise.all(promises);
-            }).then((channelsCreated) => {
-
-                let otherPromises = [];
-
-                channelsCreated.forEach(createdChannel => {
-
-                    if (createdChannel.type === "category") {
-                        this.category = createdChannel.id;
-                    } else {
-                        otherPromises.push(createdChannel.setParent(this.category));
-
-                        if (createdChannel.type === "text") {
-                            this.channels[createdChannel.name] = createdChannel.id;
-                        } else if (createdChannel.type === "voice") {
-                            this.voiceChannels[createdChannel.name] = createdChannel.id;
-                        }
-
-                    }
-                    this._channels.set(createdChannel.id, createdChannel);
-
-                });
-
-                Promise.all(otherPromises).then(() => resolve(true)).catch(err => reject(err));
-
-            }).catch(err => reject(err));
+            this._channels.set(createdChannel.id, createdChannel);
 
         });
+
+
     }
 
     deleteChannels() {
@@ -283,22 +278,19 @@ class ChannelsHandler extends IGame {
      * @param players Array<Player>
      * @returns {Promise<any>}
      */
-    switchPermissions(channelId, permission, players) {
-        return new Promise((resolve, reject) => {
+    async switchPermissions(channelId, permission, players) {
 
-            let promises = [];
-            let channel = this._channels.get(channelId);
+        let promises = [];
+        let channel = this._channels.get(channelId);
 
-            players.forEach(player => {
-                promises.push(channel.overwritePermissions(
-                    player.member,
-                    permission
-                ));
-            });
-
-            Promise.all(promises).then(() => resolve(true)).catch(err => reject(err));
-
+        players.forEach(player => {
+            promises.push(channel.createOverwrite(
+                player.member,
+                permission
+            ));
         });
+
+        await Promise.all(promises);
     }
 
     setupChannelPermissions(configuration) {
@@ -306,10 +298,10 @@ class ChannelsHandler extends IGame {
 
             let promises = [];
 
-            for (let channel of this._channels.values()) {
+            for (let channel of Array.from(this._channels.values()).filter(channel => channel.type === 'text')) {
 
                 // add mastermind permissions
-                promises.push(channel.overwritePermissions(
+                promises.push(channel.createOverwrite(
                     this.client.user,
                     this.mastermindPermissions[channel.name]
                 ));
@@ -322,37 +314,34 @@ class ChannelsHandler extends IGame {
         });
     }
 
-    applyPermissionsOnChannel(channel, players) {
-        return new Promise((resolve, reject) => {
+    async applyPermissionsOnChannel(channel, players) {
 
-            let promises = [];
+        let promises = [];
 
-            if (channel.type !== "category") {
+        if (channel.type !== "category") {
 
-                for (let player of players.values()) {
-                    promises.push(channel.overwritePermissions(
-                        player.member,
-                        player.permission[channel.name]
-                    ));
-                }
-
+            for (let player of players.values()) {
+                promises.push(channel.createOverwrite(
+                    player.member,
+                    player.permission[channel.name]
+                ));
             }
 
-            promises.push(channel.overwritePermissions(
-                this.everyoneRole,
-                this.everyonePermission[channel.name]
-            ));
+        }
 
-            Promise.all(promises).then(() => resolve(true)).catch(err => reject(err));
+        promises.push(channel.createOverwrite(
+            this.everyoneRole,
+            this.everyonePermission[channel.name]
+        ));
 
-        });
+        await Promise.all(promises);
     }
 
     sendMessageToVillage(message, imageLink, thumbnail) {
 
         let village = this._channels.get(this.channels.village_lg);
 
-        let msg = new RichEmbed()
+        let msg = new MessageEmbed()
             .addField('LG - Jeu', message)
             .setColor(BotData.BotValues.botColor)
             .setAuthor("Loup-Garou de thiercelieux", lg_var.roles_img.LoupGarou);
@@ -367,7 +356,7 @@ class ChannelsHandler extends IGame {
     sendMsgToLG(message) {
         let lg = this._channels.get(this.channels.loups_garou_lg);
 
-        return lg.send(new RichEmbed()
+        return lg.send(new MessageEmbed()
             .addField("LG - Jeu", message)
             .setColor(BotData.BotValues.botColor)
         );
@@ -405,20 +394,8 @@ class ChannelsHandler extends IGame {
         });
     }
 
-    deleteMessagesInChannel(channel) {
-        return new Promise((resolve, reject) => {
-            channel.fetchMessages({limit: 100}).then((msgFetched) => {
-
-                let promises = [];
-
-                msgFetched.array().forEach(msg => {
-                    promises.push(msg.delete());
-                });
-
-                Promise.all(promises).then(() => resolve(true)).catch(err => reject(err));
-
-            }).catch(err => reject(err));
-        })
+    async deleteMessagesInChannel(channel) {
+        await channel.bulkDelete(channel.messages.cache, true);
     }
 
 }

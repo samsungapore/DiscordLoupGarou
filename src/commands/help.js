@@ -1,4 +1,4 @@
-const RichEmbed = require('discord.js').RichEmbed;
+const MessageEmbed = require('discord.js').MessageEmbed;
 let botData = require("../BotData.js");
 const fs = require('fs');
 
@@ -7,9 +7,9 @@ module.exports = {
     description: 'afficher ce message d\'aide',
     execute(LGBot, message) {
 
-        let helpMsg = new RichEmbed()
+        let helpMsg = new MessageEmbed()
             .setColor(botData.BotValues.botColor)
-            .setImage(LGBot.user.avatarURL)
+            .setImage(LGBot.user.avatarURL())
             .setTitle("Guide pour jouer");
 
         let i = 1;
@@ -21,9 +21,9 @@ module.exports = {
             if (i === 25) {
                 message.channel.send(helpMsg).catch(console.error);
                 i = 0;
-                helpMsg = new RichEmbed()
+                helpMsg = new MessageEmbed()
                     .setColor(botData.BotValues.botColor)
-                    .setImage(LGBot.user.avatarURL)
+                    .setImage(LGBot.user.avatarURL())
                     .setTitle("Guide pour jouer");
             }
 

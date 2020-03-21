@@ -1,4 +1,4 @@
-const RichEmbed = require("discord.js").RichEmbed;
+const MessageEmbed = require("discord.js").MessageEmbed;
 const lg_var = require('./lg_var.js');
 const BotData = require("../BotData.js");
 
@@ -25,14 +25,14 @@ class CommunicationHandler extends IGame {
     }
 
     static getLGSampleMsg() {
-        return new RichEmbed()
+        return new MessageEmbed()
             .setColor(BotData.BotValues.botColor)
             .setAuthor("Loup-Garou de Thiercelieux", lg_var.roles_img.LoupGarou);
     }
 
     static reconstructEmbed(messageEmbed) {
 
-        let newEmbed = new RichEmbed();
+        let newEmbed = new MessageEmbed();
 
         if (messageEmbed.author) newEmbed.setAuthor(messageEmbed.author);
         if (messageEmbed.color) newEmbed.setColor(messageEmbed.color);
@@ -45,9 +45,7 @@ class CommunicationHandler extends IGame {
 
         messageEmbed.fields.forEach(field => {
 
-            if (field.name === '\u200B' && field.value === '\u200B') {
-                newEmbed.addBlankField(field.inline);
-            } else {
+            if (!(field.name === '\u200B' && field.value === '\u200B')) {
                 newEmbed.addField(field.name, field.value, field.inline);
             }
 
@@ -68,7 +66,7 @@ module.exports = {
      * @param s
      * @return Promise
      */
-    message_curr_chan: (message, title, s) => message.channel.send(new RichEmbed()
+    message_curr_chan: (message, title, s) => message.channel.send(new MessageEmbed()
         .addField(title, s)
         .setColor(7419530)
         .setAuthor("Loup-Garou de thiercelieux", lg_var.roles_img.LoupGarou)
@@ -84,13 +82,13 @@ module.exports = {
     message_to_village: (client, message, msg) => {
         let gSettings = client.guilds_settings.get(message.guild.id);
 
-        return (LG.lg_game_channels.village_lg.send(new RichEmbed()
+        return (LG.lg_game_channels.village_lg.send(new MessageEmbed()
             .addField('LG - Jeu', msg)
             .setColor(7419530)
             .setAuthor("Loup-Garou de thiercelieux", lg_var.roles_img.LoupGarou)));
     },
 
-    msg: (message, channel, title, msg) => channel.send(new RichEmbed()
+    msg: (message, channel, title, msg) => channel.send(new MessageEmbed()
         .addField(title, msg)
         .setColor(7419530)
         .setAuthor("Loup-Garou de thiercelieux", lg_var.roles_img.LoupGarou)

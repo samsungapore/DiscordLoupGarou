@@ -6,7 +6,7 @@ const GameFlow = require("./lg_flow").GameFlow;
 const ChannelsHandler = require("./lg_channel").ChannelsHandler;
 const RolesHandler = require("./roles/lg_role").RolesHandler;
 const ReactionHandler = require("../functions/reactionHandler").ReactionHandler;
-const RichEmbed = require("discord.js").RichEmbed;
+const MessageEmbed = require("discord.js").MessageEmbed;
 const Wait = require('../functions/wait').Wait;
 
 class IGame {
@@ -77,7 +77,6 @@ class Game extends IGame {
         LgLogger.info('New lg game created', this.gameInfo);
 
         this.guild = message.guild;
-
 
         this.gameOptions = gameOptions;
 
@@ -193,14 +192,14 @@ class Game extends IGame {
                     //todo: allow user to quit the game
 
                 } else if (reaction.emoji.name === "🔚") {
-                    let user = reaction.users.last();
+                    let user = reaction.users.cache.last();
 
-                    reaction.remove(user).catch(() => true);
-                    if (user.id === this.stemmingPlayer || this.guild.members.get(user.id).hasPermission('BAN_MEMBERS')) {
+                    reaction.users.remove(user).catch(() => true);
+                    if (user.id === this.stemmingPlayer || this.guild.members.cache.get(user.id).hasPermission('BAN_MEMBERS')) {
                         this.quit().catch(console.error);
                     }
                 }
-                reaction.remove(reaction.users.last()).catch(() => true);
+                reaction.users.remove(reaction.users.cache.last()).catch(() => true);
 
             }, () => {
 
@@ -243,6 +242,7 @@ class Game extends IGame {
                 quitPromises.push(this.preparation.channelsHandler.deleteChannels());
             } else {
                 quitPromises.push(this.preparation.channelsHandler.deletePermissionsOverwrites());
+                quitPromises.push(this.preparation.channelsHandler.deleteMessagesInChannels());
             }
 
             Promise.all(quitPromises).then(() => {
@@ -293,7 +293,7 @@ class GamePreparation extends IGame {
         //this.voiceHandler = new VoiceHandler(this.channelsHandler._channels.get(this.channelsHandler.voiceChannels.vocal_lg), gameOptions.musicMode);
 
         this.msg = undefined;
-        this.richEmbed = undefined;
+        this.MessageEmbed = undefined;
 
         this.keepChannels = false;
 
@@ -320,10 +320,10 @@ class GamePreparation extends IGame {
     init() {
         return new Promise((resolve, reject) => {
 
-            this.richEmbed = CommunicationHandler.getLGSampleMsg()
+            this.MessageEmbed = CommunicationHandler.getLGSampleMsg()
                 .addField("LG - Initialisation", "Initialisation du jeu...");
 
-            this.preparationChannel.send(this.richEmbed).then(msg => {
+            this.preparationChannel.send(this.MessageEmbed).then(msg => {
                 this.msg = msg;
                 resolve(true);
             }).catch(err => reject(err));
@@ -333,7 +333,7 @@ class GamePreparation extends IGame {
     createRoles() {
         return new Promise((resolve, reject) => {
             this.rolesHandler.createRoles().then(() => resolve(true)).catch(err => {
-                this.msg.edit(this.richEmbed.setDescription("Erreur lors de la création des rôles.")).catch(console.error);
+                this.msg.edit(this.MessageEmbed.setDescription("Erreur lors de la création des rôles.")).catch(() => true);
                 reject(err);
             });
         });
@@ -341,7 +341,7 @@ class GamePreparation extends IGame {
 
     displayGuide() {
         return new Promise((resolve, reject) => {
-            this.richEmbed = CommunicationHandler.getLGSampleMsg()
+            this.MessageEmbed = CommunicationHandler.getLGSampleMsg()
                 .setDescription("Préparation du jeu")
                 .setThumbnail(lg_var.roles_img.LoupGarou)
                 .addField("Rejoindre la partie", "Veuillez réagir avec la réaction 🐺", true)
@@ -350,7 +350,7 @@ class GamePreparation extends IGame {
                 .addField("Stopper la partie", "Veuillez réagir avec la réaction 🔚", true)
                 .addField("Joueurs participants au jeu", "Aucun participant pour le moment");
 
-            this.msg.edit(this.richEmbed).then(() => resolve(true)).catch(err => reject(err));
+            this.msg.edit(this.MessageEmbed).then(() => resolve(true)).catch(err => reject(err));
         });
     }
 
@@ -363,42 +363,44 @@ class GamePreparation extends IGame {
 
             gamePreparationMsg.initCollector((reaction) => {
 
-                let guildMember = this.guild.members.get(reaction.users.last().id);
+                this.guild.members.fetch(reaction.users.cache.last().id).then(guildMember => {
 
-                if (!guildMember) {
-                    console.error(`${reaction.users.last().username} non présent sur le serveur ${this.guild.name}`);
-                    return;
-                }
-
-                if (reaction.emoji.name === "🐺") {
-                    this.configuration.addParticipant(guildMember);
-                    this.rolesHandler.addPlayerRole(guildMember).catch(console.error);
-                    this.updateParticipantsDisplay();
-                    reaction.remove(guildMember.user).catch(console.error);
-                    if (this.configuration.getParticipantsNames().length === this.MAX_PLAYERS) {
-                        this.status = true;
-                        gamePreparationMsg.collector.stop();
+                    if (!guildMember) {
+                        console.error(`${reaction.users.cache.last().username} non présent sur le serveur ${this.guild.name}`);
+                        return;
                     }
-                } else if (reaction.emoji.name === "🚪") {
-                    this.rolesHandler.removeRoles(guildMember);
-                    this.configuration.removeParticipant(guildMember.id);
-                    this.updateParticipantsDisplay();
-                    reaction.remove(guildMember.user).catch(console.error);
-                } else if (reaction.emoji.name === "❇") {
-                    reaction.remove(guildMember.user).catch(console.error);
-                    if (guildMember.id === this.stemmingPlayer.id || guildMember.hasPermission('BAN_MEMBERS')) {
-                        if (this.configuration.getParticipantsNames().length > 1) {
+
+                    if (reaction.emoji.name === "🐺") {
+                        this.configuration.addParticipant(guildMember);
+                        this.rolesHandler.addPlayerRole(guildMember).catch(console.error);
+                        this.updateParticipantsDisplay();
+                        reaction.users.remove(guildMember.user).catch(() => true);
+                        if (this.configuration.getParticipantsNames().length === this.MAX_PLAYERS) {
                             this.status = true;
                             gamePreparationMsg.collector.stop();
                         }
+                    } else if (reaction.emoji.name === "🚪") {
+                        this.rolesHandler.removeRoles(guildMember);
+                        this.configuration.removeParticipant(guildMember.id);
+                        this.updateParticipantsDisplay();
+                        reaction.users.remove(guildMember.user).catch(() => true);
+                    } else if (reaction.emoji.name === "❇") {
+                        reaction.users.remove(guildMember.user).catch(() => true);
+                        if (guildMember.id === this.stemmingPlayer.id || guildMember.hasPermission('BAN_MEMBERS')) {
+                            if (this.configuration.getParticipantsNames().length > 1) {
+                                this.status = true;
+                                gamePreparationMsg.collector.stop();
+                            }
+                        }
+                    } else if (reaction.emoji.name === "🔚") {
+                        reaction.users.remove(guildMember.user).catch(() => true);
+                        if (guildMember.id === this.stemmingPlayer.id || guildMember.hasPermission('BAN_MEMBERS')) {
+                            this.status = false;
+                            gamePreparationMsg.collector.stop();
+                        }
                     }
-                } else if (reaction.emoji.name === "🔚") {
-                    reaction.remove(guildMember.user).catch(console.error);
-                    if (guildMember.id === this.stemmingPlayer.id || guildMember.hasPermission('BAN_MEMBERS')) {
-                        this.status = false;
-                        gamePreparationMsg.collector.stop();
-                    }
-                }
+
+                }).catch(err => reject(err));
 
             }, () => {
                 if (this.status === false) {
@@ -406,7 +408,7 @@ class GamePreparation extends IGame {
                     LgLogger.info("User decided to end game", this.gameInfo);
                     resolve(false);
                 } else {
-                    gamePreparationMsg.removeReactionList(["🐺", "❇"]).catch(console.error);
+                    gamePreparationMsg.removeReactionList(["🐺", "❇"]).catch(() => true);
                     this.rolesHandler.assignRoles(this.configuration)
                         .then((configuration) => {
                             this.configuration = configuration;
@@ -414,7 +416,7 @@ class GamePreparation extends IGame {
                         })
                         .catch(err => reject(err));
                 }
-            }, (reaction) => reaction.count > 1 && reaction.users.last().id !== this.client.user.id);
+            }, (reaction) => reaction.count > 1 && reaction.users.cache.last().id !== this.client.user.id);
         });
     }
 
@@ -439,15 +441,15 @@ class GamePreparation extends IGame {
     }
 
     updateParticipantsDisplay() {
-        this.richEmbed.fields[this.richEmbed.fields.length - 1].value = this.configuration
+        this.MessageEmbed.fields[this.MessageEmbed.fields.length - 1].value = this.configuration
             .getParticipantsNames()
             .toString()
             .replace(/,+/g, "\n");
-        if (this.richEmbed.fields[this.richEmbed.fields.length - 1].value === "") {
-            this.richEmbed.fields[this.richEmbed.fields.length - 1].value = "Aucun participant pour le moment";
+        if (this.MessageEmbed.fields[this.MessageEmbed.fields.length - 1].value === "") {
+            this.MessageEmbed.fields[this.MessageEmbed.fields.length - 1].value = "Aucun participant pour le moment";
         }
-        this.richEmbed.setFooter(`Nombre de joueurs : ${this.configuration.getParticipantsNames().length}`);
-        this.msg.edit(this.richEmbed).catch(console.error);
+        this.MessageEmbed.setFooter(`Nombre de joueurs : ${this.configuration.getParticipantsNames().length}`);
+        this.msg.edit(this.MessageEmbed).catch(() => true);
     }
 
     askForChannelGeneration() {
@@ -737,14 +739,14 @@ class CommunicationHandler extends IGame {
     }
 
     static getLGSampleMsg() {
-        return new RichEmbed()
+        return new MessageEmbed()
             .setColor(BotData.BotValues.botColor)
             .setAuthor("Loup-Garou de Thiercelieux", lg_var.roles_img.LoupGarou);
     }
 
     static reconstructEmbed(messageEmbed) {
 
-        let newEmbed = new RichEmbed();
+        let newEmbed = new MessageEmbed();
 
         if (messageEmbed.author) newEmbed.setAuthor(messageEmbed.author);
         if (messageEmbed.color) newEmbed.setColor(messageEmbed.color);
@@ -757,9 +759,7 @@ class CommunicationHandler extends IGame {
 
         messageEmbed.fields.forEach(field => {
 
-            if (field.name === '\u200B' && field.value === '\u200B') {
-                newEmbed.addBlankField(field.inline);
-            } else {
+            if (!(field.name === '\u200B' && field.value === '\u200B')) {
                 newEmbed.addField(field.name, field.value, field.inline);
             }
 

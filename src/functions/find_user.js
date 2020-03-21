@@ -1,9 +1,9 @@
 let find_user = (client, name) => {
     name = name.toLowerCase().trim();
     let result = null;
-    client.guilds.array().forEach(guild => {
+    client.guilds.cache.array().forEach(guild => {
 
-        guild.members.array().forEach(member => {
+        guild.members.cache.array().forEach(member => {
 
             if (member.nickname && member.nickname.toLowerCase().trim().includes(name)) {
                 result = member;

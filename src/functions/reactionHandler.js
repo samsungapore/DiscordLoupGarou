@@ -22,52 +22,33 @@ class ReactionHandler {
 
     /**
      * removes every reactions of the message
-     * @returns {Promise<bool>} resolve(true) if success, reject(err_message) if failure
+     * @returns {Promise<Message>} resolve(Message) if success
      */
     removeAllReactions() {
-        return new Promise((resolve, reject) => {
-            if (!this.message) {
-                reject("Message is undefined or null");
-            }
-            let reactionPromises = [];
-            this.message.reactions.array().forEach(react => {
-                reactionPromises.push(react.remove());
-            });
-
-            Promise.all(reactionPromises).then(() => {
-                resolve(this);
-            }).catch(err => reject(err));
-        });
+        return this.message.reactions.removeAll();
     }
 
-    /**
-     *
-     * @param notordered if set to true, adds the reactions without order
-     * @returns {Promise<bool>} resolve(true) if success, reject(err_message) if failure
-     */
-    addReactions(notordered) {
-        return new Promise((resolve, reject) => {
+    async addReactions(notordered) {
 
-            let promises = [];
+        let promises = [];
 
-            if (!notordered) {
+        if (!notordered) {
 
-                let addAll = async () => {
-                    for (let i = 0; i < this.reactionList.length; i++) {
-                        await this.message.react(this.reactionList[i]);
-                    }
-                };
-                promises.push(addAll());
-
-            } else {
-
-                this.reactionList.forEach(reaction => {
-                    promises.push(this.message.react(reaction))
-                });
-
+            for (let i = 0; i < this.reactionList.length; i++) {
+                await this.message.react(this.reactionList[i]);
             }
-            Promise.all(promises).then(() => resolve(this)).catch(err => reject(err));
-        });
+
+        } else {
+
+            this.reactionList.forEach(reaction => {
+                promises.push(this.message.react(reaction))
+            });
+
+        }
+
+        await Promise.allSettled(promises);
+
+        return this;
     }
 
     addReaction(reaction) {
@@ -76,7 +57,7 @@ class ReactionHandler {
     }
 
     async addReactionList(reactionList) {
-        for (let i = 0 ; i < reactionList.length ; i++) {
+        for (let i = 0; i < reactionList.length; i++) {
             await this.message.react(reactionList[i]);
         }
     }
@@ -84,8 +65,8 @@ class ReactionHandler {
     removeReaction(reaction) {
         this.reactionList.splice(this.reactionList.indexOf(reaction), 1);
 
-        let reactionArray = this.message.reactions.array();
-        for (let i = 0 ; i < reactionArray.length ; i++) {
+        let reactionArray = this.message.reactions.cache.array();
+        for (let i = 0; i < reactionArray.length; i++) {
             if (reactionArray[i].emoji.name === reaction) {
                 return reactionArray[i].remove();
             }
@@ -97,14 +78,14 @@ class ReactionHandler {
 
         let reaction;
 
-        for (let i = 0 ; i < reactionList.length ; i++) {
+        for (let i = 0; i < reactionList.length; i++) {
 
             reaction = reactionList[i];
 
             this.reactionList.splice(this.reactionList.indexOf(reaction), 1);
 
-            let reactionArray = this.message.reactions.array();
-            for (let i = 0 ; i < reactionArray.length ; i++) {
+            let reactionArray = this.message.reactions.cache.array();
+            for (let i = 0; i < reactionArray.length; i++) {
                 if (reactionArray[i].emoji.name === reaction) {
                     await reactionArray[i].remove();
                 }

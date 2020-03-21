@@ -1,7 +1,7 @@
 const EveryOneVote = require("../../lg_vote").EveryOneVote;
 const ReactionHandler = require("../../../functions/reactionHandler").ReactionHandler;
 const Villageois = require("../baseRole").Villageois;
-let RichEmbed = require('discord.js').RichEmbed;
+let MessageEmbed = require('discord.js').MessageEmbed;
 
 /**
  * * First Night
@@ -46,8 +46,8 @@ class Sorciere extends Villageois {
     askIfWannaSave(lgTarget) {
         return new Promise((resolve, reject) => {
 
-            this.dmChannel.send(new RichEmbed()
-                .setAuthor(lgTarget.member.displayName, lgTarget.member.user.avatarURL)
+            this.dmChannel.send(new MessageEmbed()
+                .setAuthor(lgTarget.member.displayName, lgTarget.member.user.avatarURL())
                 .setTitle(`Voulez-vous sauver ${lgTarget.member.displayName} ?`)
                 .addField(`✅ Oui`, "Réagissez avec ✅ pour utiliser votre potion de vie")
                 .addField(`❌ Non`, "Réagissez avec ❌ pour ne rien faire face à cette situation")
@@ -81,8 +81,8 @@ class Sorciere extends Villageois {
 
             let promises = [];
 
-            this.dmChannel.send(new RichEmbed()
-                .setAuthor(this.member.displayName, this.member.user.avatarURL)
+            this.dmChannel.send(new MessageEmbed()
+                .setAuthor(this.member.displayName, this.member.user.avatarURL())
                 .setTitle(`Voulez-vous tuer une personne ?`)
                 .addField(`✅ Oui`, "Réagissez avec ✅ pour utiliser votre potion de poison sur quelqu'un")
                 .addField(`❌ Non`, "Réagissez avec ❌ pour ne rien faire")
@@ -148,8 +148,8 @@ class Sorciere extends Villageois {
             this.getDMChannel()
                 .then((dmChannel) => {
 
-                    dmChannel.send(new RichEmbed().setColor(this.member.displayColor)
-                        .setAuthor("Voici ton inventaire de potions", this.member.user.avatarURL)
+                    dmChannel.send(new MessageEmbed().setColor(this.member.displayColor)
+                        .setAuthor("Voici ton inventaire de potions", this.member.user.avatarURL())
                         .addField("Poison", this.potions.poison, true)
                         .addField("Vie", this.potions.vie, true)
                     ).catch(() => true);

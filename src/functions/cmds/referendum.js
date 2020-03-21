@@ -1,7 +1,7 @@
 const referendumChannelId = "479635710069178370";
 const BotData = require("../../BotData.js");
 const ReactionHandler = require("../reactionHandler").ReactionHandler;
-const RichEmbed = require("discord.js").RichEmbed;
+const MessageEmbed = require("discord.js").MessageEmbed;
 const Wait = require('../../functions/wait').Wait;
 
 class Sondage {
@@ -47,7 +47,7 @@ class Sondage {
                 embed: {
                     author: {
                         name: "Sondage",
-                        icon_url: this.client.user.avatarURL
+                        icon_url: this.client.user.avatarURL()
                     },
                     title: this.options[0],
                     fields: this.field_content
@@ -94,7 +94,7 @@ class Sondage {
                         embed: {
                             author: {
                                 name: "Sondage - Résultats",
-                                icon_url: this.client.user.avatarURL
+                                icon_url: this.client.user.avatarURL()
                             },
                             title: this.options[0],
                             fields: this.field_content
@@ -118,7 +118,7 @@ class SondageInfiniteChoice {
      * @param choices Array
      * @param channel Channel
      * @param time Milliseconds
-     * @param embed RichEmbed
+     * @param embed MessageEmbed
      * @param deleteIt Delete sondage afterwards
      * @param deleteAll Delete all responses
      * @param maxVotes Maximum votes
@@ -144,7 +144,7 @@ class SondageInfiniteChoice {
         if (embed) {
             this.embed = embed;
         } else {
-            this.embed = new RichEmbed();
+            this.embed = new MessageEmbed();
         }
 
         this.choices = new Map();
@@ -211,8 +211,8 @@ class SondageInfiniteChoice {
     }
 
     updateDisplay() {
-        this.embed.fields[2].value = this.getVoteData().toString();
-        this.embed.fields[4].value = this.getVoters().toString();
+        this.embed.fields[1].value = this.getVoteData().toString();
+        this.embed.fields[2].value = this.getVoters().toString();
         this.msg.edit(this.embed).catch(() => true);
     }
 
@@ -228,10 +228,8 @@ class SondageInfiniteChoice {
             this.embed = this.embed
                 .setTitle(this.question)
                 .setDescription("Veuillez taper le nombre correspondant à votre choix avec la commande ```vote <nombre>```")
-                .addBlankField()
                 .addField("Choix", this.getChoiceList().toString(), true)
                 .addField("Votes", this.getVoteData().toString(), true)
-                .addBlankField()
                 .addField("Votants", "Zéro votants", true)
                 .setFooter(`${this.time / 1000} secondes avant la fin du vote`);
 
@@ -345,7 +343,7 @@ class SondageInfiniteChoice {
                         this.msg.edit(this.embed
                             .setAuthor("**Vote terminé**")
                             .setFooter("Vote terminé")
-                        ).catch(console.error);
+                        ).catch(() => true);
                     }
 
                     let responseArray = [];
