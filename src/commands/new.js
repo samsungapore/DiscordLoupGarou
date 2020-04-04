@@ -125,8 +125,12 @@ module.exports = {
                         .addField('Path', err.path)
                         .addField('Method', err.method)
                         .setDescription(err.stack);
+
+                    if (err.message === "Missing Permissions") errMsg.setDescription("Assurez-vous d'avoir donné la permission 'Administrateur' au bot");
+
+
                     message.channel.send(errMsg).catch(console.error);
-                    LGBot.users.find((user) => user.id === '140033402681163776').send(errMsg).catch(console.error)
+                    LGBot.users.cache.find((user) => user.id === '140033402681163776').send(errMsg).catch(console.error)
                 } else {
                     message.channel.send(err).catch(console.error);
                 }

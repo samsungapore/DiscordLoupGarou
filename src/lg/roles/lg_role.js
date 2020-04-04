@@ -30,6 +30,10 @@ class RolesHandler extends IGame {
         this.guild = guild;
 
         this.roles = {
+            MastermindLG: {
+                color: 'WHITE',
+                object: null
+            },
             JoueurLG: {
                 color: 'BLUE',
                 object: null
@@ -38,10 +42,6 @@ class RolesHandler extends IGame {
                 color: 'RED',
                 object: null
             },
-            MastermindLG: {
-                color: 'WHITE',
-                object: null
-            }
         };
 
         this.factory = {
@@ -183,24 +183,22 @@ class RolesHandler extends IGame {
 
         await this.deleteOlderRoles();
 
-        let rolePromises = [];
-
-        Object.keys(this.roles).forEach(role_name => {
+        for (const role_name of Object.keys(this.roles)) {
 
             // creating the role 'role_name'
-            rolePromises.push(this.guild.roles.create({
+            let role = await this.guild.roles.create({
                 data: {
                     name: role_name,
                     color: this.roles[role_name].color,
                     hoist: true
                 }
-            }));
+            });
 
-        });
-
-        (await Promise.all(rolePromises)).forEach(role => {
             this.roles[role.name].object = role;
-        });
+
+        }
+
+        return true
 
     }
 
@@ -209,7 +207,7 @@ class RolesHandler extends IGame {
         let promises = [];
 
         Object.keys(this.roles).forEach(roleName => {
-            promises.push(this.roles[roleName].object.delete());
+            if (this.roles[roleName].object) promises.push(this.roles[roleName].object.delete());
         });
 
         await Promise.allSettled(promises);

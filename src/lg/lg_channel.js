@@ -266,7 +266,7 @@ class ChannelsHandler extends IGame {
                 if (channel.type === 'text') promises.push(channel.delete());
             }
 
-            Promise.all(promises).then(() => resolve(true)).catch(err => reject(err));
+            Promise.allSettled(promises).then(() => resolve(true)).catch(() => true);
 
         });
     }

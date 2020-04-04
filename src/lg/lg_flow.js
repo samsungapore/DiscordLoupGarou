@@ -1142,6 +1142,13 @@ class FirstNight extends Night {
                 cupidon.getChoice(this.GameConfiguration)
                 .then(([id1, id2]) => {
 
+                    if (!id1 || !id2) {
+                        this.GameConfiguration.channelsHandler.sendMessageToVillage(
+                            "💘 **Cupidon** se rendort.", undefined, lg_var.roles_img.Cupidon
+                        ).then(() => resolve(this.GameConfiguration)).catch(err => reject(err));
+                        return;
+                    }
+
                     let choice1 = this.GameConfiguration._players.get(id1);
                     let choice2 = this.GameConfiguration._players.get(id2);
 
@@ -1154,6 +1161,14 @@ class FirstNight extends Night {
 
                         if (!choice1) choice1 = randomChoice;
                         if (!choice2) choice2 = get_random_in_array(players);
+                    }
+
+                    if (!choice2 || !choice1) {
+                        this.GameConfiguration.channelsHandler.sendMessageToVillage(
+                            "💘 **Cupidon** se rendort.", undefined, lg_var.roles_img.Cupidon
+                        ).catch(console.error);
+                        resolve(this.GameConfiguration);
+                        return;
                     }
 
                     choice1.amoureux = choice2.member.id;

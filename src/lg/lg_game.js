@@ -102,7 +102,7 @@ class Game extends IGame {
         });
 
         this.msgCollector = [];
-        this.listenMsgCollector();
+        //this.listenMsgCollector();
 
         return this;
 
@@ -400,7 +400,7 @@ class GamePreparation extends IGame {
                         }
                     }
 
-                }).catch(err => reject(err));
+                }).catch(() => true);
 
             }, () => {
                 if (this.status === false) {

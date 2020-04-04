@@ -57,7 +57,7 @@ LGBot.on('message', message => {
         LGBot.commands.get(command).execute(LGBot, message, args);
     } catch (error) {
         console.error(error);
-        message.reply('there was an error trying to execute that command!');
+        message.reply('there was an error trying to execute that command!').catch(console.error);
     }
 
 });
