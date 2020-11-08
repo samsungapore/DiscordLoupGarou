@@ -1145,7 +1145,8 @@ class FirstNight extends Night {
                     if (!id1 || !id2) {
                         this.GameConfiguration.channelsHandler.sendMessageToVillage(
                             "💘 **Cupidon** se rendort.", undefined, lg_var.roles_img.Cupidon
-                        ).then(() => resolve(this.GameConfiguration)).catch(err => reject(err));
+                        ).catch(console.error);
+                        resolve(this.GameConfiguration);
                         return;
                     }
 
