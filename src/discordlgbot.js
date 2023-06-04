@@ -24,7 +24,7 @@ LGBot.on('ready', () => {
     console.info('The bot is ready.');
     console.info(`Connected to ${LGBot.guilds.cache.size} servers, servicing ${LGBot.users.cache.size} users.`);
 
-    LGBot.user.setActivity("lg/new - Réalisé par Kazuhiro - 和宏 - 龙马 - 카즈히로#1248").catch(console.error);
+    LGBot.user.setActivity("lg/new").catch(console.error);
 
 });
 
