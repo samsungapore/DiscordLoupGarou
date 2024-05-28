@@ -5,7 +5,7 @@
   "dependencies": {
     "discord.js": "^12.0.2",
     "dotenv": "^8.2.0",
-    "googleapis": "^47.0.0",
+    "googleapis": "^137.1.0",
     "graceful-fs": "^4.2.3",
     "isomorphic-fetch": "^3.0.0",
     "keyv": "^4.0.0",
