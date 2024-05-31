@@ -1,5 +1,25 @@
 const Discord = require('discord.js');
-const LGBot = new Discord.Client();
+const {GatewayIntentBits} = require('discord-api-types/v10');
+
+// ClientOptions type
+const clientOptions = {
+    allowedMentions: {
+        parse: ['users', 'roles'],
+        repliedUser: true
+    },
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.GuildMessageReactions,
+        GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildPresences,
+        GatewayIntentBits.DirectMessages,
+        GatewayIntentBits.MessageContent,
+    ],
+    partials: ['MESSAGE', 'CHANNEL', 'REACTION']
+}
+
+const LGBot = new Discord.Client(clientOptions);
 
 // UTC + x
 const UTC_LOCAL_TIMESIFT = 1;
@@ -22,9 +42,13 @@ for (const file of fs.readdirSync('./src/commands')) {
 LGBot.on('ready', () => {
 
     console.info('The bot is ready.');
-    console.info(`Connected to ${LGBot.guilds.cache.size} servers, servicing ${LGBot.users.cache.size} users.`);
+    console.info(`Connected to ${LGBot.guilds.cache.size} servers, servicing ${LGBot.users.cache.size} unique users.`);
+    // Print all server names
+    LGBot.guilds.cache.forEach(guild => {
+        console.info(`Connected to server: ${guild.id}-${guild.name} with ${guild.memberCount} members.`);
+    });
 
-    LGBot.user.setActivity("lg/new - Réalisé par Kazuhiro - 和宏 - 龙马 - 카즈히로#1248").catch(console.error);
+    LGBot.user.setActivity("lg/new - Réalisé par .kazuhiro_");
 
 });
 
@@ -40,7 +64,7 @@ LGBot.on('resume', nb => {
     console.info(`Connection resumed. Replayed: ${nb}`);
 });
 
-LGBot.on('message', message => {
+LGBot.on('messageCreate', message => {
 
     if (message.author.bot) return;
 
