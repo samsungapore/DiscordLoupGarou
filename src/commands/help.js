@@ -1,13 +1,13 @@
-const MessageEmbed = require('discord.js').MessageEmbed;
 let botData = require("../BotData.js");
 const fs = require('fs');
+const LGDBEmbed = require("../utils/embed");
 
 module.exports = {
     name: 'help',
     description: 'afficher ce message d\'aide',
     execute(LGBot, message) {
 
-        let helpMsg = new MessageEmbed()
+        let helpMsg = new LGDBEmbed()
             .setColor(botData.BotValues.botColor)
             .setImage(LGBot.user.avatarURL())
             .setTitle("Guide pour jouer");
@@ -19,19 +19,27 @@ module.exports = {
             const command = require(`./${file}`);
 
             if (i === 25) {
-                message.channel.send(helpMsg).catch(console.error);
+                message.channel.send({
+                    embeds: [
+                        helpMsg.build()
+                    ]
+                }).catch(console.error);
                 i = 0;
-                helpMsg = new MessageEmbed()
+                helpMsg = new LGDBEmbed()
                     .setColor(botData.BotValues.botColor)
                     .setImage(LGBot.user.avatarURL())
                     .setTitle("Guide pour jouer");
             }
 
-            helpMsg.addField(command.name, command.description);
+            helpMsg.addField(command.name, command.description === '' ? 'Pas de description' : command.description);
 
             i++;
         }
 
-        message.channel.send(helpMsg).catch(console.error);
+        message.channel.send({
+            embeds: [
+                helpMsg.build()
+            ]
+        }).catch(console.error);
     },
 };
