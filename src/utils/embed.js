@@ -22,7 +22,7 @@ class LGDBEmbed {
     }
 
     addField(name, value) {
-        const fieldNumberId = this.embed.data.fields.length + 1;
+        const fieldNumberId = this.embed.data.fields?.length + 1 || 0;
         if (!name) {
             name = `#${fieldNumberId}`;
         }

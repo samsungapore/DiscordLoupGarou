@@ -1,4 +1,4 @@
-const Discord = require('discord.js');
+const {LGDB} = require('./LGDB');
 const {GatewayIntentBits} = require('discord-api-types/v10');
 
 // ClientOptions type
@@ -19,25 +19,9 @@ const clientOptions = {
     partials: ['MESSAGE', 'CHANNEL', 'REACTION']
 }
 
-const LGBot = new Discord.Client(clientOptions);
+const LGBot = new LGDB(clientOptions).init();
 
-// UTC + x
-const UTC_LOCAL_TIMESIFT = 1;
-
-const fs = require('graceful-fs');
 const BotData = require("./BotData");
-
-LGBot.Settings = new Map();
-
-LGBot.LG = new Map();
-
-LGBot.commands = new Discord.Collection();
-
-for (const file of fs.readdirSync('./src/commands')) {
-    const command = require(`./commands/${file}`);
-
-    LGBot.commands.set(command.name, command);
-}
 
 LGBot.on('ready', () => {
 

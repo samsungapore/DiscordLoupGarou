@@ -1,5 +1,5 @@
 const MessageEmbed = require('discord.js').MessageEmbed;
-let botData = require("../BotData.js");
+let BotData = require("../BotData.js");
 
 let restartBot = (message) => {
     const {exec} = require('child_process');
@@ -35,9 +35,9 @@ let getOccupiedGuilds = (LGBot) => {
 
 module.exports = {
     name: 'restart',
-    description: 'ADMIN|relancer le bot',
+    description: 'réservé au développeur du bot',
     execute(LGBot, message, args) {
-        if (message.author.id === "140033402681163776") {
+        if (BotData.BotValues.botOwners.includes(message.author.id)) {
 
             let msg = args.join(' ');
             LGBot.Settings.set("RestartMsg", msg);

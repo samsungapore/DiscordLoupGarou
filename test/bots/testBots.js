@@ -1,3 +1,4 @@
+/*
 const Discord = require('discord.js');
 
 const bots = {
@@ -58,3 +59,4 @@ Object.keys(bots).forEach(botName => {
     bots[botName].client.login(bots[botName].data.token).catch(console.error);
 
 });
+*/

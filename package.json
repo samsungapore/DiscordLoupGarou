@@ -9,7 +9,9 @@
     "graceful-fs": "^4.2.3",
     "isomorphic-fetch": "^3.0.0",
     "keyv": "^4.0.0",
+    "mocha": "^10.4.0",
     "node-webhooks": "^1.4.2",
+    "sqlite3": "^5.1.7",
     "winston": "^3.2.1",
     "winston-daily-rotate-file": "^5.0.0",
     "ytdl-core": "^4.11.5"
@@ -18,18 +20,9 @@
     "start": "node src/discordlgbot.js",
     "run": "pm2 src/main.js",
     "restart": "pm2 main restart",
-    "stop": "pm2 main stop"
+    "stop": "pm2 main stop",
+    "test": "mocha --recursive --exit"
   },
-  "contributors": [
-    {
-      "name": "Julien Sarriot",
-      "email": "julien.sarriot@epitech.eu"
-    },
-    {
-      "name": "Samuel Radat",
-      "email": "samuel.radat@epitech.eu"
-    }
-  ],
   "license": "GPL-3.0",
   "devDependencies": {
     "discord-api-types": "^0.37.86"
