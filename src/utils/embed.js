@@ -22,6 +22,13 @@ class LGDBEmbed {
     }
 
     addField(name, value) {
+        const fieldNumberId = this.embed.data.fields.length + 1;
+        if (!name) {
+            name = `#${fieldNumberId}`;
+        }
+        if (!value) {
+            value = 'Empty field.';
+        }
         this.embed = this.embed.addFields({name, value});
         return this;
     }
