@@ -1,4 +1,4 @@
 .idea
 node_modules
-src/BotData
+./src/BotData.js
 data
