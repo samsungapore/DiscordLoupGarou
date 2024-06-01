@@ -30,7 +30,7 @@ describe('persistLGData', function () {
         }
     });
 
-    it('should persist the LG data to the database', function () {
+    it('should persist the LG data to the database', async function () {
         // test code here
 
         const LG = new Map(
@@ -38,7 +38,7 @@ describe('persistLGData', function () {
                 ['test', BotData.LG]
             ]
         );
-        persistLGData(LG);
+        await persistLGData(LG);
 
         assert.equal(LG.size, 1);
 
@@ -47,12 +47,12 @@ describe('persistLGData', function () {
         assert.ok(fs.existsSync(path));
     });
 
-    after(function () {
+    /*after(function () {
         // runs after all tests in this block
         // remove the files in lg folder
         const files = fs.readdirSync('./data/lg');
         for (const file of files) {
             fs.unlinkSync(`./data/lg/${file}`);
         }
-    });
+    });*/
 });

@@ -32,37 +32,24 @@ class LGDB extends Discord.Client {
     }
 }
 
-const sqlite3 = require('sqlite3').verbose();
+// import sqlite3 promisified
+const {AsyncDatabase} = require("promised-sqlite3");
 
-function persistLGData(LG = new Map()) {
+async function persistLGData(LG = new Map()) {
     console.info(`Persisting LG data to the database. of ${JSON.stringify(LG)}`)
 
-    Array.from(LG.entries()).forEach(([key, value]) => {
-        let db = new sqlite3.Database(`./data/lg/${key}.db`, sqlite3.OPEN_READWRITE, (err) => {
-            if (err) {
-                console.error(err.message);
-            }
-            console.log(`Connected to the ${key} database.`);
-        });
+    for (let [key, value] of Array.from(LG.entries())) {
+        const db = await AsyncDatabase.open(`./data/lg/${key}.db`);
 
-        db.serialize(() => {
-            db.run(`CREATE TABLE IF NOT EXISTS lg (
-                    id TEXT PRIMARY KEY NOT NULL,
-                    running INTEGER DEFAULT 0,
-                    game TEXT DEFAULT NULL,
-                    stemming TEXT DEFAULT NULL,
-                )`);
+        await db.run(`CREATE TABLE IF NOT EXISTS lg (
+            running BOOLEAN NOT NULL DEFAULT false,
+            game TEXT DEFAULT null,
+            canRun TEXT DEFAULT '[]',
+            stemming TEXT DEFAULT null
+        )`);
 
-
-        });
-
-        db.close((err) => {
-            if (err) {
-                console.error(err.message);
-            }
-            console.log(`Connection to the ${key} database closed.`);
-        });
-    });
+        await db.close();
+    }
 }
 
 module.exports = {

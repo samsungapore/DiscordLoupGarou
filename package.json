@@ -11,6 +11,7 @@
     "keyv": "^4.0.0",
     "mocha": "^10.4.0",
     "node-webhooks": "^1.4.2",
+    "promised-sqlite3": "^2.1.0",
     "sqlite3": "^5.1.7",
     "winston": "^3.2.1",
     "winston-daily-rotate-file": "^5.0.0",
