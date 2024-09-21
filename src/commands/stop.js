@@ -1,4 +1,5 @@
 let botData = require("../BotData.js");
+const {checkPermissions} = require("../utils/permission");
 
 module.exports = {
     name: 'stop',
@@ -15,7 +16,7 @@ module.exports = {
             LGBot.LG.set(message.guild.id, LG);
         }
 
-        if (!message.member.hasPermission("BAN_MEMBERS") && !LG.canRun.includes(message.author.id)) {
+        if (!checkPermissions(message.member,"BAN_MEMBERS") && !LG.canRun.includes(message.author.id)) {
             message.channel.send("Vous n'avez pas la permission de stopper la partie").catch(console.error);
             return;
         }

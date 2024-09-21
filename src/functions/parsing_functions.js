@@ -1,5 +1,5 @@
 const BotData = require("../BotData");
-const MessageEmbed = require("discord.js").MessageEmbed;
+
 
 let shuffle_array = (a) => {
     for (let i = a.length - 1; i > 0; i--) {

@@ -1,7 +1,8 @@
 const lg_var = require("../lg_var");
+const MessageEmbed = require("../../utils/embed");
 const get_random_in_array = require("../../functions/parsing_functions").get_random_in_array;
 const EveryOneVote = require("../lg_vote").EveryOneVote;
-const MessageEmbed = require("discord.js").MessageEmbed;
+
 
 class Player {
 

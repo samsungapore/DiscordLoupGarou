@@ -34,6 +34,8 @@ LGBot.on('ready', () => {
 
     LGBot.user.setActivity("lg/new - Réalisé par .kazuhiro_");
 
+    console.log(`Le contenu de LG est ${JSON.stringify(LGBot.LG)}`);
+
 });
 
 LGBot.on('error', err => {

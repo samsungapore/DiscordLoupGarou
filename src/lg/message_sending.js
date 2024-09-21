@@ -1,6 +1,7 @@
-const MessageEmbed = require("discord.js").MessageEmbed;
+
 const lg_var = require('./lg_var.js');
 const BotData = require("../BotData.js");
+const MessageEmbed = require("../utils/embed");
 
 class IGame {
 

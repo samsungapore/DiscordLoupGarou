@@ -5,8 +5,10 @@ const LgLogger = require("../lg_logger");
 const get_random_in_array = require("../../functions/parsing_functions").get_random_in_array;
 const shuffle_array = require("../../functions/parsing_functions").shuffle_array;
 const ReactionHandler = require("../../functions/reactionHandler").ReactionHandler;
-const MessageEmbed = require("discord.js").MessageEmbed;
+
 const clone = require('../../functions/clone');
+
+const { Colors } = require('discord.js');
 
 class IGame {
 
@@ -31,15 +33,15 @@ class RolesHandler extends IGame {
 
         this.roles = {
             MastermindLG: {
-                color: 'WHITE',
+                color: Colors.White,
                 object: null
             },
             JoueurLG: {
-                color: 'BLUE',
+                color: Colors.Blue,
                 object: null
             },
             MortLG: {
-                color: 'RED',
+                color: Colors.Red,
                 object: null
             },
         };
@@ -180,26 +182,20 @@ class RolesHandler extends IGame {
     }
 
     async createRoles() {
-
         await this.deleteOlderRoles();
 
         for (const role_name of Object.keys(this.roles)) {
-
-            // creating the role 'role_name'
+            // Corrected role creation
             let role = await this.guild.roles.create({
-                data: {
-                    name: role_name,
-                    color: this.roles[role_name].color,
-                    hoist: true
-                }
+                name: role_name,
+                color: this.roles[role_name].color,
+                hoist: true,
             });
 
             this.roles[role.name].object = role;
-
         }
 
-        return true
-
+        return true;
     }
 
     async deleteRoles() {
@@ -299,29 +295,19 @@ class RolesHandler extends IGame {
         });
     }
 
-    assignRole(id, configuration) {
-        return new Promise((resolve, reject) => {
+    async assignRole(configuration) {
+        let participantArray = shuffle_array(Array.from(configuration.getParticipants().keys()));
+        let promises = participantArray.map(playerId => this.assignRole(playerId, configuration));
 
-            let found = false;
-
-            for (let i = 0; i < this.gameType.length; i++) {
-
-                if (!this.roleComplete(this.gameType[i])) {
-                    this.setRole(configuration.getParticipants().get(id), i)
-                        .then((player) => resolve(player))
-                        .catch(err => reject(err));
-                    found = true;
-                    break;
-                }
-
-            }
-
-            if (found === false) {
-                reject(`No role found for ${configuration.getParticipants().get(id).displayName}`)
-            }
-
-        });
+        try {
+            let players = await Promise.all(promises);
+            players.forEach(player => configuration.addPlayer(player));
+            return configuration;
+        } catch (err) {
+            throw err;
+        }
     }
+
 
     roleComplete(roleVar) {
         let complete = true;
@@ -377,7 +363,7 @@ class RolesHandler extends IGame {
 
             LgLogger.info(`Number of players : ${configuration.getPlayers().size}`, this.gameInfo);
             for (let player of configuration.getPlayers().values()) {
-                promises.push(player.member.send(lg_var.roles_desc[player.role]));
+                promises.push(player.member.user.send(lg_var.roles_desc[player.role]));
             }
 
             Promise.all(promises).then((messagesSend) => {

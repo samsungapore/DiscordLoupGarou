@@ -1,7 +1,9 @@
 const referendumChannelId = "479635710069178370";
 const BotData = require("../../BotData.js");
+const MessageEmbed = require("../../utils/embed");
+const {editMessage} = require("../../utils/message");
 const ReactionHandler = require("../reactionHandler").ReactionHandler;
-const MessageEmbed = require("discord.js").MessageEmbed;
+
 const Wait = require('../../functions/wait').Wait;
 
 class Sondage {
@@ -213,13 +215,13 @@ class SondageInfiniteChoice {
     updateDisplay() {
         this.embed.fields[1].value = this.getVoteData().toString();
         this.embed.fields[2].value = this.getVoters().toString();
-        this.msg.edit(this.embed).catch(() => true);
+        editMessage(this.msg,this.embed).catch(() => true);
     }
 
     updateTimer() {
         this.embed.setFooter(`${(this.time / 1000) - this.timerInterval} secondes avant la fin du vote`);
         this.timerInterval += 5;
-        this.msg.edit(this.embed).catch(() => true);
+        editMessage(this.msg,this.embed).catch(() => true);
     }
 
     post() {
@@ -340,7 +342,7 @@ class SondageInfiniteChoice {
                             this.embed.addField("**Choix du peuple**", `**${this.choices.get(higherChoice[0]).choice}**`, true);
                         }
 
-                        this.msg.edit(this.embed
+                        editMessage(this.msg,this.embed
                             .setAuthor("**Vote terminé**")
                             .setFooter("Vote terminé")
                         ).catch(() => true);

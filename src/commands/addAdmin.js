@@ -1,9 +1,9 @@
-const MessageEmbed = require('discord.js').MessageEmbed;
 let botData = require("../BotData.js");
+const {checkPermissions} = require("../utils/permission");
 
 let addAdmins = (LGBot, message) => {
 
-    if (message.member.hasPermission("BAN_MEMBERS")) {
+    if (checkPermissions(message.member,"BAN_MEMBERS")) {
 
         let Settings = LGBot.Settings.get(message.guild.id);
 

@@ -1,7 +1,7 @@
+const MessageEmbed = require("../../../utils/embed");
 const roles_img = require("../../lg_var").roles_img;
 const EveryOneVote = require("../../lg_vote").EveryOneVote;
 const Villageois = require("../baseRole").Villageois;
-let MessageEmbed = require('discord.js').MessageEmbed;
 
 class Voyante extends Villageois {
 

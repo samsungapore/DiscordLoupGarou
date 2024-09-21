@@ -1,4 +1,4 @@
-const MessageEmbed = require("discord.js").MessageEmbed;
+
 const BotData = require("../BotData.js");
 const lg_var = require('./lg_var.js');
 const LgLogger = require("./lg_logger");
@@ -13,6 +13,8 @@ const EventEmitter = require('events');
 const Vote = require("./lg_vote").DayVote;
 const CommunicationHandler = require('./message_sending').CommunicationHandler;
 let timeToString = require('../functions/time');
+const MessageEmbed = require("../utils/embed");
+const {editMessage} = require("../utils/message");
 const ReactionHandler = require("../functions/reactionHandler").ReactionHandler;
 const Message = require('discord.js').Message;
 
@@ -70,7 +72,7 @@ class GlobalTimer {
             if (!this.message) {
                 msgPromise.push(this.channel.send(this.embed));
             } else {
-                msgPromise.push(this.message.edit(this.embed));
+                msgPromise.push(editMessage(this.message, this.embed));
             }
 
             Promise.all(msgPromise)
@@ -123,7 +125,7 @@ class GlobalTimer {
             return true;
         } else {
             this.embed.setTitle(`${this.embed.title.split(':')[0]}: ${timeToString(this.time)}`);
-            await this.message.edit(this.embed);
+            await editMessage(this.message, this.embed);
             return false;
         }
     }

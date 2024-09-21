@@ -1,6 +1,6 @@
 const EmbedBuilder = require('discord.js').EmbedBuilder;
 
-class LGDBEmbed {
+class MessageEmbed {
     constructor() {
         this.embed = new EmbedBuilder();
         return this;
@@ -21,6 +21,26 @@ class LGDBEmbed {
         return this;
     }
 
+    setDescription(description) {
+        this.embed = this.embed.setDescription(description);
+        return this;
+    }
+
+    setAuthor(name, iconURL, url) {
+        const options = {
+            name: name,
+            icon_url: iconURL,
+            url: url
+        };
+        this.embed = this.embed.setAuthor(options);
+        return this;
+    }
+
+    setURL(url) {
+        this.embed = this.embed.setURL(url);
+        return this;
+    }
+
     addField(name, value) {
         const fieldNumberId = this.embed.data.fields?.length + 1 || 0;
         if (!name) {
@@ -36,6 +56,16 @@ class LGDBEmbed {
     build() {
         return this.embed;
     }
+
+    setThumbnail(thumbnail) {
+        this.embed = this.embed.setThumbnail(thumbnail);
+        return this;
+    }
+
+    setFooter(footer) {
+        this.embed = this.embed.setFooter(footer);
+        return this;
+    }
 }
 
-module.exports = LGDBEmbed;
+module.exports = MessageEmbed;

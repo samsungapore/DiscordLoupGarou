@@ -48,6 +48,11 @@ async function persistLGData(LG = new Map()) {
             stemming TEXT DEFAULT null
         )`);
 
+        await db.run(
+            `INSERT INTO lg (running, game, canRun, stemming) VALUES (?, ?, ?, ?)`,
+            [value.running, value.game, JSON.stringify(value.canRun), value.stemming]
+        );
+
         await db.close();
     }
 }

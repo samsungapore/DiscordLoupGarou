@@ -1,5 +1,5 @@
-const MessageEmbed = require("discord.js").MessageEmbed;
 const LgLogger = require("../../lg_logger");
+const MessageEmbed = require("../../../utils/embed");
 const EveryOneVote = require("../../lg_vote").EveryOneVote;
 const Villageois = require("../baseRole").Villageois;
 

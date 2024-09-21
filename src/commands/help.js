@@ -1,13 +1,13 @@
 let botData = require("../BotData.js");
 const fs = require('fs');
-const LGDBEmbed = require("../utils/embed");
+const MessageEmbed = require("../utils/embed");
 
 module.exports = {
     name: 'help',
     description: 'afficher ce message d\'aide',
     execute(LGBot, message) {
 
-        let helpMsg = new LGDBEmbed()
+        let helpMsg = new MessageEmbed()
             .setColor(botData.BotValues.botColor)
             .setImage(LGBot.user.avatarURL())
             .setTitle("Guide pour jouer");
@@ -25,7 +25,7 @@ module.exports = {
                     ]
                 }).catch(console.error);
                 i = 0;
-                helpMsg = new LGDBEmbed()
+                helpMsg = new MessageEmbed()
                     .setColor(botData.BotValues.botColor)
                     .setImage(LGBot.user.avatarURL())
                     .setTitle("Guide pour jouer");

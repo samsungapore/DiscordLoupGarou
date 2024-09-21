@@ -1,9 +1,9 @@
 let botData = require("../BotData.js");
 const LoupGarou = require("../lg/lg_game");
 const getMusics = require('../functions/googleSheets');
+const MessageEmbed = require("../utils/embed");
 const get_random_in_array = require("../functions/parsing_functions").get_random_in_array;
 const SondageInfiniteChoice = require("../functions/cmds/referendum").SondageInfiniteChoice;
-const MessageEmbed = require('discord.js').MessageEmbed;
 
 class GameOptions {
     constructor() {
@@ -89,6 +89,7 @@ let launchNewGame = async (LGBot, message, LG) => {
 
     LGBot.LG.set(message.guild.id, LG);
 
+    console.log(`GameOptions : ${JSON.stringify(gameOptions)}. Starting game.`);
     await LG.game.launch();
 
     LG = LGBot.LG.get(message.guild.id);
