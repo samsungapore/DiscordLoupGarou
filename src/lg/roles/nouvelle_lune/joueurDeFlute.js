@@ -1,6 +1,7 @@
 const send = require("../../message_sending");
 const lg_var = require("../../lg_var");
 const lg_func = require("../../lg_functions");
+const {sendEmbed} = require("../../../utils/message");
 const Player = require("../baseRole").Player;
 //let GroupDMChannel = require("discord.js").GroupDMChannel;
 let MessageEmbed = require("discord.js").MessageEmbed;
@@ -60,7 +61,7 @@ function joueurFlute(client, message) {
            let player_list = players.string;
            let players_array = players.array;
 
-           jFluteChan.send(
+           sendEmbed(jFluteChan,
                new MessageEmbed().setAuthor("Joueur de flûte", lg_var.roles_img.JoueurDeFlute).setColor(7419530)
                    .setDescription(
                        "Tu es le joueur de flûte, tu peux choisir de charmer jusqu'à deux joueurs"

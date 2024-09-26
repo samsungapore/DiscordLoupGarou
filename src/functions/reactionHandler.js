@@ -1,3 +1,5 @@
+const {PermissionsBitField} = require('discord.js');
+
 class ReactionHandler {
 
     /**
@@ -29,21 +31,16 @@ class ReactionHandler {
     }
 
     async addReactions(notordered) {
-
         let promises = [];
 
         if (!notordered) {
-
             for (let i = 0; i < this.reactionList.length; i++) {
                 await this.message.react(this.reactionList[i]);
             }
-
         } else {
-
             this.reactionList.forEach(reaction => {
-                promises.push(this.message.react(reaction))
+                promises.push(this.message.react(reaction));
             });
-
         }
 
         await Promise.allSettled(promises);
@@ -65,36 +62,32 @@ class ReactionHandler {
     removeReaction(reaction) {
         this.reactionList.splice(this.reactionList.indexOf(reaction), 1);
 
-        let reactionArray = this.message.reactions.cache.array();
+        let reactionArray = Array.from(this.message.reactions.cache.values());
         for (let i = 0; i < reactionArray.length; i++) {
             if (reactionArray[i].emoji.name === reaction) {
                 return reactionArray[i].remove();
             }
         }
-        return new Promise((resolve, reject) => resolve(this));
+        return new Promise((resolve) => resolve(this));
     }
 
     async removeReactionList(reactionList) {
-
         let reaction;
 
         for (let i = 0; i < reactionList.length; i++) {
-
             reaction = reactionList[i];
 
             this.reactionList.splice(this.reactionList.indexOf(reaction), 1);
 
-            let reactionArray = this.message.reactions.cache.array();
-            for (let i = 0; i < reactionArray.length; i++) {
-                if (reactionArray[i].emoji.name === reaction) {
-                    await reactionArray[i].remove();
+            let reactionArray = Array.from(this.message.reactions.cache.values());
+            for (let j = 0; j < reactionArray.length; j++) {
+                if (reactionArray[j].emoji.name === reaction) {
+                    await reactionArray[j].remove();
                 }
             }
-
         }
 
         return this;
-
     }
 
     /**
@@ -106,23 +99,18 @@ class ReactionHandler {
      */
     initCollector(func, endFunc, filter, options) {
         if (!filter) {
-            filter = () => {
-                return true;
-            };
+            filter = () => true;
         }
         if (!endFunc) {
-            endFunc = () => {
-                return true;
-            }
+            endFunc = () => true;
         }
         if (options) {
-            this.collector = this.message.createReactionCollector(filter, options);
+            this.collector = this.message.createReactionCollector({filter, ...options});
         } else {
-            this.collector = this.message.createReactionCollector(filter);
+            this.collector = this.message.createReactionCollector({filter});
         }
 
         this.collector.on('collect', func);
-
         this.collector.on('end', endFunc);
 
         return this;

@@ -1,3 +1,4 @@
+const {sendEmbed} = require("../../../utils/message");
 const EveryOneVote = require("../../lg_vote").EveryOneVote;
 const ReactionHandler = require("../../../functions/reactionHandler").ReactionHandler;
 const Villageois = require("../baseRole").Villageois;
@@ -46,7 +47,7 @@ class Sorciere extends Villageois {
     askIfWannaSave(lgTarget) {
         return new Promise((resolve, reject) => {
 
-            this.dmChannel.send(new MessageEmbed()
+            sendEmbed(this.dmChannel, new MessageEmbed()
                 .setAuthor(lgTarget.member.displayName, lgTarget.member.user.avatarURL())
                 .setTitle(`Voulez-vous sauver ${lgTarget.member.displayName} ?`)
                 .addField(`✅ Oui`, "Réagissez avec ✅ pour utiliser votre potion de vie")
@@ -81,7 +82,7 @@ class Sorciere extends Villageois {
 
             let promises = [];
 
-            this.dmChannel.send(new MessageEmbed()
+            sendEmbed(this.dmChannel, new MessageEmbed()
                 .setAuthor(this.member.displayName, this.member.user.avatarURL())
                 .setTitle(`Voulez-vous tuer une personne ?`)
                 .addField(`✅ Oui`, "Réagissez avec ✅ pour utiliser votre potion de poison sur quelqu'un")
@@ -148,7 +149,7 @@ class Sorciere extends Villageois {
             this.getDMChannel()
                 .then((dmChannel) => {
 
-                    dmChannel.send(new MessageEmbed().setColor(this.member.displayColor)
+                    sendEmbed(dmChannel, new MessageEmbed().setColor(this.member.displayColor)
                         .setAuthor("Voici ton inventaire de potions", this.member.user.avatarURL())
                         .addField("Poison", this.potions.poison, true)
                         .addField("Vie", this.potions.vie, true)

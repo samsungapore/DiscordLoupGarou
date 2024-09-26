@@ -1,5 +1,6 @@
 const LgLogger = require("../../lg_logger");
 const MessageEmbed = require("../../../utils/embed");
+const {sendEmbed} = require("../../../utils/message");
 const EveryOneVote = require("../../lg_vote").EveryOneVote;
 const Villageois = require("../baseRole").Villageois;
 
@@ -35,7 +36,7 @@ class EnfantSauvage extends Villageois {
                     .setDescription("Tu peux choisir ton modèle parmis les autres habitants du village." +
                         " Si ton modèle meurt, tu deviendras un Loup-Garou.");
 
-                return this.dmChannel.send(propositionMsg);
+                return sendEmbed(this.dmChannel, propositionMsg);
 
             }).then(() => {
 

@@ -10,474 +10,7 @@ const RolesHandler = require("./roles/lg_role").RolesHandler;
 const ReactionHandler = require("../functions/reactionHandler").ReactionHandler;
 const Wait = require('../functions/wait').Wait;
 const {checkPermissions} = require("../utils/permission");
-
-
-/**
- *
- * Yes, there are several compatibility issues in your code related to the updates in Node.js v20.17.0 and Discord.js v14.15.3. Discord.js v14 introduced significant breaking changes, and your code needs to be updated to accommodate these changes. Below, I'll detail the compatibility problems and provide solutions to update your code accordingly.
- *
- * ---
- *
- * ## **1. Updating Permissions Checks**
- *
- * ### **Problem**
- *
- * In Discord.js v14, the `hasPermission` method is deprecated. Instead, you should use `permissions.has()` with the appropriate permission flags from `PermissionsBitField`.
- *
- * #### **Your Code**
- *
- * ```javascript
- * if (guildMember.hasPermission('BAN_MEMBERS')) {
- *     // ...
- * }
- * ```
- *
- * ### **Solution**
- *
- * Import `PermissionsBitField` from `discord.js` and update the permissions checks.
- *
- * #### **Updated Code**
- *
- * ```javascript
- * const { PermissionsBitField } = require('discord.js');
- *
- * // ...
- *
- * if (guildMember.permissions.has(PermissionsBitField.Flags.BanMembers)) {
- *     // ...
- * }
- * ```
- *
- * ### **Explanation**
- *
- * - **Importing `PermissionsBitField`**: This provides access to permission flags.
- * - **Using `permissions.has()`**: This method replaces `hasPermission` and checks if the member has the specified permission.
- *
- * ---
- *
- * ## **2. Updating `MessageEmbed` to `EmbedBuilder`**
- *
- * ### **Problem**
- *
- * In Discord.js v14, `MessageEmbed` has been replaced with `EmbedBuilder`. Additionally, the way you set properties like author, footer, and fields has changed.
- *
- * #### **Your Code**
- *
- * ```javascript
- * const MessageEmbed = require("../utils/embed");
- *
- * // ...
- *
- * return new MessageEmbed()
- *     .setDescription("Loup-Garou de Thiercelieux")
- *     .setColor(BotData.BotValues.botColor)
- *     .setAuthor("Loup-Garou de Thiercelieux", lg_var.roles_img.LoupGarou);
- * ```
- *
- * ### **Solution**
- *
- * Import `EmbedBuilder` from `discord.js` and update your embed creation code.
- *
- * #### **Updated Code**
- *
- * ```javascript
- * const { EmbedBuilder } = require('discord.js');
- *
- * // ...
- *
- * return new EmbedBuilder()
- *     .setDescription("Loup-Garou de Thiercelieux")
- *     .setColor(BotData.BotValues.botColor)
- *     .setAuthor({ name: "Loup-Garou de Thiercelieux", iconURL: lg_var.roles_img.LoupGarou });
- * ```
- *
- * ### **Explanation**
- *
- * - **Importing `EmbedBuilder`**: This is the new class for creating embeds in Discord.js v14.
- * - **Setting Author**: Now requires an object with `name`, `iconURL`, and optionally `url`.
- * - **Using `addFields`**: Replaces `addField`.
- *
- * ---
- *
- * ## **3. Updating `addField` to `addFields`**
- *
- * ### **Problem**
- *
- * The `addField` method is deprecated and replaced by `addFields`, which accepts an array of field objects.
- *
- * #### **Your Code**
- *
- * ```javascript
- * this.MessageEmbed.addField("Rejoindre la partie", "Veuillez réagir avec la réaction 🐺", true);
- * ```
- *
- * ### **Solution**
- *
- * Use `addFields` and pass field objects.
- *
- * #### **Updated Code**
- *
- * ```javascript
- * this.MessageEmbed.addFields(
- *     { name: "Rejoindre la partie", value: "Veuillez réagir avec la réaction 🐺", inline: true },
- *     // ... other fields
- * );
- * ```
- *
- * ### **Explanation**
- *
- * - **Using `addFields`**: Allows you to add one or multiple fields at once using an array of field objects.
- * - **Field Objects**: Each field is an object with `name`, `value`, and `inline` properties.
- *
- * ---
- *
- * ## **4. Updating Reaction Handling**
- *
- * ### **Problem**
- *
- * Some methods related to reactions have changed in Discord.js v14, especially concerning reaction users.
- *
- * #### **Your Code**
- *
- * ```javascript
- * let user = reaction.users.cache.last();
- * reaction.users.remove(user).catch(() => true);
- * ```
- *
- * ### **Solution**
- *
- * Ensure that you're correctly accessing the user who added the reaction and removing their reaction.
- *
- * #### **Updated Code**
- *
- * ```javascript
- * const user = reaction.users.cache.get(reaction.users.cache.lastKey());
- * reaction.users.remove(user.id).catch(() => true);
- * ```
- *
- * ### **Explanation**
- *
- * - **Accessing Users**: `reaction.users.cache.lastKey()` gets the key (user ID) of the last user who reacted.
- * - **Removing Reaction**: Use the user ID when removing the reaction.
- *
- * ---
- *
- * ## **5. Updating Event Names**
- *
- * ### **Problem**
- *
- * The `message` event is now `messageCreate` in Discord.js v14.
- *
- * #### **Your Code**
- *
- * ```javascript
- * this.client.on('message', (message) => {
- *     // ...
- * });
- * ```
- *
- * ### **Solution**
- *
- * Update the event name to `messageCreate`.
- *
- * #### **Updated Code**
- *
- * ```javascript
- * this.client.on('messageCreate', (message) => {
- *     // ...
- * });
- * ```
- *
- * ### **Explanation**
- *
- * - **Event Name Change**: Discord.js v14 renamed the `message` event to `messageCreate` for clarity.
- *
- * ---
- *
- * ## **6. Updating Message Editing and Sending**
- *
- * ### **Problem**
- *
- * When editing or sending messages with embeds, you need to pass an object with an `embeds` array.
- *
- * #### **Your Code**
- *
- * ```javascript
- * this.msg.edit(this.MessageEmbed).catch(() => true);
- * this.preparationChannel.send(this.MessageEmbed).then(msg => {
- *     this.msg = msg;
- *     resolve(true);
- * }).catch(err => reject(err));
- * ```
- *
- * ### **Solution**
- *
- * Wrap your embeds in an object with an `embeds` property.
- *
- * #### **Updated Code**
- *
- * ```javascript
- * this.msg.editF({ embeds: [this.MessageEmbed] }).catch(() => true);
- * this.preparationChannel.send({ embeds: [this.MessageEmbed] }).then(msg => {
- *     this.msg = msg;
- *     resolve(true);
- * }).catch(err => reject(err));
- * ```
- *
- * ### **Explanation**
- *
- * - **Sending Embeds**: Discord.js v14 requires embeds to be sent within an object `{ embeds: [embed] }`.
- * - **Editing Messages**: Similarly, when editing a message to include an embed.
- *
- * ---
- *
- * ## **7. Updating Use of `setFooter`**
- *
- * ### **Problem**
- *
- * In Discord.js v14, `setFooter` now takes an object.
- *
- * #### **Your Code**
- *
- * ```javascript
- * this.MessageEmbed.setFooter(`Nombre de joueurs : ${this.configuration.getParticipantsNames().length}`);
- * ```
- *
- * ### **Solution**
- *
- * Update `setFooter` to pass an object with `text`.
- *
- * #### **Updated Code**
- *
- * ```javascript
- * this.MessageEmbed.setFooter({ text: `Nombre de joueurs : ${this.configuration.getParticipantsNames().length}` });
- * ```
- *
- * ### **Explanation**
- *
- * - **`setFooter` Change**: Now requires an object with `text` and optionally `iconURL`.
- *
- * ---
- *
- * ## **8. Importing Necessary Classes from `discord.js`**
- *
- * ### **Problem**
- *
- * You're not importing required classes like `EmbedBuilder` and `PermissionsBitField` from `discord.js`.
- *
- * ### **Solution**
- *
- * Import the necessary classes at the top of your file.
- *
- * #### **Updated Code**
- *
- * ```javascript
- * const { Client, PermissionsBitField, EmbedBuilder } = require('discord.js');
- * ```
- *
- * ### **Explanation**
- *
- * - **Importing Classes**: Ensures you have access to the updated classes and enums needed for Discord.js v14.
- *
- * ---
- *
- * ## **9. Ensuring Correct Use of `reaction.count` and `reaction.users`**
- *
- * ### **Problem**
- *
- * You need to confirm that `reaction.count` and `reaction.users.cache` are used correctly.
- *
- * #### **Your Code**
- *
- * ```javascript
- * if (reaction.count > 1 && reaction.users.cache.last().id !== this.client.user.id) {
- *     // ...
- * }
- * ```
- *
- * ### **Solution**
- *
- * Confirm that `reaction.count` and `reaction.users.cache` are still valid and adjust if necessary.
- *
- * #### **Updated Code**
- *
- * ```javascript
- * if (reaction.count > 1 && reaction.users.cache.lastKey() !== this.client.user.id) {
- *     // ...
- * }
- * ```
- *
- * ### **Explanation**
- *
- * - **`reaction.users.cache.lastKey()`**: Gets the ID of the last user who reacted.
- * - **Consistency**: Ensures that your checks are accurate and consistent with the updated Discord.js v14 methods.
- *
- * ---
- *
- * ## **10. Updating Client Intents**
- *
- * ### **Problem**
- *
- * Discord.js v14 requires specifying intents when creating the client.
- *
- * ### **Solution**
- *
- * Ensure your client is initialized with the necessary intents.
- *
- * #### **Updated Code**
- *
- * ```javascript
- * const { Client, GatewayIntentBits } = require('discord.js');
- *
- * const client = new Client({
- *     intents: [
- *         GatewayIntentBits.Guilds,
- *         GatewayIntentBits.GuildMembers,
- *         GatewayIntentBits.GuildMessages,
- *         GatewayIntentBits.MessageContent, // If you need to read message content
- *         GatewayIntentBits.GuildMessageReactions,
- *         GatewayIntentBits.DirectMessages, // If you need to send DMs
- *     ],
- * });
- * ```
- *
- * ### **Explanation**
- *
- * - **Specifying Intents**: Necessary for your bot to receive events related to messages, reactions, and other guild activities.
- *
- * ---
- *
- * ## **11. Updating `guildMember.user.send()`**
- *
- * ### **Problem**
- *
- * When sending direct messages to users, ensure you're using `guildMember.user.send()`.
- *
- * #### **Your Code**
- *
- * ```javascript
- * guildMember.send("Your message here");
- * ```
- *
- * ### **Solution**
- *
- * Update to send messages to the `User` object.
- *
- * #### **Updated Code**
- *
- * ```javascript
- * guildMember.user.send("Your message here");
- * ```
- *
- * ### **Explanation**
- *
- * - **`GuildMember` vs `User`**: The `GuildMember` object doesn't have a `send()` method; you need to use `guildMember.user`.
- *
- * ---
- *
- * ## **12. Updating Role Creation**
- *
- * ### **Problem**
- *
- * Ensure that role creation doesn't use the deprecated `data` property.
- *
- * #### **Your Code**
- *
- * ```javascript
- * let role = await this.guild.roles.create({
- *     data: {
- *         name: role_name,
- *         color: this.roles[role_name].color,
- *         hoist: true,
- *     },
- * });
- * ```
- *
- * ### **Solution**
- *
- * Remove the `data` property and pass the options directly.
- *
- * #### **Updated Code**
- *
- * ```javascript
- * let role = await this.guild.roles.create({
- *     name: role_name,
- *     color: this.roles[role_name].color,
- *     hoist: true,
- * });
- * ```
- *
- * ### **Explanation**
- *
- * - **Role Creation Update**: Discord.js v14 requires role options to be passed directly to `roles.create()`.
- *
- * ---
- *
- * ## **13. Updating Use of `MessageReaction` Methods**
- *
- * ### **Problem**
- *
- * Methods and properties of `MessageReaction` might have changed.
- *
- * #### **Your Code**
- *
- * ```javascript
- * reaction.users.remove(guildMember.user).catch(() => true);
- * ```
- *
- * ### **Solution**
- *
- * Ensure that the methods used are still valid in Discord.js v14.
- *
- * #### **Updated Code**
- *
- * ```javascript
- * reaction.users.remove(guildMember.id).catch(() => true);
- * ```
- *
- * ### **Explanation**
- *
- * - **Using User ID**: In some cases, you might need to use the user ID instead of the user object.
- *
- * ---
- *
- * ## **14. General Review of Code for Deprecated Methods**
- *
- * ### **Problem**
- *
- * There might be other methods that are deprecated or have changed.
- *
- * ### **Solution**
- *
- * - **Review the Discord.js v14 Documentation**: Check all methods and classes used in your code against the latest documentation.
- * - **Update Deprecated Methods**: Replace any deprecated methods with their updated equivalents.
- *
- * ### **Explanation**
- *
- * - **Staying Updated**: Ensures your bot remains compatible with the latest version of Discord.js.
- *
- * ---
- *
- * ## **15. Testing Your Updated Code**
- *
- * After making the above changes, it's crucial to test your bot thoroughly.
- *
- * - **Run Your Bot in a Test Environment**: Avoid running untested code in a production environment.
- * - **Check for Warnings and Errors**: Pay attention to any console warnings or errors and address them.
- * - **Test All Features**: Ensure that all commands, events, and features work as expected.
- * - **Update Dependencies**: Make sure all your npm packages are up to date.
- *
- * ---
- *
- * ## **Conclusion**
- *
- * By addressing these compatibility issues, your code should function correctly with Node.js v20.17.0 and Discord.js v14.15.3. Discord.js v14 introduced several breaking changes, so updating your code is essential to maintain your bot's functionality.
- *
- * If you encounter any further issues or need clarification on specific parts of the code, feel free to ask for additional assistance!
- *
- */
-
-
+const {PermissionsBitField} = require("discord.js");
 
 
 class IGame {
@@ -600,7 +133,7 @@ class Game extends IGame {
 
         await this.msg.delete();
 
-        this.msg = await this.stemmingChannel.send(CommunicationHandler.getLGSampleMsg()
+        this.msg = await sendEmbed(this.stemmingChannel, CommunicationHandler.getLGSampleMsg()
             .addField(
                 "Joueurs",
                 this.preparation.configuration
@@ -612,7 +145,7 @@ class Game extends IGame {
 
         await this.listenQuitEvents();
 
-        let msg = await this.stemmingChannel.send(CommunicationHandler.getLGSampleMsg()
+        let msg = await sendEmbed(this.stemmingChannel, CommunicationHandler.getLGSampleMsg()
             .addField(
                 "Le jeu va bientôt commencer", "Début du jeu dans 5 secondes"
             )
@@ -625,7 +158,7 @@ class Game extends IGame {
 
         let endMsg = await this.flow.run();
 
-        await this.stemmingChannel.send(endMsg);
+        await sendEmbed(this.stemmingChannel, endMsg);
         let msgSent = await this.stemmingChannel.send("Nettoyage des channels dans 5 secondes");
         await Wait.seconds(5);
         await msgSent.delete();
@@ -762,9 +295,12 @@ class GamePreparation extends IGame {
         this.rolesHandler = new RolesHandler(client, guild, this.gameInfo);
         this.channelsHandler = new ChannelsHandler(client, guild, this.gameInfo);
         //this.voiceHandler = new VoiceHandler(this.channelsHandler._channels.get(this.channelsHandler.voiceChannels.vocal_lg), gameOptions.musicMode);
+        this.configuration.rolesHandler = this.rolesHandler;
+        this.configuration.channelsHandler = this.channelsHandler;
 
+        this.channelsHandler.gameChannel = this.preparationChannel;
         this.msg = undefined;
-        this.MessageEmbed = undefined;
+        this.MessageEmbed = new MessageEmbed();
 
         this.keepChannels = false;
 
@@ -774,12 +310,13 @@ class GamePreparation extends IGame {
 
     prepareGame() {
         return new Promise((resolve, reject) => {
-            console.log("Preparing game...");
             this.init()
                 .then(() => this.createRoles())
                 .then(() => this.displayGuide())
                 .then(() => this.initEvents())
                 .then(status => {
+                    // Affiche la variable status dans un message bien formaté
+                    LgLogger.debug("Game preparation status =" + status, this.gameInfo);
                     if (!status) return resolve(status);
                     return this.setupChannels()
                 })
@@ -834,9 +371,13 @@ class GamePreparation extends IGame {
 
             gamePreparationMsg.addReactions().catch(err => reject(err));
 
-            gamePreparationMsg.initCollector((reaction) => {
+            gamePreparationMsg.initCollector(
+                /**
+                 * @param {import('discord.js').MessageReaction} reaction
+                 */
+                (reaction) => {
 
-                this.guild.members.fetch(reaction.users.cache.lastKey().id).then(guildMember => {
+                    this.guild.members.fetch(reaction.users.cache.lastKey()).then(guildMember => {
 
                     if (!guildMember) {
                         console.error(`${reaction.users.cache.last().username} non présent sur le serveur ${this.guild.name}`);
@@ -844,25 +385,34 @@ class GamePreparation extends IGame {
                     }
 
                     if (reaction.emoji.name === "🐺") {
+                        LgLogger.debug(`${guildMember.displayName} joined the game`, this.gameInfo);
                         this.configuration.addParticipant(guildMember);
                         this.rolesHandler.addPlayerRole(guildMember).catch(console.error);
                         this.updateParticipantsDisplay();
-                        reaction.users.remove(guildMember.id).catch(() => true);
+                        reaction.users.remove(guildMember).catch(() => true);
                         if (this.configuration.getParticipantsNames().length === this.MAX_PLAYERS) {
                             this.status = true;
                             gamePreparationMsg.collector.stop();
                         }
                     } else if (reaction.emoji.name === "🚪") {
+                        LgLogger.debug(`${guildMember.displayName} left the game`, this.gameInfo);
                         this.rolesHandler.removeRoles(guildMember);
                         this.configuration.removeParticipant(guildMember.id);
                         this.updateParticipantsDisplay();
                         reaction.users.remove(guildMember.id).catch(() => true);
                     } else if (reaction.emoji.name === "❇") {
+                        LgLogger.info("User decided to start game", this.gameInfo);
                         reaction.users.remove(guildMember.id).catch(() => true);
                         if (guildMember.id === this.stemmingPlayer.id || guildMember.permissions.has(PermissionsBitField.Flags.BanMembers)) {
                             if (this.configuration.getParticipantsNames().length > 1) {
                                 this.status = true;
                                 gamePreparationMsg.collector.stop();
+                            } else {
+                                this.preparationChannel.send("Il faut au moins 2 joueurs pour lancer la partie").then(msg => {
+                                    Wait.seconds(5).then(() => {
+                                        msg.delete().catch(() => true);
+                                    });
+                                }).catch(() => true);
                             }
                         }
                     } else if (reaction.emoji.name === "🔚") {
@@ -914,20 +464,22 @@ class GamePreparation extends IGame {
     }
 
     updateParticipantsDisplay() {
-        this.MessageEmbed.fields[this.MessageEmbed.fields.length - 1].value = this.configuration
+        let participantsDisplayText = this.configuration
             .getParticipantsNames()
             .toString()
             .replace(/,+/g, "\n");
-        if (this.MessageEmbed.fields[this.MessageEmbed.fields.length - 1].value === "") {
-            this.MessageEmbed.fields[this.MessageEmbed.fields.length - 1].value = "Aucun participant pour le moment";
+        if (participantsDisplayText === "") {
+            participantsDisplayText = "Aucun participant pour le moment";
         }
+
+        this.MessageEmbed.updateParticipationField(participantsDisplayText);
         this.MessageEmbed.setFooter(`Nombre de joueurs : ${this.configuration.getParticipantsNames().length}`);
         editMessage(this.msg, this.MessageEmbed).catch(() => true);
     }
 
     askForChannelGeneration() {
         return new Promise((resolve, reject) => {
-            this.preparationChannel.send(CommunicationHandler.getLGSampleMsg()
+            sendEmbed(this.preparationChannel, CommunicationHandler.getLGSampleMsg()
                 .setTitle("Voulez-vous garder les salons nécessaires au jeu sur le serveur discord une fois la partie terminée ?")
                 .setDescription("Garder les salons sur le serveur discord permet de ne plus les générer par la suite")
                 .addField("✅", "Garder les salons sur le serveur")
@@ -988,6 +540,10 @@ class GameConfiguration {
 
     getLGChannel() {
         return this.channelsHandler._channels.get(this.channelsHandler.channels.loups_garou_lg);
+    }
+
+    getGameChannel() {
+        return this.channelsHandler.gameChannel;
     }
 
     get villageChannel() {

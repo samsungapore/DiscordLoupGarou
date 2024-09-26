@@ -1,4 +1,5 @@
 const MessageEmbed = require("../../../utils/embed");
+const {sendEmbed} = require("../../../utils/message");
 const roles_img = require("../../lg_var").roles_img;
 const EveryOneVote = require("../../lg_vote").EveryOneVote;
 const Villageois = require("../baseRole").Villageois;
@@ -39,7 +40,7 @@ class Voyante extends Villageois {
 
                     roleDetected = target.role;
 
-                    return this.dmChannel.send(new MessageEmbed()
+                    return sendEmbed(this.dmChannel, new MessageEmbed()
                         .setAuthor(target.member.displayName, target.member.user.avatarURL())
                         .setTitle(target.role)
                         .setImage(roles_img[target.role])

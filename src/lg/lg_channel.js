@@ -2,6 +2,9 @@ const BotData = require("../BotData.js");
 const lg_var = require("./lg_var");
 const LgLogger = require("./lg_logger");
 const MessageEmbed = require("../utils/embed");
+const {ChannelType, PermissionsBitField} = require("discord.js");
+const {transformPermissions} = require("../utils/permission");
+const {sendEmbed} = require("../utils/message");
 
 
 class IGame {
@@ -18,6 +21,13 @@ class IGame {
 
 class ChannelsHandler extends IGame {
 
+    /**
+     *
+     * @param {import('discord.js').Client} client
+     * @param {import('discord.js').Guild} guild
+     * @param {GameInfo} gameInfo
+     * @returns {ChannelsHandler}
+     */
     constructor(client, guild, gameInfo) {
         super(client);
 
@@ -74,6 +84,7 @@ class ChannelsHandler extends IGame {
         });
 
         this.category = undefined;
+        this.gameChannel = undefined;
 
         this.channels = {
             thiercelieux_lg: undefined,
@@ -122,7 +133,7 @@ class ChannelsHandler extends IGame {
 
             let channel = this.guild.channels.cache.find(x => x.name === "loups_garou_de_thiercelieux");
 
-            if (channel && channel.type === "category") {
+            if (channel && channel.type === ChannelType.GuildCategory) {
                 this.category = channel.id;
                 this._channels.set(channel.id, channel);
                 return resolve(true);
@@ -144,10 +155,13 @@ class ChannelsHandler extends IGame {
             // check text channels
             Object.keys(this.channels).forEach(channelToFind => {
 
+                /**
+                 * @type {TextChannel} channel
+                 */
                 let channel = this.guild.channels.cache.find(x => x.name === channelToFind);
 
-                if (channel && channel.type === "text" &&
-                    channel.parentID === this.category) {
+                if (channel && channel.type === ChannelType.GuildText &&
+                    channel.parentId === this.category) {
                     this.channels[channelToFind] = channel.id;
                     this._channels.set(channel.id, channel);
                 }
@@ -161,10 +175,13 @@ class ChannelsHandler extends IGame {
             //check voice channels
             Object.keys(this.voiceChannels).forEach(channelToFind => {
 
+                /**
+                 * @type {TextChannel} channel
+                 */
                 let channel = this.guild.channels.cache.find(x => x.name === channelToFind);
 
-                if (channel && channel.type === "voice" &&
-                    channel.parentID === this.category) {
+                if (channel && channel.type === ChannelType.GuildVoice &&
+                    channel.parentId === this.category) {
                     this.voiceChannels[channelToFind] = channel.id;
                     this._channels.set(channel.id, channel);
                 }
@@ -190,7 +207,7 @@ class ChannelsHandler extends IGame {
 
         for (let channel of this._channels.values()) {
 
-            channel.permissionOverwrites.array().forEach(overwrite => {
+            channel.permissionOverwrites.cache.each(overwrite => {
                 promises.push(overwrite.delete());
             });
 
@@ -216,7 +233,10 @@ class ChannelsHandler extends IGame {
         let promises = [];
 
         if (!this.category) {
-            let categoriesCreated = await this.guild.channels.create("loups_garou_de_thiercelieux", {type: 'category'});
+            let categoriesCreated = await this.guild.channels.create({
+                name: "loups_garou_de_thiercelieux",
+                type: ChannelType.GuildCategory
+            });
             this.category = categoriesCreated.id;
             this._channels.set(categoriesCreated.id, categoriesCreated);
         }
@@ -224,8 +244,9 @@ class ChannelsHandler extends IGame {
         //create text channels
         Object.keys(this.channels).forEach(channelName => {
             if (!this.channels[channelName]) {
-                promises.push(this.guild.channels.create(channelName, {
-                    type: "text",
+                promises.push(this.guild.channels.create({
+                    name: channelName,
+                    type: ChannelType.GuildText,
                     parent: this._channels.get(this.category)
                 }));
             }
@@ -234,8 +255,9 @@ class ChannelsHandler extends IGame {
         //create voice channels
         Object.keys(this.voiceChannels).forEach(channelName => {
             if (!this.voiceChannels[channelName]) {
-                promises.push(this.guild.channels.create(channelName, {
-                    type: "voice",
+                promises.push(this.guild.channels.create({
+                    name: channelName,
+                    type: ChannelType.GuildVoice,
                     parent: this._channels.get(this.category)
                 }));
             }
@@ -245,9 +267,9 @@ class ChannelsHandler extends IGame {
 
         channelsCreated.forEach(createdChannel => {
 
-            if (createdChannel.type === "text") {
+            if (createdChannel.type === ChannelType.GuildText) {
                 this.channels[createdChannel.name] = createdChannel.id;
-            } else if (createdChannel.type === "voice") {
+            } else if (createdChannel.type === ChannelType.GuildVoice) {
                 this.voiceChannels[createdChannel.name] = createdChannel.id;
             }
 
@@ -264,13 +286,28 @@ class ChannelsHandler extends IGame {
             let promises = [];
 
             for (let channel of this._channels.values()) {
-                if (channel.type === 'text') promises.push(channel.delete());
+                if (channel.type === ChannelType.GuildText) promises.push(channel.delete());
             }
 
             Promise.allSettled(promises).then(() => resolve(true)).catch(() => true);
 
         });
     }
+
+    /**
+     * Creates permission overwrites for a user or role in this channel, or replaces them if already present.
+     * @param {RoleResolvable|UserResolvable} userOrRole The user or role to update
+     * @param {PermissionOverwriteOptions} options The options for the update
+     * @param {GuildChannelOverwriteOptions} [overwriteOptions] The extra information for the update
+     * @returns {Promise<GuildChannel>}
+     * @example
+     * // Create or Replace permission overwrites for a message author
+     * message.channel.permissionOverwrites.create(message.author, {
+     *   SendMessages: false
+     * })
+     *   .then(channel => console.log(channel.permissionOverwrites.cache.get(message.author.id)))
+     *   .catch(console.error);
+     */
 
     /**
      *
@@ -281,13 +318,14 @@ class ChannelsHandler extends IGame {
      */
     async switchPermissions(channelId, permission, players) {
 
+
         let promises = [];
         let channel = this._channels.get(channelId);
 
         players.forEach(player => {
-            promises.push(channel.createOverwrite(
+            promises.push(channel.permissionOverwrites.create(
                 player.member,
-                permission
+                transformPermissions(permission)
             ));
         });
 
@@ -299,12 +337,12 @@ class ChannelsHandler extends IGame {
 
             let promises = [];
 
-            for (let channel of Array.from(this._channels.values()).filter(channel => channel.type === 'text')) {
+            for (let channel of Array.from(this._channels.values()).filter(channel => channel.type === ChannelType.GuildText)) {
 
                 // add mastermind permissions
-                promises.push(channel.createOverwrite(
+                promises.push(channel.permissionOverwrites.create(
                     this.client.user,
-                    this.mastermindPermissions[channel.name]
+                    transformPermissions(this.mastermindPermissions[channel.name])
                 ));
 
                 promises.push(this.applyPermissionsOnChannel(channel, configuration.getPlayers()));
@@ -319,20 +357,20 @@ class ChannelsHandler extends IGame {
 
         let promises = [];
 
-        if (channel.type !== "category") {
+        if (channel.type !== ChannelType.GuildCategory) {
 
             for (let player of players.values()) {
-                promises.push(channel.createOverwrite(
+                promises.push(channel.permissionOverwrites.create(
                     player.member,
-                    player.permission[channel.name]
+                    transformPermissions(player.permission[channel.name])
                 ));
             }
 
         }
 
-        promises.push(channel.createOverwrite(
+        promises.push(channel.permissionOverwrites.create(
             this.everyoneRole,
-            this.everyonePermission[channel.name]
+            transformPermissions(this.everyonePermission[channel.name])
         ));
 
         await Promise.all(promises);
@@ -350,14 +388,14 @@ class ChannelsHandler extends IGame {
         if (imageLink) msg.setImage(imageLink);
         if (thumbnail) msg.setThumbnail(thumbnail);
 
-        return village.send(msg);
+        return sendEmbed(village, msg);
 
     }
 
     sendMsgToLG(message) {
         let lg = this._channels.get(this.channels.loups_garou_lg);
 
-        return lg.send(new MessageEmbed()
+        return sendEmbed(lg, new MessageEmbed()
             .addField("LG - Jeu", message)
             .setColor(BotData.BotValues.botColor)
         );

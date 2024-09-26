@@ -2,6 +2,7 @@
 const lg_var = require('./lg_var.js');
 const BotData = require("../BotData.js");
 const MessageEmbed = require("../utils/embed");
+const {sendEmbed} = require("../utils/message");
 
 class IGame {
 
@@ -67,7 +68,7 @@ module.exports = {
      * @param s
      * @return Promise
      */
-    message_curr_chan: (message, title, s) => message.channel.send(new MessageEmbed()
+    message_curr_chan: (message, title, s) => sendEmbed(message.channel, new MessageEmbed()
         .addField(title, s)
         .setColor(7419530)
         .setAuthor("Loup-Garou de thiercelieux", lg_var.roles_img.LoupGarou)
@@ -83,13 +84,13 @@ module.exports = {
     message_to_village: (client, message, msg) => {
         let gSettings = client.guilds_settings.get(message.guild.id);
 
-        return (LG.lg_game_channels.village_lg.send(new MessageEmbed()
+        return (sendEmbed(LG.lg_game_channels.village_lg, new MessageEmbed()
             .addField('LG - Jeu', msg)
             .setColor(7419530)
             .setAuthor("Loup-Garou de thiercelieux", lg_var.roles_img.LoupGarou)));
     },
 
-    msg: (message, channel, title, msg) => channel.send(new MessageEmbed()
+    msg: (message, channel, title, msg) => sendEmbed(channel, new MessageEmbed()
         .addField(title, msg)
         .setColor(7419530)
         .setAuthor("Loup-Garou de thiercelieux", lg_var.roles_img.LoupGarou)

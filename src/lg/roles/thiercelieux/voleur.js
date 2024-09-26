@@ -1,5 +1,6 @@
 const lg_var = require("../../lg_var");
 const LgLogger = require("../../lg_logger");
+const {sendEmbed} = require("../../../utils/message");
 const ReactionHandler = require("../../../functions/reactionHandler").ReactionHandler;
 const Villageois = require("../baseRole").Villageois;
 const MessageEmbed = require('discord.js').MessageEmbed;
@@ -66,7 +67,7 @@ class Voleur extends Villageois {
                         propositionMsg.addField('❌', 'Garder son rôle');
                     }
 
-                    return this.dmChannel.send(propositionMsg);
+                    return sendEmbed(this.dmChannel, propositionMsg);
                 })
                 .then(embedMsg => {
                     embed = embedMsg;

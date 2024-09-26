@@ -52,7 +52,7 @@ winston.configure({
         }),
     ),
     transports: [
-        transport,
+        //transport,
         new winston.transports.Console({level: 'debug'}),
     ],
 });

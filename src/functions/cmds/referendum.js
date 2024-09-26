@@ -17,7 +17,7 @@ class Sondage {
 
         this.field_content = [];
 
-        this.field_emojis = ['1⃣', '2⃣', '3⃣', '4⃣', '5⃣', '6⃣', '7⃣', '8⃣', '9⃣', '🔟'];
+        this.field_emojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟'];
 
         this.choices = {};
         this.emojis_used = [];
@@ -45,16 +45,12 @@ class Sondage {
             }
             this.field_content.splice(0, 1);
 
-            this.channel.send({
-                embed: {
-                    author: {
-                        name: "Sondage",
-                        icon_url: this.client.user.avatarURL()
-                    },
-                    title: this.options[0],
-                    fields: this.field_content
-                }
-            }).then((new_message) => {
+            const embed = new MessageEmbed()
+                .setAuthor("Sondage", this.client.user.avatarURL())
+                .setTitle(this.options[0])
+                .addFields(this.field_content);
+
+            this.channel.send({embeds: [embed.build()]}).then((new_message) => {
 
                 this.field_content.forEach((element) => {
                     this.emojis_used.push(this.field_emojis[this.field_content.indexOf(element)]);
@@ -67,19 +63,17 @@ class Sondage {
 
             }).then((reactHandler) => {
 
-                reactHandler.initCollector((r) => {
-                    if (!this.hasvoted.includes(r.users.last().id)) {
-                        if (r.users.last().id !== this.client.user.id) {
-                            this.choices[r.users.last().id] = this.emojis_used.indexOf(r.emoji.name);
-                            this.votes[this.emojis_used.indexOf(r.emoji.name)] += 1;
-                            this.hasvoted.push(r.users.last().id);
-                        }
+                reactHandler.initCollector((reaction, user) => {
+                    if (user.bot) return;
+
+                    if (!this.hasvoted.includes(user.id)) {
+                        this.choices[user.id] = this.emojis_used.indexOf(reaction.emoji.name);
+                        this.votes[this.emojis_used.indexOf(reaction.emoji.name)] += 1;
+                        this.hasvoted.push(user.id);
                     } else {
-                        if (r.users.last().id !== this.client.user.id) {
-                            this.votes[this.choices[r.users.last().id]] -= 1;
-                            this.choices[r.users.last().id] = this.emojis_used.indexOf(r.emoji.name);
-                            this.votes[this.emojis_used.indexOf(r.emoji.name)] += 1;
-                        }
+                        this.votes[this.choices[user.id]] -= 1;
+                        this.choices[user.id] = this.emojis_used.indexOf(reaction.emoji.name);
+                        this.votes[this.emojis_used.indexOf(reaction.emoji.name)] += 1;
                     }
                 }, () => {
                     this.field_content = [];
@@ -92,17 +86,18 @@ class Sondage {
                         });
                     });
                     this.field_content.splice(0, 1);
-                    this.channel.send({
-                        embed: {
-                            author: {
-                                name: "Sondage - Résultats",
-                                icon_url: this.client.user.avatarURL()
-                            },
-                            title: this.options[0],
-                            fields: this.field_content
-                        }
-                    }).then(() => resolve(true)).catch(err => reject(err));
-                }, (reaction) => this.emojis_used.includes(reaction.emoji.name), {
+
+                    const resultEmbed = new MessageEmbed()
+                        .setAuthor("Sondage - Résultats", this.client.user.avatarURL())
+                        .setTitle(this.options[0])
+                        .addFields(this.field_content);
+
+                    this.channel.send({embeds: [resultEmbed.build()]})
+                        .then(() => resolve(true))
+                        .catch(err => reject(err));
+                }, (reaction, user) => {
+                    return this.emojis_used.includes(reaction.emoji.name);
+                }, {
                     time: this.time
                 });
 
@@ -213,15 +208,15 @@ class SondageInfiniteChoice {
     }
 
     updateDisplay() {
-        this.embed.fields[1].value = this.getVoteData().toString();
-        this.embed.fields[2].value = this.getVoters().toString();
-        editMessage(this.msg,this.embed).catch(() => true);
+        this.embed.setFieldValue(1, this.getVoteData().toString());
+        this.embed.setFieldValue(2, this.getVoters().toString());
+        editMessage(this.msg, this.embed).catch(() => true);
     }
 
     updateTimer() {
         this.embed.setFooter(`${(this.time / 1000) - this.timerInterval} secondes avant la fin du vote`);
         this.timerInterval += 5;
-        editMessage(this.msg,this.embed).catch(() => true);
+        editMessage(this.msg, this.embed).catch(() => true);
     }
 
     post() {
@@ -235,7 +230,7 @@ class SondageInfiniteChoice {
                 .addField("Votants", "Zéro votants", true)
                 .setFooter(`${this.time / 1000} secondes avant la fin du vote`);
 
-            this.channel.send(this.embed).then(async msg => {
+            this.channel.send({embeds: [this.embed.build()]}).then(async msg => {
 
                 await Wait.seconds(1);
 
@@ -245,7 +240,10 @@ class SondageInfiniteChoice {
                     this.updateTimer();
                 }, 5000);
 
-                const vote = this.channel.createMessageCollector(m => m.author.id !== BotData.BotValues.bot_id, {time: this.time});
+                const vote = this.channel.createMessageCollector({
+                    filter: m => m.author.id !== BotData.BotValues.bot_id,
+                    time: this.time
+                });
 
                 vote.on("collect", collectedVote => {
 
@@ -342,7 +340,7 @@ class SondageInfiniteChoice {
                             this.embed.addField("**Choix du peuple**", `**${this.choices.get(higherChoice[0]).choice}**`, true);
                         }
 
-                        editMessage(this.msg,this.embed
+                        editMessage(this.msg, this.embed
                             .setAuthor("**Vote terminé**")
                             .setFooter("Vote terminé")
                         ).catch(() => true);
@@ -404,7 +402,7 @@ class Referendum {
         this.question = question;
         this.client = discordClient;
         this.author = referendumAuthor;
-        this.referendumChannel = this.client.channels.get(referendumChannelId);
+        this.referendumChannel = this.client.channels.cache.get(referendumChannelId);
         this.time = time;
     }
 

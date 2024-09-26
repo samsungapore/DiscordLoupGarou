@@ -35,6 +35,10 @@ class LgLogger {
         logger.warn(`${gameInfo.serverName} | game ${gameInfo.gameNb} | ${message}`);
     }
 
+    static debug(message, gameInfo) {
+        logger.debug(`${gameInfo.serverName} | game ${gameInfo.gameNb} | ${message}`);
+    }
+
     static error(message, gameInfo) {
         logger.error(`${gameInfo.serverName} | game ${gameInfo.gameNb} | ${message}`);
     }

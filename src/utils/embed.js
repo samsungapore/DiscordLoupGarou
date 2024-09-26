@@ -1,55 +1,68 @@
-const EmbedBuilder = require('discord.js').EmbedBuilder;
+const {EmbedBuilder} = require('discord.js');
+const COLORS = require('./colors');
 
 class MessageEmbed {
     constructor() {
         this.embed = new EmbedBuilder();
-        return this;
     }
 
     setTitle(title) {
-        this.embed = this.embed.setTitle(title);
+        this.embed.setTitle(title);
         return this;
     }
 
     setColor(color) {
-        this.embed = this.embed.setColor(color);
+        this.embed.setColor(COLORS[color] || color);
         return this;
     }
 
     setImage(url) {
-        this.embed = this.embed.setImage(url);
+        this.embed.setImage(url);
         return this;
     }
 
     setDescription(description) {
-        this.embed = this.embed.setDescription(description);
+        this.embed.setDescription(description);
         return this;
     }
 
     setAuthor(name, iconURL, url) {
-        const options = {
-            name: name,
-            icon_url: iconURL,
-            url: url
-        };
-        this.embed = this.embed.setAuthor(options);
+        this.embed.setAuthor({name, iconURL, url});
         return this;
     }
 
     setURL(url) {
-        this.embed = this.embed.setURL(url);
+        this.embed.setURL(url);
         return this;
     }
 
     addField(name, value) {
         const fieldNumberId = this.embed.data.fields?.length + 1 || 0;
-        if (!name) {
-            name = `#${fieldNumberId}`;
-        }
-        if (!value) {
-            value = 'Empty field.';
-        }
-        this.embed = this.embed.addFields({name, value});
+        this.embed.addFields({name: name || `#${fieldNumberId}`, value: value || 'Empty field.'});
+        return this;
+    }
+
+    addFields(fields) {
+        this.embed.addFields(fields);
+        return this;
+    }
+
+    setFieldValue(fieldIndex, value) {
+        this.embed.data.fields[fieldIndex].value = value;
+        return this;
+    }
+
+    getFieldValue(fieldIndex) {
+        return this.embed.data.fields[fieldIndex].value;
+    }
+
+    setThumbnail(thumbnail) {
+        this.embed.setThumbnail(thumbnail);
+        return this;
+    }
+
+    setFooter(footer) {
+        this.embed.setFooter({text: footer});
         return this;
     }
 
@@ -57,14 +70,8 @@ class MessageEmbed {
         return this.embed;
     }
 
-    setThumbnail(thumbnail) {
-        this.embed = this.embed.setThumbnail(thumbnail);
-        return this;
-    }
-
-    setFooter(footer) {
-        this.embed = this.embed.setFooter(footer);
-        return this;
+    updateParticipationField(participantsDisplayText) {
+        this.embed.data.fields[this.embed.data.fields.length - 1].value = participantsDisplayText;
     }
 }
 

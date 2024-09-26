@@ -14,9 +14,10 @@ const Vote = require("./lg_vote").DayVote;
 const CommunicationHandler = require('./message_sending').CommunicationHandler;
 let timeToString = require('../functions/time');
 const MessageEmbed = require("../utils/embed");
-const {editMessage} = require("../utils/message");
+const {editMessage, sendEmbed} = require("../utils/message");
 const ReactionHandler = require("../functions/reactionHandler").ReactionHandler;
 const Message = require('discord.js').Message;
+const TextChannel = require('discord.js').TextChannel;
 
 class IGame {
 
@@ -32,6 +33,9 @@ class IGame {
 
 class GlobalTimer {
     constructor(channel, secInterval) {
+        /**
+         * @type {MessageEmbed}
+         */
         this.embed = CommunicationHandler
             .getLGSampleMsg()
             .addField(
@@ -39,7 +43,13 @@ class GlobalTimer {
                 "Réagissez avec ⏭ pour skip l'attente. Tout le monde doit skip pour pouvoir procéder."
             );
         this.timer = null;
+        /**
+         * @type {Message}
+         */
         this.message = null;
+        /**
+         * @type {TextChannel}
+         */
         this.channel = channel;
         this.secInterval = secInterval ? secInterval : 5;
 
@@ -70,7 +80,7 @@ class GlobalTimer {
             let msgPromise = [];
 
             if (!this.message) {
-                msgPromise.push(this.channel.send(this.embed));
+                msgPromise.push(sendEmbed(this.channel, this.embed));
             } else {
                 msgPromise.push(editMessage(this.message, this.embed));
             }
@@ -142,6 +152,9 @@ class GameFlow extends IGame {
         this.gameOptions = gameOptions;
 
         this.GameConfiguration = null;
+        /**
+         * @type {Message}
+         */
         this.msg = null;
 
         this.killer = new EventEmitter();
@@ -236,8 +249,7 @@ class GameFlow extends IGame {
 
             //this.moveEveryPlayersToVocalChannel().catch(console.error);
 
-            this.GameConfiguration.channelsHandler._channels.get(this.GameConfiguration.channelsHandler.channels.thiercelieux_lg)
-                .send(new MessageEmbed().setColor(BotData.BotValues.botColor)
+            sendEmbed(this.GameConfiguration.channelsHandler._channels.get(this.GameConfiguration.channelsHandler.channels.thiercelieux_lg), new MessageEmbed().setColor(BotData.BotValues.botColor)
                     .setAuthor("Les Loups-garous de Thiercelieux [v2.3]", lg_var.roles_img.LoupGarou)
                     .setDescription('Développé par Kazuhiro - 和宏 - 龙马 - 카즈히로#1248.\n\n*Thiercelieux est un petit village rural d\'apparence paisible,' +
                         ' mais chaque nuit certains villageois se transforment en loups-garou pour dévorer d\'autres villageois...*\n')
@@ -249,8 +261,7 @@ class GameFlow extends IGame {
                     .setFooter("Bienvenue à Thiercelieux, sa campagne paisible, son école charmante, sa population accueillante, ainsi que " +
                         "ses traditions ancestrales et ses mystères inquiétants.", lg_var.roles_img.LoupGarou)
                     .setImage(lg_var.roles_img.LoupGarou))
-                .then(() => this.GameConfiguration.channelsHandler._channels.get(this.GameConfiguration.channelsHandler.channels.thiercelieux_lg)
-                    .send(new MessageEmbed().setColor(BotData.BotValues.botColor)
+                .then(() => sendEmbed(this.GameConfiguration.channelsHandler._channels.get(this.GameConfiguration.channelsHandler.channels.thiercelieux_lg), new MessageEmbed().setColor(BotData.BotValues.botColor)
                         .addField(
                             "Table ronde",
                             this.GameConfiguration.getTable().map(member => member.displayName).toString().replace(/,+/g, '\n')

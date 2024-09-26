@@ -1,5 +1,6 @@
 const lg_var = require("../lg_var");
 const MessageEmbed = require("../../utils/embed");
+const {sendEmbed} = require("../../utils/message");
 const get_random_in_array = require("../../functions/parsing_functions").get_random_in_array;
 const EveryOneVote = require("../lg_vote").EveryOneVote;
 
@@ -63,7 +64,7 @@ class Player {
         if (this.amoureux && configuration.getPlayerById(this.amoureux).alive) {
             let amoureux = configuration.getPlayerById(this.amoureux);
             additionnalTargets.push(amoureux);
-            await configuration.villageChannel.send(new MessageEmbed()
+            await sendEmbed(configuration.villageChannel, new MessageEmbed()
                 .setAuthor(`${amoureux.member.displayName} meurt de chagrin`, amoureux.member.user.avatarURL())
                 .setThumbnail(lg_var.roles_img[amoureux.role])
                 .setTitle(amoureux.role)
@@ -105,7 +106,7 @@ class Player {
 
         }
 
-        await configuration.villageChannel.send(new MessageEmbed()
+        await sendEmbed(configuration.villageChannel, new MessageEmbed()
             .setAuthor(`${this.member.displayName} est mort(e)`, this.member.user.avatarURL())
             .setTitle(this.role)
             .setImage(this.member.user.avatarURL())

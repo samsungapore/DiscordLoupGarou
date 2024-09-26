@@ -8,7 +8,8 @@ const ReactionHandler = require("../../functions/reactionHandler").ReactionHandl
 
 const clone = require('../../functions/clone');
 
-const { Colors } = require('discord.js');
+const {Colors} = require('discord.js');
+const {sendEmbed} = require("../../utils/message");
 
 class IGame {
 
@@ -190,6 +191,7 @@ class RolesHandler extends IGame {
                 name: role_name,
                 color: this.roles[role_name].color,
                 hoist: true,
+                reason: 'Creating role for game',
             });
 
             this.roles[role.name].object = role;
@@ -295,17 +297,36 @@ class RolesHandler extends IGame {
         });
     }
 
-    async assignRole(configuration) {
-        let participantArray = shuffle_array(Array.from(configuration.getParticipants().keys()));
-        let promises = participantArray.map(playerId => this.assignRole(playerId, configuration));
+    // async assignRoles(configuration) {
+    //     let participantArray = shuffle_array(Array.from(configuration.getParticipants().keys()));
+    //     let promises = participantArray.map(playerId => this.assignRole(playerId, configuration));
+    //
+    //     try {
+    //         let players = await Promise.all(promises);
+    //         players.forEach(player => configuration.addPlayer(player));
+    //         return configuration;
+    //     } catch (err) {
+    //         throw err;
+    //     }
+    // }
 
-        try {
-            let players = await Promise.all(promises);
-            players.forEach(player => configuration.addPlayer(player));
-            return configuration;
-        } catch (err) {
-            throw err;
-        }
+    assignRole(id, configuration) {
+        return new Promise((resolve, reject) => {
+            let found = false;
+            for (let i = 0; i < this.gameType.length; i++) {
+
+                if (!this.roleComplete(this.gameType[i])) {
+                    this.setRole(configuration.getParticipants().get(id), i)
+                        .then((player) => resolve(player))
+                        .catch(err => reject(err));
+                    found = true;
+                    break;
+                }
+            }
+            if (found === false) {
+                reject(`No role found for ${configuration.getParticipants().get(id).displayName}`)
+            }
+        });
     }
 
 
@@ -356,23 +377,41 @@ class RolesHandler extends IGame {
         return cleaned;
     }
 
-    sendRolesToPlayers(configuration) {
-        return new Promise((resolve, reject) => {
+    async sendRolesToPlayers(configuration) {
+        LgLogger.info(`Nombre de joueurs : ${configuration.getPlayers().size}`, this.gameInfo);
 
-            let promises = [];
+        let successfulSends = 0;
+        let failedSends = [];
 
-            LgLogger.info(`Number of players : ${configuration.getPlayers().size}`, this.gameInfo);
-            for (let player of configuration.getPlayers().values()) {
-                promises.push(player.member.user.send(lg_var.roles_desc[player.role]));
+        for (let player of configuration.getPlayers().values()) {
+            try {
+                // Tente de créer un canal de MP avec l'utilisateur
+                let dmChannel = await player.member.user.createDM(true);
+                // Envoie le message embed
+                await sendEmbed(dmChannel, lg_var.roles_desc[player.role]);
+                successfulSends++;
+            } catch (err) {
+                if (err.code === 50007) { // Impossible d'envoyer des messages à cet utilisateur
+                    LgLogger.warn(`Impossible d'envoyer un MP à ${player.member.user.tag}. Ils ont peut-être désactivé les MP.`, this.gameInfo);
+                    failedSends.push(player.member.user.tag);
+                } else {
+                    // Gérer d'autres erreurs éventuelles
+                    LgLogger.error(`Erreur lors de l'envoi du MP à ${player.member.user.tag} : ${err}`, this.gameInfo);
+                    failedSends.push(player.member.user.tag);
+                }
             }
+        }
 
-            Promise.all(promises).then((messagesSend) => {
-                LgLogger.info(`Sent ${messagesSend.length} roles.`, this.gameInfo);
-                resolve(true);
-            }).catch(err => resolve(err)); //todo: change to reject
+        LgLogger.info(`Roles envoyés avec succès à ${successfulSends} joueurs.`, this.gameInfo);
+        if (failedSends.length > 0) {
+            LgLogger.warn(`Échec de l'envoi des rôles aux joueurs suivants : ${failedSends.join(', ')}`, this.gameInfo);
+            // informer ces utilisateurs dans un canal public
+            configuration.getGameChannel().send(`Impossible d'envoyer les rôles à ${failedSends.join(', ')}. Ils ont peut-être désactivé les MP.`);
+        }
 
-        });
+        return true;
     }
+
 
     confHasSpace() {
 

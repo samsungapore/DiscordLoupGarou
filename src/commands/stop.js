@@ -1,5 +1,7 @@
 let botData = require("../BotData.js");
 const {checkPermissions} = require("../utils/permission");
+const {sendEmbed} = require("../utils/message");
+const MessageEmbed = require("../utils/embed");
 
 module.exports = {
     name: 'stop',
@@ -16,8 +18,13 @@ module.exports = {
             LGBot.LG.set(message.guild.id, LG);
         }
 
-        if (!checkPermissions(message.member,"BAN_MEMBERS") && !LG.canRun.includes(message.author.id)) {
-            message.channel.send("Vous n'avez pas la permission de stopper la partie").catch(console.error);
+        if (!LG.running) {
+            sendEmbed(message.channel, new MessageEmbed().setDescription("Aucune partie en cours").setColor("YELLOW")).catch(console.error);
+            return;
+        }
+
+        if (!checkPermissions(message.member, "BAN_MEMBERS") && !LG.canRun.includes(message.author.id)) {
+            sendEmbed(message.channel, new MessageEmbed().setDescription("Vous n'avez pas la permission de stopper la partie").setColor("RED")).catch(console.error);
             return;
         }
 
@@ -30,22 +37,19 @@ module.exports = {
                 LG.game = null;
 
                 try {
-                    LGBot.LG.set(message.guild.id, LG)
-                    message.channel.send("Partie stoppée").catch(console.error);
+                    LGBot.LG.set(message.guild.id, LG);
+                    sendEmbed(message.channel, new MessageEmbed().setDescription("Partie stoppée").setColor("GREEN")).catch(console.error);
                 } catch (e) {
                     console.error(e);
                 }
-
             });
         } else {
-
             try {
-                LGBot.LG.set(message.guild.id, LG)
-                message.channel.send("Partie interrompue").catch(console.error);
+                LGBot.LG.set(message.guild.id, LG);
+                sendEmbed(message.channel, new MessageEmbed().setDescription("Partie interrompue").setColor("YELLOW")).catch(console.error);
             } catch (e) {
                 console.error(e);
             }
-
         }
     },
 };
