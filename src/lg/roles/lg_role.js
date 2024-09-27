@@ -407,6 +407,7 @@ class RolesHandler extends IGame {
             LgLogger.warn(`Échec de l'envoi des rôles aux joueurs suivants : ${failedSends.join(', ')}`, this.gameInfo);
             // informer ces utilisateurs dans un canal public
             configuration.getGameChannel().send(`Impossible d'envoyer les rôles à ${failedSends.join(', ')}. Ils ont peut-être désactivé les MP.`);
+            return false;
         }
 
         return true;

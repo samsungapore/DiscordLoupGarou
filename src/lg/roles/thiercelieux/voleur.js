@@ -3,7 +3,7 @@ const LgLogger = require("../../lg_logger");
 const {sendEmbed} = require("../../../utils/message");
 const ReactionHandler = require("../../../functions/reactionHandler").ReactionHandler;
 const Villageois = require("../baseRole").Villageois;
-const MessageEmbed = require('discord.js').MessageEmbed;
+const MessageEmbed = require("../../../utils/embed");
 
 /**
  * Si on décide de jouer avec le voleur, on doit ajouter deux cartes de plus au paquet de cartes qui seront distribuée

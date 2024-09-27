@@ -4,7 +4,7 @@ const lg_func = require("../../lg_functions");
 const {sendEmbed} = require("../../../utils/message");
 const Player = require("../baseRole").Player;
 //let GroupDMChannel = require("discord.js").GroupDMChannel;
-let MessageEmbed = require("discord.js").MessageEmbed;
+let MessageEmbed = require("../../../utils/embed");
 
 class JoueurDeFlute extends Player {
 

@@ -302,7 +302,7 @@ class GamePreparation extends IGame {
         this.msg = undefined;
         this.MessageEmbed = new MessageEmbed();
 
-        this.keepChannels = false;
+        this.keepChannels = true;
 
         return this;
 
@@ -321,7 +321,7 @@ class GamePreparation extends IGame {
                     return this.setupChannels()
                 })
                 .then(() => this.rolesHandler.sendRolesToPlayers(this.configuration))
-                .then(() => resolve(this.configuration))
+                .then((sendRolesStatus) => resolve(this.configuration))
                 .catch(err => reject(err));
         });
     }

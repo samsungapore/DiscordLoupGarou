@@ -208,7 +208,7 @@ class GameFlow extends IGame {
                         );
                     }
 
-                }).then(() => deadPlayer.die(this.GameConfiguration, this.killer).then((somebodyNew) => {
+                }).then(() => deadPlayer.die(this.GameConfiguration, this.killer).then((collateralDeaths) => {
 
                     this.GameConfiguration.rolesHandler.removePlayerRole(deadPlayer.member).catch(console.error);
                     this.GameConfiguration.rolesHandler.addDeadRole(deadPlayer.member).catch(console.error);
@@ -217,8 +217,8 @@ class GameFlow extends IGame {
                     //    this.GameConfiguration.channelsHandler.voiceChannels.mort_lg
                     //)).catch(() => true);
 
-                    if (somebodyNew) {
-                        somebodyNew.forEach(person => setImmediate(() => this.killer.emit("death", person)));
+                    if (collateralDeaths) {
+                        collateralDeaths.forEach(person => setImmediate(() => this.killer.emit("death", person)));
                     }
 
                     LgLogger.info("onpause - 1", this.gameInfo);
@@ -251,7 +251,7 @@ class GameFlow extends IGame {
 
             sendEmbed(this.GameConfiguration.channelsHandler._channels.get(this.GameConfiguration.channelsHandler.channels.thiercelieux_lg), new MessageEmbed().setColor(BotData.BotValues.botColor)
                     .setAuthor("Les Loups-garous de Thiercelieux [v2.3]", lg_var.roles_img.LoupGarou)
-                    .setDescription('Développé par Kazuhiro - 和宏 - 龙马 - 카즈히로#1248.\n\n*Thiercelieux est un petit village rural d\'apparence paisible,' +
+                .setDescription('Développé par .kazuhiro_\n\n*Thiercelieux est un petit village rural d\'apparence paisible,' +
                         ' mais chaque nuit certains villageois se transforment en loups-garou pour dévorer d\'autres villageois...*\n')
                     .addField("Règles :",
                         'Les joueurs sont divisés en deux camps : les villageois (certains d\'entre eux jouant ' +
@@ -554,7 +554,7 @@ class Day extends Period {
 
     async debateTime() {
 
-        let debateDuration = this.GameConfiguration.getAlivePlayers().length / 2; // in minutes
+        let debateDuration = Math.max(3, this.GameConfiguration.getAlivePlayers().length / 2); // in minutes
 
         await this.GameConfiguration.channelsHandler.sendMessageToVillage(
             `Le jour se lève sur thiercelieux 🌄`
@@ -608,6 +608,7 @@ class Day extends Period {
     }
 
     async pronounceSentence(outcome) {
+        let messageVoteBlanc = 'Le village n\'a pas souhaité voter';
 
         let victimId = null;
 
@@ -654,7 +655,8 @@ class Day extends Period {
 
             } else {
 
-                victimId = get_random_in_array(outcome);
+                victimId = undefined;
+                messageVoteBlanc = 'Le village n\'a pas pu se mettre d\'accord, le vote est nul';
 
             }
 
@@ -663,7 +665,7 @@ class Day extends Period {
         if (!victimId) {
 
             await this.GameConfiguration.channelsHandler.sendMessageToVillage(
-                `Le village n'a pas souhaité voter`
+                messageVoteBlanc
             );
 
             return null;

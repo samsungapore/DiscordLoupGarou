@@ -1,4 +1,4 @@
-const MessageEmbed = require('discord.js').MessageEmbed;
+const MessageEmbed = require("../utils/embed");
 let BotData = require("../BotData.js");
 
 let restartBot = (message) => {

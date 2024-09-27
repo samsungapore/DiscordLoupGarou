@@ -1,6 +1,9 @@
 const {LGDB} = require('./LGDB');
 const {GatewayIntentBits} = require('discord-api-types/v10');
 
+const BotData = require("./BotData");
+const {Partials} = require("discord.js");
+
 // ClientOptions type
 const clientOptions = {
     allowedMentions: {
@@ -11,17 +14,17 @@ const clientOptions = {
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.GuildMessageReactions,
+        GatewayIntentBits.DirectMessageReactions,
         GatewayIntentBits.GuildMembers,
         GatewayIntentBits.GuildPresences,
         GatewayIntentBits.DirectMessages,
         GatewayIntentBits.MessageContent,
     ],
-    partials: ['MESSAGE', 'CHANNEL', 'REACTION']
+    partials: [Partials.Message, Partials.Channel, Partials.Reaction]
 }
 
 const LGBot = new LGDB(clientOptions).init();
 
-const BotData = require("./BotData");
 
 LGBot.on('ready', () => {
 

@@ -408,7 +408,7 @@ class ChannelsHandler extends IGame {
 
             for (let channel of this._channels.values()) {
 
-                channel.permissionOverwrites.array().forEach(overwrite => {
+                channel.permissionOverwrites.cache.each(overwrite => {
                     promises.push(overwrite.delete());
                 });
 
