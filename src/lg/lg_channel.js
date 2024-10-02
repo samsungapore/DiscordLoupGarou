@@ -42,7 +42,7 @@ class ChannelsHandler extends IGame {
                 'SEND_MESSAGES': false,
                 'ADD_REACTIONS': false
             },
-            thiercelieux_lg: {
+            vote_lg: {
                 'VIEW_CHANNEL': true,
                 'SEND_MESSAGES': false,
                 'ADD_REACTIONS': false
@@ -68,7 +68,7 @@ class ChannelsHandler extends IGame {
 
         [
             "loups_garou_de_thiercelieux",
-            "thiercelieux_lg",
+            "vote_lg",
             "village_lg",
             "paradis_lg",
             "loups_garou_lg",
@@ -87,7 +87,7 @@ class ChannelsHandler extends IGame {
         this.gameChannel = undefined;
 
         this.channels = {
-            thiercelieux_lg: undefined,
+            vote_lg: undefined,
             village_lg: undefined,
             paradis_lg: undefined,
             loups_garou_lg: undefined,
@@ -424,7 +424,7 @@ class ChannelsHandler extends IGame {
 
             let promises = [];
 
-            promises.push(this.deleteMessagesInChannel(this._channels.get(this.channels.thiercelieux_lg)));
+            promises.push(this.deleteMessagesInChannel(this._channels.get(this.channels.vote_lg)));
             promises.push(this.deleteMessagesInChannel(this._channels.get(this.channels.loups_garou_lg)));
             promises.push(this.deleteMessagesInChannel(this._channels.get(this.channels.paradis_lg)));
 

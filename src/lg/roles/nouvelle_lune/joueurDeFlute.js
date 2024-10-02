@@ -71,10 +71,10 @@ function joueurFlute(client, message) {
                    .setFooter("Tu as 2 minutes pour faire ton choix", lg_var.roles_img.JoueurDeFlute)
            ).catch(err => reject(err));
 
-           let msg_timeout = setTimeout(() => {
-               jFluteChan.send("Il te reste 20 secondes pour faire un choix.")
-                   .catch(console.error);
-           }, 100000);
+           /*           let msg_timeout = setTimeout(() => {
+                          jFluteChan.send("Il te reste 20 secondes pour faire un choix.")
+                              .catch(console.error);
+                      }, 100000);*/
 
            let joueurFluteMsgColl = jFluteChan.createMessageCollector(
                (m) => m.author.id !== m.guild.me.id,

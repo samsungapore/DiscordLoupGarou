@@ -240,7 +240,7 @@ class GameFlow extends IGame {
         return new Promise((resolve, reject) => {
 
             this.GameConfiguration.globalTimer = new GlobalTimer(this.GameConfiguration.channelsHandler._channels.get(
-                this.GameConfiguration.channelsHandler.channels.thiercelieux_lg
+                this.GameConfiguration.channelsHandler.channels.vote_lg
             ));
 
             this.listenDeaths();
@@ -249,7 +249,7 @@ class GameFlow extends IGame {
 
             //this.moveEveryPlayersToVocalChannel().catch(console.error);
 
-            sendEmbed(this.GameConfiguration.channelsHandler._channels.get(this.GameConfiguration.channelsHandler.channels.thiercelieux_lg), new MessageEmbed().setColor(BotData.BotValues.botColor)
+            sendEmbed(this.GameConfiguration.channelsHandler._channels.get(this.GameConfiguration.channelsHandler.channels.vote_lg), new MessageEmbed().setColor(BotData.BotValues.botColor)
                     .setAuthor("Les Loups-garous de Thiercelieux [v2.3]", lg_var.roles_img.LoupGarou)
                 .setDescription('Développé par .kazuhiro_\n\n*Thiercelieux est un petit village rural d\'apparence paisible,' +
                         ' mais chaque nuit certains villageois se transforment en loups-garou pour dévorer d\'autres villageois...*\n')
@@ -261,7 +261,7 @@ class GameFlow extends IGame {
                     .setFooter("Bienvenue à Thiercelieux, sa campagne paisible, son école charmante, sa population accueillante, ainsi que " +
                         "ses traditions ancestrales et ses mystères inquiétants.", lg_var.roles_img.LoupGarou)
                     .setImage(lg_var.roles_img.LoupGarou))
-                .then(() => sendEmbed(this.GameConfiguration.channelsHandler._channels.get(this.GameConfiguration.channelsHandler.channels.thiercelieux_lg), new MessageEmbed().setColor(BotData.BotValues.botColor)
+                .then(() => sendEmbed(this.GameConfiguration.channelsHandler._channels.get(this.GameConfiguration.channelsHandler.channels.vote_lg), new MessageEmbed().setColor(BotData.BotValues.botColor)
                         .addField(
                             "Table ronde",
                             this.GameConfiguration.getTable().map(member => member.displayName).toString().replace(/,+/g, '\n')
@@ -571,7 +571,7 @@ class Day extends Period {
         );
 
         await this.GameConfiguration.channelsHandler.switchPermissions(
-            this.GameConfiguration.channelsHandler.channels.thiercelieux_lg,
+            this.GameConfiguration.channelsHandler.channels.vote_lg,
             {
                 'VIEW_CHANNEL': true,
                 'SEND_MESSAGES': true,
@@ -581,7 +581,7 @@ class Day extends Period {
         );
 
         await this.GameConfiguration.channelsHandler.switchPermissions(
-            this.GameConfiguration.channelsHandler.channels.thiercelieux_lg,
+            this.GameConfiguration.channelsHandler.channels.vote_lg,
             {
                 VIEW_CHANNEL: true,
                 SEND_MESSAGES: false,
@@ -590,19 +590,19 @@ class Day extends Period {
             this.GameConfiguration.getDeadPlayers()
         );
 
-        setTimeout(() => {
-            this.GameConfiguration.channelsHandler.sendMessageToVillage(`Il reste ${timeToString(debateDuration / 4)} avant la fin du vote`)
-        }, (debateDuration / 4) * 60 * 1000);
+        /*        setTimeout(() => {
+                    this.GameConfiguration.channelsHandler.sendMessageToVillage(`Il reste ${timeToString(debateDuration / 4)} avant la fin du vote`)
+                }, (debateDuration / 4) * 60 * 1000);*/
 
         await this.GameConfiguration.channelsHandler.sendMessageToVillage(
-            `Votez dans le channel ${this.GameConfiguration.channelsHandler._channels.get(this.GameConfiguration.channelsHandler.channels.thiercelieux_lg).toString()} !`
+            `Votez dans le channel ${this.GameConfiguration.channelsHandler._channels.get(this.GameConfiguration.channelsHandler.channels.vote_lg).toString()} !`
         );
 
         return await new DayVote(
             "Qui doit mourir ?",
             this.GameConfiguration,
             (debateDuration / 2) * 60 * 1000,
-            this.GameConfiguration.channelsHandler._channels.get(this.GameConfiguration.channelsHandler.channels.thiercelieux_lg),
+            this.GameConfiguration.channelsHandler._channels.get(this.GameConfiguration.channelsHandler.channels.vote_lg),
             this.GameConfiguration.getAlivePlayers().length
         ).excludeDeadPlayers().runVote();
     }
@@ -730,7 +730,7 @@ class FirstDay extends Period {
             ).then(() => {
 
                 return this.GameConfiguration.channelsHandler.switchPermissions(
-                    this.GameConfiguration.channelsHandler.channels.thiercelieux_lg,
+                    this.GameConfiguration.channelsHandler.channels.vote_lg,
                     {
                         'VIEW_CHANNEL': true,
                         'SEND_MESSAGES': true,
@@ -744,14 +744,14 @@ class FirstDay extends Period {
                 LgLogger.info('Permissions switch, init referendum.', this.gameInfo);
 
                 this.GameConfiguration.channelsHandler.sendMessageToVillage(
-                    `Votez dans le channel ${this.GameConfiguration.channelsHandler._channels.get(this.GameConfiguration.channelsHandler.channels.thiercelieux_lg).toString()} !`
+                    `Votez dans le channel ${this.GameConfiguration.channelsHandler._channels.get(this.GameConfiguration.channelsHandler.channels.vote_lg).toString()} !`
                 ).catch(console.error);
 
                 return new EveryOneVote(
                     "Qui voulez-vous élir comme capitaine ?",
                     this.GameConfiguration,
                     120000,
-                    this.GameConfiguration.channelsHandler._channels.get(this.GameConfiguration.channelsHandler.channels.thiercelieux_lg),
+                    this.GameConfiguration.channelsHandler._channels.get(this.GameConfiguration.channelsHandler.channels.vote_lg),
                     this.GameConfiguration._players.size
                 ).runVote();
 
@@ -788,7 +788,7 @@ class FirstDay extends Period {
                 }
 
                 return this.GameConfiguration.channelsHandler.switchPermissions(
-                    this.GameConfiguration.channelsHandler.channels.thiercelieux_lg,
+                    this.GameConfiguration.channelsHandler.channels.vote_lg,
                     {
                         'VIEW_CHANNEL': true,
                         'SEND_MESSAGES': false,

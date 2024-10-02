@@ -21,7 +21,7 @@ class Player {
         this.role = "Joueur";
 
         this.permission = {
-            thiercelieux_lg: {
+            vote_lg: {
                 'VIEW_CHANNEL': true,
                 'SEND_MESSAGES': false,
                 'ADD_REACTIONS': true
@@ -128,7 +128,7 @@ class LoupGarou extends Player {
         this.role = "LoupGarou";
 
         this.permission = {
-            thiercelieux_lg: {
+            vote_lg: {
                 'VIEW_CHANNEL': true,
                 'SEND_MESSAGES': false,
                 'ADD_REACTIONS': true
