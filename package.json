@@ -14,7 +14,8 @@
     "sqlite3": "^5.1.7",
     "winston": "^3.13.1",
     "winston-daily-rotate-file": "^5.0.0",
-    "ytdl-core": "^4.11.5"
+    "ytdl-core": "^4.11.5",
+    "undici": "^6.21.2"
   },
   "scripts": {
     "start": "node src/discordlgbot.js",
@@ -30,5 +31,8 @@
     "jest": "^29.7.0",
     "nyc": "^17.1.0",
     "sinon": "^20.0.0"
+  },
+  "overrides": {
+    "undici": "^6.21.2"
   }
 }
