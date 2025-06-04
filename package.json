@@ -22,11 +22,14 @@
     "run": "pm2 src/main.js",
     "restart": "pm2 main restart",
     "stop": "pm2 main stop",
-    "test": "mocha --recursive --exit"
+    "test": "mocha --recursive --exit",
+    "coverage": "nyc npm test"
   },
   "license": "GPL-3.0",
   "devDependencies": {
     "discord-api-types": "^0.37.93",
-    "jest": "^29.7.0"
+    "jest": "^29.7.0",
+    "nyc": "^17.1.0",
+    "sinon": "^20.0.0"
   }
 }
