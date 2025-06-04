@@ -16,6 +16,8 @@ describe('logger util', function () {
   afterEach(function () {
     process.chdir(cwd);
     fs.rmSync(tmp, {recursive: true, force: true});
+    delete require.cache[require.resolve('../../src/utils/logger')];
+    delete require.cache[require.resolve('../../src/utils/env')];
   });
 
   it('creates log directory on require', function () {
