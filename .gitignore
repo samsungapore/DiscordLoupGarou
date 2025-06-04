@@ -3,3 +3,5 @@ node_modules
 ./src/BotData.js
 data
 yarn.lock
+.nyc_output
+coverage
