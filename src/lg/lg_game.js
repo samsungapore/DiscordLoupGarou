@@ -33,7 +33,7 @@ class GameInfo {
         this._history = [];
         this.gameNumber = new Date().toUTCString().split(' ')[4];
         if (this.gameNumber) {
-            this.gameNumber.replace(/:+/g, "42");
+            this.gameNumber = this.gameNumber.replace(/:+/g, '42');
         }
     }
 
