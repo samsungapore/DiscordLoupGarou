@@ -6,7 +6,7 @@
   "exclude": [
     "test/**",
     "**/*.test.js",
-    "src/lg/**",
+    "src/lg/roles/**",
     "src/functions/interval.js",
     "src/functions/googleSheets.js",
     "src/functions/cmds/**",
