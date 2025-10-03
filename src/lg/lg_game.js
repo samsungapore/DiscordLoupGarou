@@ -2,7 +2,7 @@ const BotData = require("../BotData.js");
 const lg_var = require("./lg_var");
 const LgLogger = require("./lg_logger");
 const MessageEmbed = require("../utils/embed");
-const {sendEmbed, editMessage} = require("../utils/message");
+const messageUtils = require("../utils/message");
 const VoiceHandler = require("./lg_voice").VoiceHandler;
 const GameFlow = require("./lg_flow").GameFlow;
 const ChannelsHandler = require("./lg_channel").ChannelsHandler;
@@ -11,6 +11,8 @@ const ReactionHandler = require("../functions/reactionHandler").ReactionHandler;
 const Wait = require('../functions/wait').Wait;
 const {checkPermissions} = require("../utils/permission");
 const {PermissionsBitField} = require("discord.js");
+const AIController = require("../services/ai/ai_controller");
+const {VirtualMember} = require("../services/ai/virtual_member");
 
 
 class IGame {
@@ -133,7 +135,7 @@ class Game extends IGame {
 
         await this.msg.delete();
 
-        this.msg = await sendEmbed(this.stemmingChannel, CommunicationHandler.getLGSampleMsg()
+        this.msg = await messageUtils.sendEmbed(this.stemmingChannel, CommunicationHandler.getLGSampleMsg()
             .addField(
                 "Joueurs",
                 this.preparation.configuration
@@ -145,7 +147,7 @@ class Game extends IGame {
 
         await this.listenQuitEvents();
 
-        let msg = await sendEmbed(this.stemmingChannel, CommunicationHandler.getLGSampleMsg()
+        let msg = await messageUtils.sendEmbed(this.stemmingChannel, CommunicationHandler.getLGSampleMsg()
             .addField(
                 "Le jeu va bientôt commencer", "Début du jeu dans 5 secondes"
             )
@@ -158,7 +160,7 @@ class Game extends IGame {
 
         let endMsg = await this.flow.run();
 
-        await sendEmbed(this.stemmingChannel, endMsg);
+        await messageUtils.sendEmbed(this.stemmingChannel, endMsg);
         let msgSent = await this.stemmingChannel.send("Nettoyage des channels dans 5 secondes");
         await Wait.seconds(5);
         await msgSent.delete();
@@ -180,6 +182,18 @@ class Game extends IGame {
         this.msg = this.preparation.msg;
         this.flow.msg = this.preparation.msg;
         this.flow.GameConfiguration = configuration;
+
+        // Attach AI controller if requested
+        try {
+            if (this.gameOptions && this.gameOptions.ai && this.gameOptions.ai.enabled) {
+                configuration.ai = new AIController({
+                    seed: this.gameOptions.ai.seed,
+                    fast: !!this.gameOptions.ai.fast
+                });
+            }
+        } catch (e) {
+            // ignore
+        }
     }
 
     listenQuitEvents() {
@@ -313,6 +327,7 @@ class GamePreparation extends IGame {
             this.init()
                 .then(() => this.createRoles())
                 .then(() => this.displayGuide())
+                .then(() => this.injectBots())
                 .then(() => this.initEvents())
                 .then(status => {
                     // Affiche la variable status dans un message bien formaté
@@ -332,7 +347,7 @@ class GamePreparation extends IGame {
             this.MessageEmbed = CommunicationHandler.getLGSampleMsg()
                 .addField("LG - Initialisation", "Initialisation du jeu...");
 
-            sendEmbed(this.preparationChannel, this.MessageEmbed).then(msg => {
+            messageUtils.sendEmbed(this.preparationChannel, this.MessageEmbed).then(msg => {
                 this.msg = msg;
                 console.log("Game preparation message sent");
                 resolve(true);
@@ -343,7 +358,7 @@ class GamePreparation extends IGame {
     createRoles() {
         return new Promise((resolve, reject) => {
             this.rolesHandler.createRoles().then(() => resolve(true)).catch(err => {
-                editMessage(this.msg, this.MessageEmbed.setDescription("Erreur lors de la création des rôles.")).catch(() => true);
+                messageUtils.editMessage(this.msg, this.MessageEmbed.setDescription("Erreur lors de la création des rôles.")).catch(() => true);
                 reject(err);
             });
         });
@@ -360,7 +375,7 @@ class GamePreparation extends IGame {
                 .addField("Stopper la partie", "Veuillez réagir avec la réaction 🔚", true)
                 .addField("Joueurs participants au jeu", "Aucun participant pour le moment");
 
-            editMessage(this.msg, this.MessageEmbed).then(() => resolve(true)).catch(err => reject(err));
+            messageUtils.editMessage(this.msg, this.MessageEmbed).then(() => resolve(true)).catch(err => reject(err));
         });
     }
 
@@ -474,12 +489,32 @@ class GamePreparation extends IGame {
 
         this.MessageEmbed.updateParticipationField(participantsDisplayText);
         this.MessageEmbed.setFooter(`Nombre de joueurs : ${this.configuration.getParticipantsNames().length}`);
-        editMessage(this.msg, this.MessageEmbed).catch(() => true);
+        messageUtils.editMessage(this.msg, this.MessageEmbed).catch(() => true);
+    }
+
+    injectBots() {
+        return new Promise((resolve) => {
+            try {
+                const ai = this.gameOptions && this.gameOptions.ai;
+                if (!ai || !ai.enabled || !ai.bots || ai.bots <= 0) return resolve(true);
+
+                for (let i = 1; i <= ai.bots; i++) {
+                    const id = `VIRTUAL-${Date.now()}-${i}`;
+                    const vm = new VirtualMember({id, displayName: `Bot ${i}`});
+                    this.configuration.addParticipant(vm);
+                }
+
+                this.updateParticipantsDisplay();
+            } catch (e) {
+                // ignore bot injection failures
+            }
+            resolve(true);
+        });
     }
 
     askForChannelGeneration() {
         return new Promise((resolve, reject) => {
-            sendEmbed(this.preparationChannel, CommunicationHandler.getLGSampleMsg()
+            messageUtils.sendEmbed(this.preparationChannel, CommunicationHandler.getLGSampleMsg()
                 .setTitle("Voulez-vous garder les salons nécessaires au jeu sur le serveur discord une fois la partie terminée ?")
                 .setDescription("Garder les salons sur le serveur discord permet de ne plus les générer par la suite")
                 .addField("✅", "Garder les salons sur le serveur")
@@ -801,3 +836,6 @@ class CommunicationHandler extends IGame {
 }
 
 module.exports = {Game, IGame};
+module.exports.GameInfo = GameInfo;
+module.exports.GameConfiguration = GameConfiguration;
+module.exports.GamePreparation = GamePreparation;

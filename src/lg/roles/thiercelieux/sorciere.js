@@ -79,6 +79,7 @@ class Sorciere extends Villageois {
                     if (interaction.customId === 'save_yes') {
                         this.potions.vie -= 1;
                         this.savedLgTarget = true;
+                        if (lgTarget) lgTarget.savedTonightBySorciere = true;
                         // Modifier le message pour refléter le choix
                         await message.edit({content: 'Vous avez choisi de sauver la personne.', components: []});
                         collector.stop();
@@ -237,6 +238,21 @@ class Sorciere extends Villageois {
     async processRole(configuration, lgTarget) {
         return new Promise(async (resolve, reject) => {
             try {
+                // IA path: if configuration has AI and this is a virtual member, decide deterministically
+                if (configuration && configuration.ai && configuration.ai.enabled && this.member && this.member.isVirtual) {
+                    this.target = null;
+                    const decision = configuration.ai.decideSorciere({
+                        lgTargetId: lgTarget ? lgTarget.member.id : null,
+                        selfId: this.member.id
+                    });
+                    if (decision.save && this.potions.vie > 0) {
+                        this.potions.vie -= 1;
+                        this.savedLgTarget = true;
+                        if (lgTarget) lgTarget.savedTonightBySorciere = true;
+                    }
+                    // No poison by default policy
+                    return resolve(this);
+                }
                 this.target = null;
                 await this.getDMChannel();
 
@@ -254,9 +270,11 @@ class Sorciere extends Villageois {
                 );
 
                 // Demander si elle veut sauver quelqu'un
-                if (this.potions.vie > 0 && !lgTarget.immunity) {
+                if (this.potions.vie > 0 && lgTarget && !lgTarget.immunity) {
                     await this.askIfWannaSave(lgTarget);
-                } else if (lgTarget.immunity) {
+                } else if (lgTarget && lgTarget.immunity) {
+                    // Saved by Salvateur previously: mark and consume that immunity for this night
+                    lgTarget._savedBySalvateurTonight = true;
                     lgTarget.immunity = false;
                     this.targetIsSavedBySalva = true;
                 }

@@ -2,7 +2,6 @@
 const BotData = require("../BotData.js");
 const lg_var = require('./lg_var.js');
 const LgLogger = require("./lg_logger");
-const botColor = require("./lg_var").botColor;
 const LoupGarouVote = require("./lg_vote").LoupGarouVote;
 const DayVote = require("./lg_vote").DayVote;
 const get_random_in_array = require("../functions/parsing_functions").get_random_in_array;
@@ -14,7 +13,7 @@ const Vote = require("./lg_vote").DayVote;
 const CommunicationHandler = require('./message_sending').CommunicationHandler;
 let timeToString = require('../functions/time');
 const MessageEmbed = require("../utils/embed");
-const {editMessage, sendEmbed} = require("../utils/message");
+const messageUtils = require("../utils/message");
 const ReactionHandler = require("../functions/reactionHandler").ReactionHandler;
 const Message = require('discord.js').Message;
 const TextChannel = require('discord.js').TextChannel;
@@ -80,9 +79,9 @@ class GlobalTimer {
             let msgPromise = [];
 
             if (!this.message) {
-                msgPromise.push(sendEmbed(this.channel, this.embed));
+                msgPromise.push(messageUtils.sendEmbed(this.channel, this.embed));
             } else {
-                msgPromise.push(editMessage(this.message, this.embed));
+                msgPromise.push(messageUtils.editMessage(this.message, this.embed));
             }
 
             Promise.all(msgPromise)
@@ -135,7 +134,7 @@ class GlobalTimer {
             return true;
         } else {
             this.embed.setTitle(`${this.embed.title.split(':')[0]}: ${timeToString(this.time)}`);
-            await editMessage(this.message, this.embed);
+            await messageUtils.editMessage(this.message, this.embed);
             return false;
         }
     }
@@ -164,7 +163,7 @@ class GameFlow extends IGame {
 
         this.turnNb = 1;
 
-        this.gameStats = new MessageEmbed().setColor(botColor).setDescription("Fin de partie");
+        this.gameStats = new MessageEmbed().setColor(BotData.BotValues.botColor).setDescription("Fin de partie");
 
         this.deadPeople = [];
 
@@ -239,9 +238,13 @@ class GameFlow extends IGame {
     run() {
         return new Promise((resolve, reject) => {
 
-            this.GameConfiguration.globalTimer = new GlobalTimer(this.GameConfiguration.channelsHandler._channels.get(
-                this.GameConfiguration.channelsHandler.channels.vote_lg
-            ));
+            const secInterval = (this.gameOptions && this.gameOptions.ai && this.gameOptions.ai.fast) ? 0.1 : undefined;
+            this.GameConfiguration.globalTimer = new GlobalTimer(
+                this.GameConfiguration.channelsHandler._channels.get(
+                    this.GameConfiguration.channelsHandler.channels.vote_lg
+                ),
+                secInterval
+            );
 
             this.listenDeaths();
 
@@ -249,7 +252,7 @@ class GameFlow extends IGame {
 
             //this.moveEveryPlayersToVocalChannel().catch(console.error);
 
-            sendEmbed(this.GameConfiguration.channelsHandler._channels.get(this.GameConfiguration.channelsHandler.channels.vote_lg), new MessageEmbed().setColor(BotData.BotValues.botColor)
+            messageUtils.sendEmbed(this.GameConfiguration.channelsHandler._channels.get(this.GameConfiguration.channelsHandler.channels.vote_lg), new MessageEmbed().setColor(BotData.BotValues.botColor)
                     .setAuthor("Les Loups-garous de Thiercelieux [v2.3]", lg_var.roles_img.LoupGarou)
                 .setDescription('Développé par .kazuhiro_\n\n*Thiercelieux est un petit village rural d\'apparence paisible,' +
                         ' mais chaque nuit certains villageois se transforment en loups-garou pour dévorer d\'autres villageois...*\n')
@@ -261,7 +264,7 @@ class GameFlow extends IGame {
                     .setFooter("Bienvenue à Thiercelieux, sa campagne paisible, son école charmante, sa population accueillante, ainsi que " +
                         "ses traditions ancestrales et ses mystères inquiétants.", lg_var.roles_img.LoupGarou)
                     .setImage(lg_var.roles_img.LoupGarou))
-                .then(() => sendEmbed(this.GameConfiguration.channelsHandler._channels.get(this.GameConfiguration.channelsHandler.channels.vote_lg), new MessageEmbed().setColor(BotData.BotValues.botColor)
+                .then(() => messageUtils.sendEmbed(this.GameConfiguration.channelsHandler._channels.get(this.GameConfiguration.channelsHandler.channels.vote_lg), new MessageEmbed().setColor(BotData.BotValues.botColor)
                         .addField(
                             "Table ronde",
                             this.GameConfiguration.getTable().map(member => member.displayName).toString().replace(/,+/g, '\n')
@@ -475,7 +478,9 @@ class GameFlow extends IGame {
     killPlayers(shouldDie) {
         return new Promise((resolve, reject) => {
             shouldDie = [...new Set(shouldDie)];
-            shouldDie = shouldDie.filter(element => element !== undefined && element !== null);
+            // Filter out targets saved this night by Sorcière or Salvateur safeguards
+            shouldDie = shouldDie.filter(element => element !== undefined && element !== null)
+                .filter(p => !p.savedTonightBySorciere && !p._savedBySalvateurTonight && !p.savedLgTarget);
 
             if (shouldDie.length === 0) return resolve(this);
 

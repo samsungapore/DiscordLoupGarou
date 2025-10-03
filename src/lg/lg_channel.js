@@ -323,10 +323,15 @@ class ChannelsHandler extends IGame {
         let channel = this._channels.get(channelId);
 
         players.forEach(player => {
-            promises.push(channel.permissionOverwrites.create(
-                player.member,
-                transformPermissions(permission)
-            ));
+            try {
+                if (player && player.member && player.member.isVirtual) return;
+                promises.push(channel.permissionOverwrites.create(
+                    player.member,
+                    transformPermissions(permission)
+                ));
+            } catch (e) {
+                // ignore
+            }
         });
 
         await Promise.all(promises);
@@ -360,10 +365,15 @@ class ChannelsHandler extends IGame {
         if (channel.type !== ChannelType.GuildCategory) {
 
             for (let player of players.values()) {
-                promises.push(channel.permissionOverwrites.create(
-                    player.member,
-                    transformPermissions(player.permission[channel.name])
-                ));
+                try {
+                    if (player && player.member && player.member.isVirtual) continue;
+                    promises.push(channel.permissionOverwrites.create(
+                        player.member,
+                        transformPermissions(player.permission[channel.name])
+                    ));
+                } catch (e) {
+                    // ignore
+                }
             }
 
         }
@@ -422,19 +432,29 @@ class ChannelsHandler extends IGame {
     deleteMessagesInChannels() {
         return new Promise((resolve, reject) => {
 
-            let promises = [];
+            const targets = [
+                this._channels.get(this.channels.vote_lg),
+                this._channels.get(this.channels.loups_garou_lg),
+                this._channels.get(this.channels.paradis_lg)
+            ].filter(Boolean);
 
-            promises.push(this.deleteMessagesInChannel(this._channels.get(this.channels.vote_lg)));
-            promises.push(this.deleteMessagesInChannel(this._channels.get(this.channels.loups_garou_lg)));
-            promises.push(this.deleteMessagesInChannel(this._channels.get(this.channels.paradis_lg)));
-
-            Promise.all(promises).then(() => resolve(true)).catch(err => reject(err));
+            Promise.all(targets.map(ch => this.deleteMessagesInChannel(ch)))
+                .then(() => resolve(true))
+                .catch(err => reject(err));
 
         });
     }
 
     async deleteMessagesInChannel(channel) {
-        await channel.bulkDelete(channel.messages.cache, true);
+        if (!channel || channel.type !== ChannelType.GuildText) return;
+        try {
+            const messages = await channel.messages.fetch({limit: 100});
+            if (messages && messages.size > 0) {
+                await channel.bulkDelete(messages, true);
+            }
+        } catch (e) {
+            return;
+        }
     }
 
 }

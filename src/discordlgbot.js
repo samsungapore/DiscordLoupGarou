@@ -26,7 +26,7 @@ const clientOptions = {
 const LGBot = new LGDB(clientOptions).init();
 
 
-LGBot.on('ready', () => {
+LGBot.on('clientReady', () => {
 
     console.info('The bot is ready.');
     console.info(`Connected to ${LGBot.guilds.cache.size} servers, servicing ${LGBot.users.cache.size} unique users.`);

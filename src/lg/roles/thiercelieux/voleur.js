@@ -40,6 +40,23 @@ class Voleur extends Villageois {
 
     proposeRoleChoice(gameConf) {
         return new Promise((resolve, reject) => {
+            // IA path: bypass interactive flow for virtual members
+            try {
+                if (gameConf && gameConf.ai && gameConf.ai.enabled && this.member && this.member.isVirtual) {
+                    gameConf.rolesHandler.getAdditionnalRoles(2).then((roles) => {
+                        this.additionnalRoles = roles;
+                        const decision = gameConf.ai.decideVoleur({additionalRoles: roles});
+                        if (decision.keep) {
+                            this.roleChosen = undefined;
+                        } else {
+                            this.roleChosen = decision.role || roles[0];
+                        }
+                        return resolve(this);
+                    }).catch(() => resolve(this));
+                    return;
+                }
+            } catch (e) { /* ignore and fallback to interactive */
+            }
 
             let dmchanpromise = [];
 
