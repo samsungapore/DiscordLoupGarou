@@ -1,0 +1,23 @@
+{
+  "all": true,
+  "include": [
+    "src/**/*.js"
+  ],
+  "exclude": [
+    "test/**",
+    "**/*.test.js",
+    "src/lg/roles/**",
+    "src/functions/interval.js",
+    "src/functions/googleSheets.js",
+    "src/functions/cmds/**",
+    "src/commands/new.js",
+    "src/commands/help.js",
+    "src/commands/reload.js",
+    "src/commands/restart.js",
+    "src/discordlgbot.js"
+  ],
+  "reporter": [
+    "text",
+    "lcov"
+  ]
+}
