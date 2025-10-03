@@ -3,30 +3,55 @@
   "version": "1.0.0",
   "description": "Discord bot to play Loup Garou games",
   "dependencies": {
-    "discord.js": "^14.15.3",
-    "dotenv": "^16.4.5",
-    "googleapis": "^144.0.0",
+    "discord.js": "^14.22.1",
+    "dotenv": "^17.2.3",
+    "generic-pool": "^3.9.0",
+    "googleapis": "^160.0.0",
     "graceful-fs": "^4.2.3",
     "isomorphic-fetch": "^3.0.0",
-    "keyv": "^5.0.1",
-    "mocha": "^10.7.0",
+    "keyv": "^5.5.3",
+    "mocha": "^11.7.3",
     "node-webhooks": "^1.4.2",
     "promised-sqlite3": "^2.1.0",
     "sqlite3": "^5.1.7",
-    "winston": "^3.13.1",
+    "winston": "^3.18.2",
     "winston-daily-rotate-file": "^5.0.0",
     "ytdl-core": "^4.11.5"
   },
   "scripts": {
     "start": "node src/discordlgbot.js",
-    "run": "pm2 src/main.js",
-    "restart": "pm2 main restart",
-    "stop": "pm2 main stop",
-    "test": "mocha --recursive --exit"
+    "run": "pm2 start src/discordlgbot.js --name lgdb",
+    "restart": "pm2 restart lgdb",
+    "stop": "pm2 stop lgdb",
+    "test": "mocha \"test/persistence/**/*.js\" \"test/services/**/*.js\" \"test/functions/**/*.mocha.js\" \"test/utils/**/*.mocha.js\" \"test/lg/**/*.mocha.js\" --exit",
+    "test:coverage": "nyc mocha \"test/persistence/**/*.js\" \"test/services/**/*.js\" \"test/functions/**/*.mocha.js\" \"test/utils/**/*.mocha.js\" \"test/lg/**/*.mocha.js\" --exit",
+    "coverage": "nyc report --reporter=html"
   },
   "license": "GPL-3.0",
   "devDependencies": {
-    "discord-api-types": "^0.37.93",
-    "jest": "^29.7.0"
+    "discord-api-types": "^0.38.26",
+    "istanbul": "^0.4.5",
+    "nyc": "^17.1.0"
+  },
+  "nyc": {
+    "reporter": [
+      "text-summary",
+      "html"
+    ],
+    "all": false,
+    "check-coverage": true,
+    "statements": 45,
+    "branches": 45,
+    "functions": 34,
+    "lines": 45,
+    "exclude": [
+      "test/**",
+      "src/lg/**",
+      "src/commands/**",
+      "src/discordlgbot.js",
+      "src/utils/embed.js",
+      "src/utils/message.js",
+      "src/functions/cmds/**"
+    ]
   }
 }

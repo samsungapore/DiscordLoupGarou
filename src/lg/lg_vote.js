@@ -65,6 +65,22 @@ class Vote {
                 });
             }
 
+            // AI shortcut: if configuration has deterministic AI enabled, bypass interactive vote
+            try {
+                if (this.configuration && this.configuration.ai && this.configuration.ai.enabled) {
+                    const aiIds = ids.filter(id => !exceptionArrayOfIds.includes(id));
+                    const winners = this.configuration.ai.decideVote({
+                        type: this.constructor.name,
+                        ids: aiIds,
+                        configuration: this.configuration,
+                        maxVotes: this.maxVotes
+                    });
+                    return resolve(Array.isArray(winners) ? winners : (winners ? [winners] : []));
+                }
+            } catch (e) {
+                // fallback to interactive path
+            }
+
             new Sondage(
                 this.question, names, this.channel, this.time,
                 CommunicationHandler.getLGSampleMsg(),
@@ -123,4 +139,4 @@ class VillageoisVote extends Vote {
 
 }
 
-module.exports = {LoupGarouVote, EveryOneVote: EveryoneVote, VillageoisVote, DayVote};
+module.exports = {Vote, LoupGarouVote, EveryOneVote: EveryoneVote, VillageoisVote, DayVote};

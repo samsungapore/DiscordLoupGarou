@@ -186,10 +186,9 @@ class RolesHandler extends IGame {
         await this.deleteOlderRoles();
 
         for (const role_name of Object.keys(this.roles)) {
-            // Corrected role creation
             let role = await this.guild.roles.create({
                 name: role_name,
-                color: this.roles[role_name].color,
+                colors: {primaryColor: this.roles[role_name].color},
                 hoist: true,
                 reason: 'Creating role for game',
             });
@@ -218,18 +217,22 @@ class RolesHandler extends IGame {
      * @returns {Promise<GuildMember>}
      */
     addPlayerRole(guildMember) {
+        if (guildMember && guildMember.isVirtual) return Promise.resolve(guildMember);
         return guildMember.roles.add(this.roles.JoueurLG.object);
     }
 
     addDeadRole(guildMember) {
+        if (guildMember && guildMember.isVirtual) return Promise.resolve(guildMember);
         return guildMember.roles.add(this.roles.MortLG.object);
     }
 
     removePlayerRole(guildMember) {
+        if (guildMember && guildMember.isVirtual) return Promise.resolve(guildMember);
         return guildMember.roles.remove(this.roles.JoueurLG.object);
     }
 
     removeDeadRole(guildMember) {
+        if (guildMember && guildMember.isVirtual) return Promise.resolve(guildMember);
         return guildMember.roles.remove(this.roles.MortLG.object);
     }
 
@@ -238,6 +241,7 @@ class RolesHandler extends IGame {
      * @param guildMember
      */
     removeRoles(guildMember) {
+        if (guildMember && guildMember.isVirtual) return;
         guildMember.roles.remove(this.roles.JoueurLG.object).catch(() => true);
         guildMember.roles.remove(this.roles.MortLG.object).catch(() => true);
     }
@@ -385,6 +389,10 @@ class RolesHandler extends IGame {
 
         for (let player of configuration.getPlayers().values()) {
             try {
+                if (player.member && player.member.isVirtual) {
+                    successfulSends++;
+                    continue;
+                }
                 // Tente de créer un canal de MP avec l'utilisateur
                 let dmChannel = await player.member.user.createDM(true);
                 // Envoie le message embed

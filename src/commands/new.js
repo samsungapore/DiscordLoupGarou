@@ -2,6 +2,7 @@ let botData = require("../BotData.js");
 const LoupGarou = require("../lg/lg_game");
 const getMusics = require('../functions/googleSheets');
 const MessageEmbed = require("../utils/embed");
+const messageUtils = require("../utils/message");
 const LgLogger = require("../lg/lg_logger.js");
 const get_random_in_array = require("../functions/parsing_functions").get_random_in_array;
 const SondageInfiniteChoice = require("../functions/cmds/referendum").SondageInfiniteChoice;
@@ -13,6 +14,13 @@ class GameOptions {
         this._musics = null;
 
         this.musicMode = null;
+
+        this.ai = {
+            enabled: false,
+            bots: 0,
+            seed: 42,
+            fast: false,
+        };
 
         return this;
     }
@@ -68,7 +76,7 @@ let askMusicMode = async (message) => {
     return musicsData[finalChoice];
 };
 
-let askOptions = async (message) => {
+let askOptions = async (message, args) => {
 
     let gameOptions = new GameOptions();
 
@@ -76,13 +84,35 @@ let askOptions = async (message) => {
 
     //await message.channel.send(new MessageEmbed().setColor(botData.BotValues.botColor).setTitle(`Musiques utilisées : ${gameOptions.musicMode.name}`));
 
+    // Parse AI args: --bots N --seed S --fast
+    if (Array.isArray(args)) {
+        const getNum = (v, d) => {
+            const n = parseInt(v, 10);
+            return isNaN(n) ? d : n;
+        };
+        for (const a of args) {
+            if (a.startsWith('--bots')) {
+                const parts = a.split('=');
+                const v = parts[1] || args[args.indexOf(a) + 1];
+                gameOptions.ai.bots = getNum(v, 0);
+                gameOptions.ai.enabled = gameOptions.ai.bots > 0;
+            } else if (a.startsWith('--seed')) {
+                const parts = a.split('=');
+                const v = parts[1] || args[args.indexOf(a) + 1];
+                gameOptions.ai.seed = getNum(v, 42);
+            } else if (a === '--fast') {
+                gameOptions.ai.fast = true;
+            }
+        }
+    }
+
     return gameOptions;
 
 };
 
-let launchNewGame = async (LGBot, message, LG) => {
+let launchNewGame = async (LGBot, message, LG, args) => {
 
-    let gameOptions = await askOptions(message);
+    let gameOptions = await askOptions(message, args);
 
     LG.running = true;
     LG.stemming = message.author.id;
@@ -103,7 +133,7 @@ let launchNewGame = async (LGBot, message, LG) => {
 module.exports = {
     name: 'new',
     description: 'Lancer une nouvelle partie de Thiercelieux',
-    execute(LGBot, message) {
+    execute(LGBot, message, args) {
 
         if (!message.member) {
             return;
@@ -118,7 +148,7 @@ module.exports = {
 
         if (!LG.running) {
 
-            launchNewGame(LGBot, message, LG).catch(err => {
+            launchNewGame(LGBot, message, LG, args).catch(err => {
                 if (err.name === "DiscordAPIError") {
                     let errMsg = new MessageEmbed()
                         .setTitle("Erreur rencontrée avec l'API Discord.")
@@ -131,10 +161,13 @@ module.exports = {
                     if (err.message === "Missing Permissions") errMsg.setDescription("Assurez-vous d'avoir donné la permission 'Administrateur' au bot");
 
 
-                    message.channel.send(errMsg).catch(console.error);
-                    LGBot.users.cache.find((user) => user.id === '140033402681163776').send(errMsg).catch(console.error)
+                    messageUtils.sendEmbed(message.channel, errMsg).catch(console.error);
+                    const adminUser = LGBot.users.cache.find((user) => user.id === '140033402681163776');
+                    if (adminUser) {
+                        messageUtils.sendEmbed(adminUser, errMsg).catch(console.error);
+                    }
                 } else {
-                    message.channel.send(err).catch(console.error);
+                    message.channel.send(err?.message || String(err)).catch(console.error);
                 }
                 console.error(err);
             });
