@@ -149,22 +149,75 @@ module.exports = {
         if (!LG.running) {
 
             launchNewGame(LGBot, message, LG, args).catch(err => {
-                if (err.name === "DiscordAPIError") {
+                const errName = String(err?.name || '');
+                const isDiscordApiError = errName.startsWith('DiscordAPIError');
+                const isMissingPerm = /Missing Permissions/i.test(String(err?.message || '')) || err?.code === 50013;
+
+                if (isDiscordApiError) {
                     let errMsg = new MessageEmbed()
                         .setTitle("Erreur rencontrée avec l'API Discord.")
                         .addField('Nom de l\'erreur', err.name)
                         .addField('Type', err.message)
                         .addField('Path', err.path)
-                        .addField('Method', err.method)
-                        .setDescription(err.stack);
+                        .addField('Method', err.method);
 
-                    if (err.message === "Missing Permissions") errMsg.setDescription("Assurez-vous d'avoir donné la permission 'Administrateur' au bot");
+                    if (isMissingPerm) {
+                        try {
+                            const {PermissionsBitField} = require('discord.js');
+                            const permUtils = require('../utils/permission');
+                            const status = permUtils.getBotPermissionStatus(message.guild);
+                            const neededForOp = permUtils.inferRequiredFromError(err);
+                            const fmt = (flags) => flags.map(f => PermissionsBitField.Flags[f] ? f : Object.keys(PermissionsBitField.Flags).find(k => PermissionsBitField.Flags[k] === f) || String(f));
+                            const present = fmt(status.present);
+                            const missing = fmt(status.missing);
+                            const opReq = fmt(neededForOp);
 
+                            errMsg.setTitle('Permissions du bot sur ce serveur');
+                            if (opReq.length) errMsg.addField('Opération bloquée', `Permissions requises: ${opReq.join(', ')}`);
+                            if (!status.unknown) {
+                                errMsg.addField('Déjà accordées', present.length ? present.join(', ') : 'Aucune');
+                                errMsg.addField('Manquantes', missing.length ? missing.join(', ') : 'Aucune');
+                            } else {
+                                errMsg.addField('Diagnostic', 'Impossible de récupérer les permissions actuelles du bot.');
+                            }
 
+                            const inviteBits = permUtils.bitfieldOf(permUtils.REQUIRED_PERMISSIONS);
+                            const invite = permUtils.buildInviteLink(inviteBits);
+                            if (invite) errMsg.addField('Inviter avec permissions minimales', invite);
+                        } catch (_) {
+                            errMsg.setDescription("Permissions manquantes. Veuillez accorder les permissions nécessaires au bot.");
+                        }
+                    }
                     messageUtils.sendEmbed(message.channel, errMsg).catch(console.error);
                     const adminUser = LGBot.users.cache.find((user) => user.id === '140033402681163776');
                     if (adminUser) {
                         messageUtils.sendEmbed(adminUser, errMsg).catch(console.error);
+                    }
+                } else if (isMissingPerm) {
+                    try {
+                        const {PermissionsBitField} = require('discord.js');
+                        const permUtils = require('../utils/permission');
+                        const status = permUtils.getBotPermissionStatus(message.guild);
+                        const neededForOp = permUtils.inferRequiredFromError(err);
+                        const fmt = (flags) => flags.map(f => PermissionsBitField.Flags[f] ? f : Object.keys(PermissionsBitField.Flags).find(k => PermissionsBitField.Flags[k] === f) || String(f));
+                        const present = fmt(status.present);
+                        const missing = fmt(status.missing);
+                        const opReq = fmt(neededForOp);
+
+                        const errMsg = new MessageEmbed().setTitle('Permissions du bot sur ce serveur');
+                        if (opReq.length) errMsg.addField('Opération bloquée', `Permissions requises: ${opReq.join(', ')}`);
+                        if (!status.unknown) {
+                            errMsg.addField('Déjà accordées', present.length ? present.join(', ') : 'Aucune');
+                            errMsg.addField('Manquantes', missing.length ? missing.join(', ') : 'Aucune');
+                        } else {
+                            errMsg.addField('Diagnostic', 'Impossible de récupérer les permissions actuelles du bot.');
+                        }
+                        const inviteBits = permUtils.bitfieldOf(permUtils.REQUIRED_PERMISSIONS);
+                        const invite = permUtils.buildInviteLink(inviteBits);
+                        if (invite) errMsg.addField('Inviter avec permissions minimales', invite);
+                        messageUtils.sendEmbed(message.channel, errMsg).catch(console.error);
+                    } catch (_) {
+                        message.channel.send("Permissions manquantes. Veuillez accorder les permissions nécessaires au bot.").catch(console.error);
                     }
                 } else {
                     message.channel.send(err?.message || String(err)).catch(console.error);

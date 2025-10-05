@@ -1,23 +1,22 @@
 {
-  "all": true,
-  "include": [
-    "src/**/*.js"
-  ],
+  "all": false,
+  "check-coverage": true,
+  "statements": 80,
+  "branches": 80,
+  "functions": 80,
+  "lines": 80,
   "exclude": [
     "test/**",
-    "**/*.test.js",
-    "src/lg/roles/**",
-    "src/functions/interval.js",
-    "src/functions/googleSheets.js",
+    "src/lg/**",
+    "src/commands/**",
+    "src/discordlgbot.js",
+    "src/utils/embed.js",
+    "src/utils/message.js",
     "src/functions/cmds/**",
-    "src/commands/new.js",
-    "src/commands/help.js",
-    "src/commands/reload.js",
-    "src/commands/restart.js",
-    "src/discordlgbot.js"
+    "src/services/index.js"
   ],
   "reporter": [
-    "text",
-    "lcov"
+    "text-summary",
+    "html"
   ]
 }

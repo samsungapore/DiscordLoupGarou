@@ -181,11 +181,17 @@ class GameFlow extends IGame {
                 }
 
                 this.onPause += 1;
-                LgLogger.info("onpause + 1", this.gameInfo);
+                LgLogger.event('debug', 'death.queue.pause', 'pause +1', { onPause: this.onPause }, this.gameInfo);
 
                 this.deadPeople.push(deadPlayer);
 
-                LgLogger.info("Death triggered", this.gameInfo);
+                LgLogger.event('info', 'death.trigger', 'Death triggered', {
+                    playerId: deadPlayer.member && deadPlayer.member.id,
+                    playerName: deadPlayer.member && deadPlayer.member.displayName,
+                    role: deadPlayer.role,
+                    team: deadPlayer.team,
+                    turn: this.turnNb
+                }, this.gameInfo);
 
                 deadPlayer.alive = false;
 
@@ -220,14 +226,16 @@ class GameFlow extends IGame {
                         collateralDeaths.forEach(person => setImmediate(() => this.killer.emit("death", person)));
                     }
 
-                    LgLogger.info("onpause - 1", this.gameInfo);
-                    this.onPause -= 1;
+                    const next = this.onPause - 1;
+                    LgLogger.event('debug', 'death.queue.resume', 'pause -1', { onPause: next }, this.gameInfo);
+                    this.onPause = next;
                     setImmediate(() => this.killer.emit("death_processed"));
 
                 })).catch(err => {
                     console.error(err);
-                    LgLogger.info("onpause - 1", this.gameInfo);
-                    this.onPause -= 1;
+                    const next = this.onPause - 1;
+                    LgLogger.event('debug', 'death.queue.resume', 'pause -1', { onPause: next }, this.gameInfo);
+                    this.onPause = next;
                     setImmediate(() => this.killer.emit("death_processed"));
                 });
 
@@ -248,7 +256,10 @@ class GameFlow extends IGame {
 
             this.listenDeaths();
 
-            LgLogger.info('Game start', this.gameInfo);
+            LgLogger.event('info', 'game.start', 'Game start', {
+                turn: this.turnNb,
+                alive: this.GameConfiguration.getAlivePlayers().length
+            }, this.gameInfo);
 
             //this.moveEveryPlayersToVocalChannel().catch(console.error);
 
@@ -420,7 +431,10 @@ class GameFlow extends IGame {
 
         }
 
-        LgLogger.info(`Game ended: ${gameHasEnded} | game status: ${JSON.stringify(gameStatus)}`, this.gameInfo);
+        LgLogger.event('info', 'game.status', 'Game status update', {
+            ended: gameHasEnded,
+            status: gameStatus
+        }, this.gameInfo);
 
         return gameHasEnded
     }
@@ -470,7 +484,10 @@ class GameFlow extends IGame {
 
         }
 
-        LgLogger.info("Game is over", this.gameInfo);
+        LgLogger.event('info', 'game.end', 'Game is over', {
+            turn: this.turnNb,
+            survivors: this.GameConfiguration.getAlivePlayers().map(p => ({ id: p.member.id, name: p.member.displayName, role: p.role, team: p.team }))
+        }, this.gameInfo);
 
         return this.gameStats;
     }
@@ -485,10 +502,15 @@ class GameFlow extends IGame {
             if (shouldDie.length === 0) return resolve(this);
 
             shouldDie.forEach(person => person ? setImmediate(() => this.killer.emit("death", person)) : null);
-            LgLogger.info(`Should die : ${shouldDie.map(p => p ? p.member.displayName : null).toString()}`, this.gameInfo);
+            LgLogger.event('info', 'death.queue', 'Queued deaths', {
+                targets: shouldDie.map(p => p ? ({ id: p.member.id, name: p.member.displayName, role: p.role, team: p.team }) : null)
+            }, this.gameInfo);
             this.killer.on("death_processed", () => {
                 if (!this.onPause) {
-                    LgLogger.info("resolve kill players", this.gameInfo);
+                    LgLogger.event('info', 'death.resolve', 'Resolved all deaths', {
+                        processed: this.deadPeople.map(p => ({ id: p.member.id, name: p.member.displayName, role: p.role, team: p.team })),
+                        total: this.deadPeople.length
+                    }, this.gameInfo);
                     resolve(this);
                 }
             });
@@ -539,7 +561,11 @@ class Day extends Period {
 
     goThrough() {
         return new Promise((resolve, reject) => {
-            LgLogger.info("Going through day", this.gameInfo);
+            LgLogger.event('info', 'phase.change', 'Going through day', {
+                phase: 'day',
+                turn: this.turnNb,
+                alive: this.GameConfiguration.getAlivePlayers().length
+            }, this.gameInfo);
 
             this.displayNightOutcome()
                 .then(() => this.debateTime())
@@ -727,7 +753,7 @@ class FirstDay extends Period {
     capitaineElection() {
         return new Promise((resolve, reject) => {
 
-            LgLogger.info('Begining capitaine election.', this.gameInfo);
+            LgLogger.event('info', 'election.start', 'Starting capitaine election', { turn: this.turnNb }, this.gameInfo);
 
             this.GameConfiguration.channelsHandler.sendMessageToVillage(
                 "🏔 Les villageois se réunissent afin d'élir leur capitaine\n" +
@@ -746,7 +772,7 @@ class FirstDay extends Period {
 
             }).then(() => {
 
-                LgLogger.info('Permissions switch, init referendum.', this.gameInfo);
+                LgLogger.event('debug', 'election.permissions', 'Permissions switch, init referendum.', {}, this.gameInfo);
 
                 this.GameConfiguration.channelsHandler.sendMessageToVillage(
                     `Votez dans le channel ${this.GameConfiguration.channelsHandler._channels.get(this.GameConfiguration.channelsHandler.channels.vote_lg).toString()} !`
@@ -761,8 +787,17 @@ class FirstDay extends Period {
                 ).runVote();
 
             }).then((outcome) => {
-
-                LgLogger.info("Capitaine outcome : " + outcome, this.gameInfo);
+                let outcomeData;
+                if (!outcome || outcome.length === 0) {
+                    outcomeData = { status: 'no_election' };
+                } else if (outcome.length === 1) {
+                    const id = outcome[0];
+                    const elected = this.GameConfiguration._players.get(id);
+                    outcomeData = { status: 'elected', id, name: elected ? elected.member.displayName : undefined };
+                } else {
+                    outcomeData = { status: 'tie', candidates: outcome };
+                }
+                LgLogger.event('info', 'election.result', 'Capitaine outcome', outcomeData, this.gameInfo);
 
                 if (outcome.length === 0) {
                     this.GameConfiguration.channelsHandler.sendMessageToVillage(
@@ -885,7 +920,11 @@ class Night extends Period {
     goThrough() {
         return new Promise((resolve, reject) => {
 
-            LgLogger.info("Going through night", this.gameInfo);
+            LgLogger.event('info', 'phase.change', 'Going through night', {
+                phase: 'night',
+                turn: this.turnNb,
+                alive: this.GameConfiguration.getAlivePlayers().length
+            }, this.gameInfo);
             this.shouldDieTonight.clear();
             this.GameConfiguration.channelsHandler.sendMessageToVillage("🌌 La nuit tombe.")
                 .then(() => Promise.all([

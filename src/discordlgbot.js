@@ -1,8 +1,7 @@
 const {LGDB} = require('./LGDB');
-const {GatewayIntentBits} = require('discord-api-types/v10');
-
 const BotData = require("./BotData");
-const {Partials} = require("discord.js");
+const {GatewayIntentBits, Partials} = require("discord.js");
+const {loadSlashCommands, registerSlashCommands} = require('./slashCommands');
 
 // ClientOptions type
 const clientOptions = {
@@ -24,6 +23,10 @@ const clientOptions = {
 }
 
 const LGBot = new LGDB(clientOptions).init();
+loadSlashCommands(LGBot);
+LGBot.once('ready', async () => {
+    try { await registerSlashCommands(LGBot); } catch (e) { console.error('Slash register failed', e); }
+});
 
 
 LGBot.on('clientReady', () => {
@@ -53,6 +56,22 @@ LGBot.on('resume', nb => {
     console.info(`Connection resumed. Replayed: ${nb}`);
 });
 
+// Generic slash command dispatcher
+LGBot.on('interactionCreate', async (interaction) => {
+    if (!interaction.isChatInputCommand()) return;
+    const cmd = LGBot.slashCommands?.get(interaction.commandName);
+    if (!cmd) return;
+    try { await cmd.execute(interaction); }
+    catch (e) {
+        console.error('Slash command error', e);
+        try {
+            const content = 'An error occurred while processing the command.';
+            if (interaction.deferred || interaction.replied) await interaction.editReply(content);
+            else await interaction.reply({content, ephemeral: true});
+        } catch (_) {}
+    }
+});
+
 LGBot.on('messageCreate', message => {
 
     if (message.author.bot) return;
@@ -65,6 +84,13 @@ LGBot.on('messageCreate', message => {
     }
 
     if (!LGBot.commands.has(command)) return;
+
+    // Short deprecation notice pointing to slash commands
+    try {
+        const slashMap = { addadmins: 'add-admins', setloglevel: 'set-log-level' };
+        const slashName = slashMap[command] || command;
+        message.reply(`Commande dépréciée: utilisez plutôt /${slashName}`).catch(console.error);
+    } catch (_) {}
 
     try {
         LGBot.commands.get(command).execute(LGBot, message, args);

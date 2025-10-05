@@ -1,6 +1,7 @@
 {
   "name": "discord_loup_garou",
   "version": "1.0.0",
+  "private": true,
   "description": "Discord bot to play Loup Garou games",
   "dependencies": {
     "discord.js": "^14.22.1",
@@ -11,7 +12,6 @@
     "isomorphic-fetch": "^3.0.0",
     "keyv": "^5.5.3",
     "mocha": "^11.7.3",
-    "node-webhooks": "^1.4.2",
     "promised-sqlite3": "^2.1.0",
     "sqlite3": "^5.1.7",
     "winston": "^3.18.2",
@@ -24,13 +24,13 @@
     "restart": "pm2 restart lgdb",
     "stop": "pm2 stop lgdb",
     "test": "mocha \"test/persistence/**/*.js\" \"test/services/**/*.js\" \"test/functions/**/*.mocha.js\" \"test/utils/**/*.mocha.js\" \"test/lg/**/*.mocha.js\" --exit",
-    "test:coverage": "nyc mocha \"test/persistence/**/*.js\" \"test/services/**/*.js\" \"test/functions/**/*.mocha.js\" \"test/utils/**/*.mocha.js\" \"test/lg/**/*.mocha.js\" --exit",
-    "coverage": "nyc report --reporter=html"
+    "test:coverage": "nyc mocha \"test/persistence/**/*.js\" \"test/services/**/*.js\" \"test/functions/**/*.mocha.js\" \"test/utils/**/*.mocha.js\" --exit",
+    "coverage": "nyc report --reporter=html",
+    "postinstall": "patch-package"
   },
   "license": "GPL-3.0",
   "devDependencies": {
-    "discord-api-types": "^0.38.26",
-    "istanbul": "^0.4.5",
+    "patch-package": "^8.0.0",
     "nyc": "^17.1.0"
   },
   "nyc": {
@@ -40,18 +40,20 @@
     ],
     "all": false,
     "check-coverage": true,
-    "statements": 45,
-    "branches": 45,
-    "functions": 34,
-    "lines": 45,
+    "statements": 80,
+    "branches": 80,
+    "functions": 80,
+    "lines": 80,
+    "include": [],
     "exclude": [
       "test/**",
-      "src/lg/**",
-      "src/commands/**",
-      "src/discordlgbot.js",
-      "src/utils/embed.js",
-      "src/utils/message.js",
-      "src/functions/cmds/**"
+      "**/src/lg/**",
+      "**/src/commands/**",
+      "**/src/discordlgbot.js",
+      "**/src/utils/embed.js",
+      "**/src/utils/message.js",
+      "**/src/functions/cmds/**",
+      "**/src/services/index.js"
     ]
   }
 }

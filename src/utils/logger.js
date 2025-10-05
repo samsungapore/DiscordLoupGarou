@@ -24,37 +24,48 @@ if (!process.env.LOG_PATH) {
     require('./env');
 }
 
-if (!fs.existsSync('./logs')) {
-    fs.mkdirSync('./logs');
+const defaultLogDir = './logs';
+const LOG_DIR = process.env.LOG_PATH || defaultLogDir;
+if (!fs.existsSync(LOG_DIR)) {
+    fs.mkdirSync(LOG_DIR, {recursive: true});
 }
 
-let transport = new (winston.transports.DailyRotateFile)({
-    filename: join(process.env.LOG_PATH, '/%DATE%.log'),
+const fileTransport = new (winston.transports.DailyRotateFile)({
+    filename: join(LOG_DIR, '/%DATE%.log'),
     datePattern: 'YYYY_MM_DD',
     zippedArchive: true,
     maxSize: '20m',
-    maxFiles: '14d'
+    maxFiles: '14d',
+    level: process.env.LOG_LEVEL || 'info',
+    format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.uncolorize(),
+        winston.format.json()
+    )
 });
 
-winston.configure({
-    level: 'info',
+const consoleTransport = new winston.transports.Console({
+    level: process.env.LOG_LEVEL || 'info',
     format: winston.format.combine(
         winston.format.colorize(),
         winston.format.timestamp(),
-        winston.format.align(),
         winston.format.printf((info) => {
-            const {
-                timestamp, level, message, ...args
-            } = info;
-
-            const ts = timestamp.slice(0, 19).replace('T', ' ');
-            return `${ts} [${level}]: ${message} ${Object.keys(args).length ? JSON.stringify(args, null, 2) : ''}`;
+            const {timestamp, level, message, ...meta} = info;
+            const ts = String(timestamp).slice(0, 19).replace('T', ' ');
+            const kv = [];
+            for (const [k, v] of Object.entries(meta)) {
+                if (v === undefined || v === null) continue;
+                if (typeof v === 'object') kv.push(`${k}=${JSON.stringify(v)}`);
+                else kv.push(`${k}=${v}`);
+            }
+            return `${ts} [${level}]: ${message}${kv.length ? ' ' + kv.join(' ') : ''}`;
         }),
-    ),
-    transports: [
-        //transport,
-        new winston.transports.Console({level: 'debug'}),
-    ],
+    )
+});
+
+winston.configure({
+    level: process.env.LOG_LEVEL || 'info',
+    transports: [consoleTransport, fileTransport],
 });
 
 module.exports = winston;
