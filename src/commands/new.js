@@ -6,6 +6,7 @@ const messageUtils = require("../utils/message");
 const LgLogger = require("../lg/lg_logger.js");
 const get_random_in_array = require("../functions/parsing_functions").get_random_in_array;
 const SondageInfiniteChoice = require("../functions/cmds/referendum").SondageInfiniteChoice;
+const {parseRoleComposition} = require("../utils/roleCompositionParser");
 
 class GameOptions {
     constructor() {
@@ -21,6 +22,8 @@ class GameOptions {
             seed: 42,
             fast: false,
         };
+
+        this.roleComposition = null;
 
         return this;
     }
@@ -90,18 +93,48 @@ let askOptions = async (message, args) => {
             const n = parseInt(v, 10);
             return isNaN(n) ? d : n;
         };
-        for (const a of args) {
+
+        for (let i = 0; i < args.length; i++) {
+            const a = args[i];
+
+            const extractValue = () => {
+                const eqIndex = a.indexOf('=');
+                if (eqIndex !== -1) {
+                    const value = a.slice(eqIndex + 1).trim();
+                    if (value) {
+                        return value;
+                    }
+                }
+
+                const next = args[i + 1];
+                if (next && !next.startsWith('--')) {
+                    i += 1;
+                    return next;
+                }
+
+                return undefined;
+            };
+
             if (a.startsWith('--bots')) {
-                const parts = a.split('=');
-                const v = parts[1] || args[args.indexOf(a) + 1];
+                const v = extractValue();
                 gameOptions.ai.bots = getNum(v, 0);
                 gameOptions.ai.enabled = gameOptions.ai.bots > 0;
             } else if (a.startsWith('--seed')) {
-                const parts = a.split('=');
-                const v = parts[1] || args[args.indexOf(a) + 1];
+                const v = extractValue();
                 gameOptions.ai.seed = getNum(v, 42);
             } else if (a === '--fast') {
                 gameOptions.ai.fast = true;
+            } else if (a.startsWith('--roles')) {
+                const value = extractValue();
+                if (!value) {
+                    throw new Error('Missing role composition specification for --roles');
+                }
+
+                try {
+                    gameOptions.roleComposition = parseRoleComposition(value);
+                } catch (err) {
+                    throw new Error(`Invalid role composition: ${err.message}`);
+                }
             }
         }
     }

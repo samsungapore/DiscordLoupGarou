@@ -306,7 +306,7 @@ class GamePreparation extends IGame {
         this.stemmingPlayer = player;
         this.preparationChannel = channel;
         this.configuration = new GameConfiguration(this.gameInfo);
-        this.rolesHandler = new RolesHandler(client, guild, this.gameInfo);
+        this.rolesHandler = new RolesHandler(client, guild, this.gameInfo, this.gameOptions && this.gameOptions.roleComposition);
         this.channelsHandler = new ChannelsHandler(client, guild, this.gameInfo);
         //this.voiceHandler = new VoiceHandler(this.channelsHandler._channels.get(this.channelsHandler.voiceChannels.vocal_lg), gameOptions.musicMode);
         this.configuration.rolesHandler = this.rolesHandler;
