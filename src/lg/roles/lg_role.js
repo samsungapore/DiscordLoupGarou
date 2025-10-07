@@ -6,7 +6,7 @@ const get_random_in_array = require("../../functions/parsing_functions").get_ran
 const shuffle_array = require("../../functions/parsing_functions").shuffle_array;
 const ReactionHandler = require("../../functions/reactionHandler").ReactionHandler;
 
-const clone = require('../../functions/clone');
+const {createRoleCompositionStrategy} = require('./compositions/roleCompositionStrategy');
 
 const {Colors} = require('discord.js');
 const {sendEmbed} = require("../../utils/message");
@@ -25,7 +25,7 @@ class IGame {
 
 class RolesHandler extends IGame {
 
-    constructor(client, guild, gameInfo) {
+    constructor(client, guild, gameInfo, composition) {
         super(client);
 
         this.gameInfo = gameInfo;
@@ -79,91 +79,8 @@ class RolesHandler extends IGame {
             JugeBegue: LGGame.Create.jugeBegue,*/
         };
 
-        this.role_conf = [
-            {
-                LoupGarou: 1,
-            },
-            // Thiercelieux
-            {
-                Voyante: 1,
-                Chasseur: 1,
-                Cupidon: 1,
-                Sorciere: 1,
-            },
-            {
-                LoupGarou: 1,
-            },
-            {
-                PetiteFille: 1,
-                Voleur: 1,
-            },
-            // Nouvelle lune
-            {
-                Villageois: 1,
-                LoupGarou: 1,
-                Salvateur: 1,
-                IdiotDuVillage: 1,
-                BoucEmissaire: 1,
-                JoueurDeFlute: 1
-            },
-            {
-                Villageois: 1,
-                EnfantSauvage: 1,
-                Chevalier: 1,
-                Ange: 1,
-                InfectPereDesLoups: 1,
-                Soeur: 2, // todo: si une carte soeur est donnée, il faut donner la deuxième. Si impossible de donner la deuxième, donner un autre rôle.
-                Renard: 1,
-                ServanteDevouee: 1,
-                Frere: 3, // todo: si une carte soeur est donnée, il faut donner les autres. Si impossible de les donner, donner un autre rôle.
-                MontreurOurs: 1,
-                Comedien: 1,
-                AbominableSectaire: 1,
-                ChienLoup: 1,
-                VillageoisVillageois: 1,
-                Corbeau: 1
-            },
-            {
-                GrandMechantLoup: 1,
-                Ancien: 1,
-                JugeBegue: 1,
-            },
-            {
-                Villageois: Number.MAX_SAFE_INTEGER,
-                LoupGarou: 1
-            }
-        ];
-
-        this.thiercelieux = [
-            this.role_conf[0], this.role_conf[1], this.role_conf[2], this.role_conf[3], this.role_conf[7]
-        ];
-
-        this.nouvelleLune = [
-            this.role_conf[0], this.role_conf[1], this.role_conf[4], this.role_conf[7]
-        ];
-
-        this.allExtension = this.thiercelieux;
-
-        this.gameType = this.thiercelieux;
-
-        this.gameTypeCopy = clone(this.gameType);
-
-        let gameTypeCopyObj;
-
-        for (let i = 1; i < this.gameTypeCopy.length; i++) {
-            gameTypeCopyObj = Object.assign(this.gameTypeCopy[0], this.gameTypeCopy[i]);
-            this.gameTypeCopy[0] = gameTypeCopyObj;
-        }
-
-        try {
-            delete gameTypeCopyObj.Voleur;
-            delete gameTypeCopyObj.Cupidon;
-            delete gameTypeCopyObj.JoueurDeFlute;
-        } catch (e) {
-            console.error(e);
-        }
-
-        this.gameTypeCopy = [gameTypeCopyObj];
+        this.compositionStrategy = createRoleCompositionStrategy(composition);
+        this.compositionStrategy.apply(this);
 
         return this;
     }
