@@ -2,6 +2,7 @@ const assert = require('assert');
 
 describe('roleCompositionParser', () => {
     const {parseRoleComposition, ROLE_COMPOSITION_USAGE} = require('../../src/utils/roleCompositionParser');
+    const {allRoles} = require('../../src/lg/roles/roleFactory');
 
     it('parses comma separated role specifications', () => {
         const composition = parseRoleComposition('Villageois:5,LoupGarou:2,Voyante:1');
@@ -41,5 +42,15 @@ describe('roleCompositionParser', () => {
         expectHelpfulError('Villageois');
         expectHelpfulError('Villageois:-1');
         expectHelpfulError('Villageois:abc');
+    });
+
+    it('lists the available role names to guide the user', () => {
+        const availableNames = Object.keys(allRoles);
+        for (const roleName of availableNames) {
+            assert.ok(
+                ROLE_COMPOSITION_USAGE.includes(roleName),
+                `ROLE_COMPOSITION_USAGE should mention ${roleName}`,
+            );
+        }
     });
 });
