@@ -1,7 +1,7 @@
 const assert = require('assert');
 
 describe('roleCompositionParser', () => {
-    const {parseRoleComposition} = require('../../src/utils/roleCompositionParser');
+    const {parseRoleComposition, ROLE_COMPOSITION_USAGE} = require('../../src/utils/roleCompositionParser');
 
     it('parses comma separated role specifications', () => {
         const composition = parseRoleComposition('Villageois:5,LoupGarou:2,Voyante:1');
@@ -28,10 +28,18 @@ describe('roleCompositionParser', () => {
         });
     });
 
-    it('throws when specification is empty or invalid', () => {
-        assert.throws(() => parseRoleComposition(''), /role composition/i);
-        assert.throws(() => parseRoleComposition('Villageois'), /role composition/i);
-        assert.throws(() => parseRoleComposition('Villageois:-1'), /role composition/i);
-        assert.throws(() => parseRoleComposition('Villageois:abc'), /role composition/i);
+    it('throws when specification is empty or invalid with helpful guidance', () => {
+        const expectHelpfulError = (input) => {
+            assert.throws(() => parseRoleComposition(input), (err) => {
+                assert.match(err.message, /Composition de rôles invalide/);
+                assert.ok(err.message.includes(ROLE_COMPOSITION_USAGE));
+                return true;
+            });
+        };
+
+        expectHelpfulError('');
+        expectHelpfulError('Villageois');
+        expectHelpfulError('Villageois:-1');
+        expectHelpfulError('Villageois:abc');
     });
 });

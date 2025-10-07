@@ -1,6 +1,12 @@
+const ROLE_COMPOSITION_USAGE = "Format: Rôle:Nombre séparés par des virgules (ex. Villageois:6,LoupGarou:2)";
+
+function compositionError() {
+    return new Error(`Composition de rôles invalide. ${ROLE_COMPOSITION_USAGE}`);
+}
+
 function parseRoleComposition(spec) {
     if (typeof spec !== 'string' || spec.trim() === '') {
-        throw new Error('Invalid role composition specification');
+        throw compositionError();
     }
 
     const tokens = spec
@@ -9,7 +15,7 @@ function parseRoleComposition(spec) {
         .filter(Boolean);
 
     if (tokens.length === 0) {
-        throw new Error('Invalid role composition specification');
+        throw compositionError();
     }
 
     const composition = {};
@@ -18,20 +24,20 @@ function parseRoleComposition(spec) {
         const [roleName, countString] = token.split(':').map(part => part && part.trim());
 
         if (!roleName || !countString) {
-            throw new Error('Invalid role composition specification');
+            throw compositionError();
         }
 
         const count = Number.parseInt(countString, 10);
 
         if (!Number.isInteger(count) || count <= 0) {
-            throw new Error('Invalid role composition specification');
+            throw compositionError();
         }
 
         composition[roleName] = (composition[roleName] || 0) + count;
     }
 
     if (Object.keys(composition).length === 0) {
-        throw new Error('Invalid role composition specification');
+        throw compositionError();
     }
 
     return composition;
@@ -39,4 +45,5 @@ function parseRoleComposition(spec) {
 
 module.exports = {
     parseRoleComposition,
+    ROLE_COMPOSITION_USAGE,
 };

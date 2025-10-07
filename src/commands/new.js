@@ -6,7 +6,7 @@ const messageUtils = require("../utils/message");
 const LgLogger = require("../lg/lg_logger.js");
 const get_random_in_array = require("../functions/parsing_functions").get_random_in_array;
 const SondageInfiniteChoice = require("../functions/cmds/referendum").SondageInfiniteChoice;
-const {parseRoleComposition} = require("../utils/roleCompositionParser");
+const {parseRoleComposition, ROLE_COMPOSITION_USAGE} = require("../utils/roleCompositionParser");
 
 class GameOptions {
     constructor() {
@@ -127,13 +127,13 @@ let askOptions = async (message, args) => {
             } else if (a.startsWith('--roles')) {
                 const value = extractValue();
                 if (!value) {
-                    throw new Error('Missing role composition specification for --roles');
+                    throw new Error(`Aucune composition indiquée pour --roles. ${ROLE_COMPOSITION_USAGE}`);
                 }
 
                 try {
                     gameOptions.roleComposition = parseRoleComposition(value);
                 } catch (err) {
-                    throw new Error(`Invalid role composition: ${err.message}`);
+                    throw new Error(err?.message || `Composition de rôles invalide. ${ROLE_COMPOSITION_USAGE}`);
                 }
             }
         }
