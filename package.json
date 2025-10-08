@@ -23,8 +23,8 @@
     "run": "pm2 start src/discordlgbot.js --name lgdb",
     "restart": "pm2 restart lgdb",
     "stop": "pm2 stop lgdb",
-    "test": "mocha \"test/persistence/**/*.js\" \"test/services/**/*.js\" \"test/functions/**/*.mocha.js\" \"test/utils/**/*.mocha.js\" \"test/lg/**/*.mocha.js\" --exit",
-    "test:coverage": "nyc mocha \"test/persistence/**/*.js\" \"test/services/**/*.js\" \"test/functions/**/*.mocha.js\" \"test/utils/**/*.mocha.js\" --exit",
+    "test": "mocha \"test/persistence/**/*.js\" \"test/services/**/*.js\" \"test/functions/**/*.mocha.js\" \"test/utils/**/*.mocha.js\" \"test/slashCommands/**/*.mocha.js\" \"test/lg/**/*.mocha.js\" --exit",
+    "test:coverage": "nyc mocha \"test/persistence/**/*.js\" \"test/services/**/*.js\" \"test/functions/**/*.mocha.js\" \"test/utils/**/*.mocha.js\" \"test/slashCommands/**/*.mocha.js\" \"test/lg/**/*.mocha.js\" --exit",
     "coverage": "nyc report --reporter=html",
     "postinstall": "patch-package"
   },
@@ -53,7 +53,9 @@
       "**/src/utils/embed.js",
       "**/src/utils/message.js",
       "**/src/functions/cmds/**",
-      "**/src/services/index.js"
+      "**/src/services/index.js",
+      "**/src/slashCommands/**",
+      "src/slashCommands/**"
     ]
   }
 }

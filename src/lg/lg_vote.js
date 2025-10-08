@@ -1,5 +1,95 @@
 const Sondage = require("../functions/cmds/referendum").SondageInfiniteChoice;
 const CommunicationHandler = require("./message_sending.js").CommunicationHandler;
+const {
+    ActionRowBuilder,
+    StringSelectMenuBuilder,
+    ComponentType,
+    ChannelType
+} = require('discord.js');
+
+function isDMChannel(channel) {
+    if (!channel) return false;
+    if (typeof channel.isDMBased === 'function') {
+        try {
+            if (channel.isDMBased()) return true;
+        } catch (err) {
+            // ignore and fallback to type checks
+        }
+    }
+
+    return channel.type === ChannelType.DM || channel.type === 'DM';
+}
+
+async function runDirectSelection({channel, question, ids, names, maxSelectable, time}) {
+    if (!channel || ids.length === 0) return [];
+
+    const uniqueCustomId = `vote_${Date.now()}_${Math.random().toString(16).slice(2, 8)}`;
+
+    const limitedIds = ids.slice(0, 25);
+    const limitedNames = names.slice(0, limitedIds.length);
+    const cappedMaxSelectable = Math.max(1, Math.min(maxSelectable || limitedIds.length, limitedIds.length));
+
+    const menu = new StringSelectMenuBuilder()
+        .setCustomId(uniqueCustomId)
+        .setPlaceholder('Choisissez un joueur')
+        .setMinValues(1)
+        .setMaxValues(cappedMaxSelectable);
+
+    limitedIds.forEach((id, index) => {
+        const label = (limitedNames[index] || id).toString().substring(0, 100);
+        menu.addOptions({label, value: id});
+    });
+
+    const choicesList = limitedNames
+        .map((name, index) => `**${index + 1}.** ${name}`)
+        .join('\n');
+
+    const message = await channel.send({
+        content: `${question}\n${choicesList}`,
+        components: [new ActionRowBuilder().addComponents(menu)]
+    });
+
+    return await new Promise(resolve => {
+        let resolved = false;
+        const collector = message.createMessageComponentCollector({
+            componentType: ComponentType.StringSelect,
+            time
+        });
+
+        collector.on('collect', async interaction => {
+            if (interaction.customId !== uniqueCustomId) return;
+
+            resolved = true;
+            try {
+                await interaction.deferUpdate();
+            } catch (err) {
+                // ignore defer errors in tests/mocks
+            }
+
+            const selection = interaction.values.slice(0, cappedMaxSelectable);
+
+            try {
+                await message.edit({components: []});
+            } catch (err) {
+                // ignore edit errors
+            }
+
+            collector.stop('completed');
+            resolve(selection);
+        });
+
+        collector.on('end', async () => {
+            if (!resolved) {
+                try {
+                    await message.edit({components: []});
+                } catch (err) {
+                    // ignore edit errors
+                }
+                resolve([]);
+            }
+        });
+    });
+}
 
 class Vote {
 
@@ -79,6 +169,18 @@ class Vote {
                 }
             } catch (e) {
                 // fallback to interactive path
+            }
+
+            if (isDMChannel(this.channel)) {
+                runDirectSelection({
+                    channel: this.channel,
+                    question: this.question,
+                    ids,
+                    names,
+                    maxSelectable: this.maxVotes,
+                    time: this.time
+                }).then(resolve).catch(reject);
+                return;
             }
 
             new Sondage(

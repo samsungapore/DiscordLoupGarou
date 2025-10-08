@@ -24,4 +24,11 @@ describe('logger util', function () {
     require('../../src/utils/logger');
     assert.ok(fs.existsSync(path.join(tmp, 'logs')));
   });
+
+  it('uses existing log directory without errors', function () {
+    const logDir = path.join(tmp, 'logs');
+    fs.mkdirSync(logDir);
+    require('../../src/utils/logger');
+    assert.ok(fs.existsSync(logDir));
+  });
 });
