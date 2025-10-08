@@ -22,4 +22,11 @@ describe('env util', function () {
     assert.ok(fs.existsSync(path.join(tmp, '.env')));
     assert.strictEqual(process.env.LOG_PATH, './logs');
   });
+
+  it('does not overwrite existing .env file', function () {
+    fs.writeFileSync(path.join(tmp, '.env'), 'LOG_PATH=custom');
+    require('../../src/utils/env');
+    const content = fs.readFileSync(path.join(tmp, '.env'), 'utf8');
+    assert.ok(content.includes('LOG_PATH=custom'));
+  });
 });

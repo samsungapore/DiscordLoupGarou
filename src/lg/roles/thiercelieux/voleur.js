@@ -1,9 +1,9 @@
 const lg_var = require("../../lg_var");
 const LgLogger = require("../../lg_logger");
 const {sendEmbed} = require("../../../utils/message");
-const ReactionHandler = require("../../../functions/reactionHandler").ReactionHandler;
 const Villageois = require("../baseRole").Villageois;
 const MessageEmbed = require("../../../utils/embed");
+const {ActionRowBuilder, ButtonBuilder, ButtonStyle} = require('discord.js');
 
 /**
  * Si on décide de jouer avec le voleur, on doit ajouter deux cartes de plus au paquet de cartes qui seront distribuée
@@ -64,21 +64,28 @@ class Voleur extends Villageois {
                 dmchanpromise.push(this.getDMChannel());
             }
 
-            let embed = null;
+            let selectionMade = false;
 
             Promise.all(dmchanpromise)
                 .then(() => gameConf.rolesHandler.getAdditionnalRoles(2))
                 .then(roles => {
                     this.additionnalRoles = roles;
 
+                    const getRoleDescription = (roleName) => {
+                        const roleData = lg_var.roles_desc[roleName];
+                        return roleData && roleData.embed && roleData.embed.fields && roleData.embed.fields[0]
+                            ? roleData.embed.fields[0].value.slice(0, 1024)
+                            : 'Description indisponible.';
+                    };
+
                     let propositionMsg = new MessageEmbed()
                         .setAuthor(`${this.member.displayName}`, this.member.user.avatarURL())
                         .setTitle('Tu es le voleur de la partie')
                         .setDescription('Tu as le choix d\'échanger ton rôle de voleur considéré ' +
                             'comme villageois avec deux carte. Tu ne dois en choisir qu\'une seule')
-                        .addField(`Carte 🇦 ${roles[0]}`, lg_var.roles_desc[roles[0]].embed.fields[0].value.slice(0, 1024), true)
-                        .addField(`Carte 🇧 ${roles[1]}`, lg_var.roles_desc[roles[1]].embed.fields[0].value.slice(0, 1024), true)
-                        .setFooter('Veuillez réagir avec la réaction de votre choix. Tu as 40 secondes pour prendre une décision', lg_var.roles_img.LoupGarou);
+                        .addField(`Carte 🇦 ${roles[0]}`, getRoleDescription(roles[0]), true)
+                        .addField(`Carte 🇧 ${roles[1]}`, getRoleDescription(roles[1]), true)
+                        .setFooter('Utilise les boutons ci-dessous pour faire ton choix. Tu as 40 secondes.', lg_var.roles_img.LoupGarou);
 
                     if (!(roles[0] === "LoupGarou" && roles[1] === "LoupGarou")) {
                         propositionMsg.addField('❌', 'Garder son rôle');
@@ -87,37 +94,78 @@ class Voleur extends Villageois {
                     return sendEmbed(this.dmChannel, propositionMsg);
                 })
                 .then(embedMsg => {
-                    embed = embedMsg;
-                    return new ReactionHandler(embedMsg, ['🇦', '🇧', '❌']).addReactions();
-                })
-                .then((proposition) => {
-                    proposition.initCollector((reaction) => {
-                        if (reaction.emoji.name === "🇦") {
-                            this.roleChosen = this.additionnalRoles[0];
-                            proposition.stop();
-                        } else if (reaction.emoji.name === "🇧") {
-                            this.roleChosen = this.additionnalRoles[1];
-                            proposition.stop();
-                        } else if (reaction.emoji.name === "❌" && !(this.additionnalRoles[0] === "LoupGarou" && this.additionnalRoles[1] === "LoupGarou")) {
-                            this.roleChosen = undefined;
-                            proposition.stop();
-                        }
-                    }, () => {
 
-                        embed.delete().catch(() => true);
+                    const row = new ActionRowBuilder()
+                        .addComponents(
+                            new ButtonBuilder()
+                                .setCustomId('voleur_pick_0')
+                                .setLabel('Carte 🇦')
+                                .setStyle(ButtonStyle.Primary),
+                            new ButtonBuilder()
+                                .setCustomId('voleur_pick_1')
+                                .setLabel('Carte 🇧')
+                                .setStyle(ButtonStyle.Primary)
+                        );
+
+                    if (!(this.additionnalRoles[0] === "LoupGarou" && this.additionnalRoles[1] === "LoupGarou")) {
+                        row.addComponents(
+                            new ButtonBuilder()
+                                .setCustomId('voleur_keep')
+                                .setLabel('Garder son rôle')
+                                .setStyle(ButtonStyle.Secondary)
+                        );
+                    }
+
+                    return embedMsg.edit({components: [row]});
+                })
+                .then(messageWithComponents => new Promise((resolveCollector) => {
+                    const collector = messageWithComponents.createMessageComponentCollector({time: 40000});
+
+                    collector.on('collect', async interaction => {
+                        if (interaction.user.id !== this.member.id) return;
+
+                        selectionMade = true;
+
+                        try {
+                            await interaction.deferUpdate();
+                        } catch (err) {
+                            // ignore errors from mocked environments
+                        }
+
+                        if (interaction.customId === 'voleur_pick_0') {
+                            this.roleChosen = this.additionnalRoles[0];
+                        } else if (interaction.customId === 'voleur_pick_1') {
+                            this.roleChosen = this.additionnalRoles[1];
+                        } else if (interaction.customId === 'voleur_keep' && !(this.additionnalRoles[0] === "LoupGarou" && this.additionnalRoles[1] === "LoupGarou")) {
+                            this.roleChosen = undefined;
+                        }
+
+                        try {
+                            await messageWithComponents.edit({components: []});
+                        } catch (err) {
+                            // ignore edit errors
+                        }
+
+                        collector.stop('selected');
+                    });
+
+                    collector.on('end', async () => {
+                        try {
+                            await messageWithComponents.delete();
+                        } catch (err) {
+                            // ignore delete errors
+                        }
 
                         if (this.roleChosen) {
                             this.dmChannel.send(`Tu as choisi le rôle ${this.roleChosen}`).catch(() => true);
                         } else {
-                            this.dmChannel.send(`Tu as choisi de garder ton rôle`).catch(() => true);
+                            this.dmChannel.send(selectionMade ? `Tu as choisi de garder ton rôle` : `Tu n'as pas fait ton choix, tu gardes ton rôle`).catch(() => true);
                         }
 
-                        resolve(this);
-
-                    }, (reaction) => reaction.count > 1,
-                        { time: 40000 }
-                    );
-                })
+                        resolveCollector();
+                    });
+                }))
+                .then(() => resolve(this))
                 .catch(err => reject(err));
 
         });
