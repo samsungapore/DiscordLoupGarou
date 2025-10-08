@@ -14,7 +14,6 @@ description: >-
 
 ## Informations très importantes
 
-{% hint style="danger" %}
 ### Le bot réquisitionne des noms spécifiques de channels et de rôles
 
 #### Noms de rôles utilisés par le bot
@@ -36,7 +35,6 @@ Voici les channels que le bot générera si ils ne sont pas présents sur le ser
 * _**loups\_garou\_lg**_ Channel textuel des loups garous, où les loups se concertent pour désigner leurs proies
 * _**vocal\_lg**_ Channel vocal pour les joueurs vivants
 * _**mort\_lg**_ Channel vocal pour les joueurs morts
-{% endhint %}
 
 ![Channels g&#xE9;n&#xE9;r&#xE9;s par le bot](.gitbook/assets/lg_channelsecategory.png)
 
@@ -46,9 +44,7 @@ Voici les channels que le bot générera si ils ne sont pas présents sur le ser
 Bot en cours de développement, Beta 1.5
 ```
 
-{% hint style="info" %}
 [Cliquez-ici](https://discordapp.com/api/oauth2/authorize?client_id=538344945673830410&scope=bot&permissions=468839664) pour ajouter le bot à votre serveur
-{% endhint %}
 
 | Commandes | Fonctionnalité |
 | :--- | :--- |
@@ -107,23 +103,17 @@ Vous pouvez proposer vos améliorations du bot et signaler les bugs en envoyant 
 
 ### Normes utilisées
 
-{% hint style="info" %}
 ### Programmation Orientée Objet
 
 Pour le développement de ce jeu, une approche orientée objet paraît nécessaire. Le Javascript permet ce paradigme de programmation, c'est donc celui utilisé lors du développement de ce jeu.
-{% endhint %}
 
-{% hint style="warning" %}
 ### ES6
 
  La norme utilisé est la **norme ES6**, ce qui induit notamment les **arrow function**, les **promises**, et le **async**/**await**. Une bonne connaissance de ces notions est nécessaire au développement de ce jeu. L'**événementiel** et le **parallélisme** sont des éléments clés qui se retrouvent dans le code.
-{% endhint %}
 
-{% hint style="info" %}
 ### Discord.js
 
 [La bibliothèque discord.js](https://discord.js.org) est celle utilisé pour le bot, compatible avec les normes mentionnées précédemment.
-{% endhint %}
 
 ### Diagrammes d'architectures
 
