@@ -33,6 +33,9 @@ class GameInfo {
         this.guild = message.guild;
         this.playTime = playTime;
         this._history = [];
+        this.startedById = (message && message.author && message.author.id)
+            || (message && message.member && message.member.id)
+            || '';
         this.gameNumber = new Date().toUTCString().split(' ')[4];
         if (this.gameNumber) {
             this.gameNumber = this.gameNumber.replace(/:+/g, '42');
@@ -68,6 +71,10 @@ class GameInfo {
         }
 
         return playTime;
+    }
+
+    get startedBy() {
+        return this.startedById;
     }
 }
 

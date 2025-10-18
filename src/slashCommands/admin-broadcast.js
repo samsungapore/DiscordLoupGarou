@@ -1,5 +1,10 @@
 const {PermissionsBitField, ApplicationCommandOptionType} = require('discord.js');
 
+// Default per-DM delay to be gentle with rate limits; configurable for tests
+let BROADCAST_DELAY_MS = Number(process.env.BROADCAST_DELAY_MS || 150);
+let BROADCAST_ASYNC = String(process.env.BROADCAST_ASYNC || '0') !== '0';
+let PROGRESS_UPDATE_MS = Number(process.env.BROADCAST_PROGRESS_MS || 5000);
+
 function getGuildAdmins(guild) {
     const admins = new Map();
     if (guild.ownerId) {
@@ -19,7 +24,7 @@ function getGuildAdmins(guild) {
     return admins;
 }
 
-async function dmMembersSequential(iterable, text, sleep = (() => Promise.resolve())) {
+async function dmMembersSequential(iterable, text, sleep = (() => Promise.resolve()), onProgress) {
     let attempted = 0, sent = 0, failed = 0;
     for (const m of iterable) {
         attempted++;
@@ -29,7 +34,8 @@ async function dmMembersSequential(iterable, text, sleep = (() => Promise.resolv
         } catch (_) {
             failed++;
         }
-        await sleep(0);
+        await sleep();
+        if (onProgress) onProgress({attempted, sent, failed});
     }
     return {attempted, sent, failed};
 }
@@ -58,7 +64,7 @@ module.exports = {
         const text = interaction.options.getString('message', true).slice(0, 2000);
         await interaction.deferReply({ephemeral: true});
 
-        const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+        const sleepFn = () => BROADCAST_DELAY_MS > 0 ? new Promise(r => setTimeout(r, BROADCAST_DELAY_MS)) : Promise.resolve();
         // Collect unique recipients across all guilds (dedupe by user ID)
         const uniqueRecipients = new Map();
         for (const guild of interaction.client.guilds.cache.values()) {
@@ -73,13 +79,58 @@ module.exports = {
             }
         }
 
-        const {attempted, sent, failed} = await dmMembersSequential(
-            Array.from(uniqueRecipients.values()),
-            `Admin notice:\n\n${text}`,
-            (delay) => sleep(delay || 150)
-        );
+        const recipients = Array.from(uniqueRecipients.values());
 
+        if (BROADCAST_ASYNC) {
+            await interaction.editReply(`Broadcast started: ${recipients.length} recipients. Delay ${BROADCAST_DELAY_MS}ms.`);
+            const startedAt = Date.now();
+            let lastEdit = 0;
+            const onProgress = async ({attempted, sent, failed}) => {
+                const now = Date.now();
+                if (now - lastEdit >= PROGRESS_UPDATE_MS) {
+                    lastEdit = now;
+                    try {
+                        await interaction.editReply(`Broadcast in progress: attempted ${attempted}, sent ${sent}, failed ${failed}.`);
+                    } catch (_) {
+                    }
+                }
+            };
+            // fire-and-forget processing
+            dmMembersSequential(recipients, `Admin notice:\n\n${text}`, sleepFn, onProgress)
+                .then(async ({attempted, sent, failed}) => {
+                    try {
+                        await interaction.editReply(`Broadcast complete: attempted ${attempted}, sent ${sent}, failed ${failed}. (took ${Math.round((Date.now() - startedAt) / 1000)}s)`);
+                    } catch (_) {
+                        // fallback: try DM initiator if editing failed (window expired)
+                        try {
+                            await interaction.user.send(`Broadcast complete: attempted ${attempted}, sent ${sent}, failed ${failed}.`);
+                        } catch (_) {
+                        }
+                    }
+                })
+                .catch(async () => {
+                    try {
+                        await interaction.editReply('Broadcast encountered an error.');
+                    } catch (_) {
+                    }
+                });
+            return; // do not await
+        }
+
+        const {attempted, sent, failed} = await dmMembersSequential(recipients, `Admin notice:\n\n${text}`, sleepFn);
         await interaction.editReply(`Broadcast complete: attempted ${attempted}, sent ${sent}, failed ${failed}.`);
     },
-    _internal: { getGuildAdmins, dmMembersSequential }
+    _internal: {
+        getGuildAdmins,
+        dmMembersSequential,
+        setBroadcastDelayMs: (ms) => {
+            BROADCAST_DELAY_MS = Number(ms);
+        },
+        setAsyncMode: (on) => {
+            BROADCAST_ASYNC = !!on;
+        },
+        setProgressMs: (ms) => {
+            PROGRESS_UPDATE_MS = Number(ms);
+        }
+    }
 };

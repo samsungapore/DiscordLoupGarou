@@ -17,6 +17,7 @@ const messageUtils = require("../utils/message");
 const ReactionHandler = require("../functions/reactionHandler").ReactionHandler;
 const Message = require('discord.js').Message;
 const TextChannel = require('discord.js').TextChannel;
+const AiNarration = require('../services/ai/ai_narration');
 
 class IGame {
 
@@ -587,9 +588,20 @@ class Day extends Period {
 
         let debateDuration = Math.max(3, this.GameConfiguration.getAlivePlayers().length / 2); // in minutes
 
-        await this.GameConfiguration.channelsHandler.sendMessageToVillage(
-            `Le jour se lève sur thiercelieux 🌄`
-        );
+        let morning = `Le jour se lève sur thiercelieux 🌄`;
+        try {
+            if (AiNarration.shouldUseAi(this.gameInfo)) {
+                const txt = await AiNarration.generateMorningAnnouncement({
+                    gameInfo: this.gameInfo,
+                    deadPeople: this.deadPeople || [],
+                    turn: this.turnNb
+                });
+                if (txt) morning = txt;
+            }
+        } catch (_) {
+        }
+
+        await this.GameConfiguration.channelsHandler.sendMessageToVillage(morning);
 
         await this.GameConfiguration.channelsHandler.sendMessageToVillage(
             `Vous disposez de ${timeToString(debateDuration)} pour débattre, et faire un vote`
@@ -728,11 +740,17 @@ class FirstDay extends Period {
 
     goThrough() {
         return new Promise((resolve, reject) => {
+            const fallback = "🌄 Le jour se lève à Thiercelieux. Quand la neige éternelle ornera les montagnes, le capitaine devra être élu.";
+            const mkMorning = AiNarration.shouldUseAi(this.gameInfo)
+                ? AiNarration.generateMorningAnnouncement({
+                    gameInfo: this.gameInfo,
+                    deadPeople: [],
+                    turn: this.turnNb
+                }).catch(() => fallback)
+                : Promise.resolve(fallback);
 
-            this.GameConfiguration.channelsHandler.sendMessageToVillage(
-                "🌄 Le jour se lève à Thiercelieux." +
-                " Quand la neige éternelle ornera les montagnes, le capitaine devra être élu."
-            ).then(() => this.GameConfiguration.globalTimer.setTimer(
+            mkMorning.then((morning) => this.GameConfiguration.channelsHandler.sendMessageToVillage(morning))
+                .then(() => this.GameConfiguration.globalTimer.setTimer(
                 1,
                 "Temps avant le vote du capitaine",
                 this.GameConfiguration.getAlivePlayers().length
